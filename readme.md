@@ -34,9 +34,9 @@
 
 给定车载摄像头采集的单帧图像 \( I \)，设计一个 **长尾场景触发函数**：
 
-\[
-f(I) \rightarrow \{0, 1\}
-\]
+```
+f(I) -> {0, 1}
+```
 
 其中：
 - `1`：判定为 **长尾 / Corner Case 场景**
@@ -77,11 +77,11 @@ f(I) \rightarrow \{0, 1\}
 
 ## 四、系统整体框架
 
-<p align="center">
-  <img src="figs/system_overview.png" width="800">
-</p>
+<img width="1308" height="1051" alt="image" src="https://github.com/user-attachments/assets/561f5125-43b6-4727-97ab-a03432a0b977" />
+
 
 系统整体采用 **车–云协同架构**：
+<img width="1134" height="421" alt="image" src="https://github.com/user-attachments/assets/d75995f9-d24d-4d16-9371-70426f282774" />
 
 ### 🚗 车端（Edge）
 - 硬件平台：**Raspberry Pi 5**
@@ -104,9 +104,8 @@ f(I) \rightarrow \{0, 1\}
 
 ## 五、长尾场景触发信号设计
 
-<p align="center">
-  <img src="figs/trigger_pipeline.png" width="800">
-</p>
+<img width="1520" height="601" alt="image" src="https://github.com/user-attachments/assets/f1c60411-815a-462d-9f91-5a9ad766d1e1" />
+
 
 长尾触发机制由多种信号共同决定：
 
