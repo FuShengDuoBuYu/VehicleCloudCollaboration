@@ -16,6 +16,8 @@ VehicleCloudCollaboration/
 │   ├── yolov8n.pt
 │   └── yolopv2.pt
 ├── detectors/         # Detector implementations
+│   └── yolov8_multi_task/
+│       └── run_demo.py
 │   ├── clip_detector.py
 │   ├── yolov8_detector.py
 │   ├── yoloworld_detector.py
@@ -59,3 +61,15 @@ python evaluate.py --dataset path/to/dataset --output evaluation_results/
 ## Configuration
 
 Adjust weights and thresholds in `config.yaml` to tune the sensitivity of the ensemble.
+
+## YOLOv8-multi-task
+## Setup
+This codebase has been developed with Python==3.7.16 with PyTorch==1.13.1.
+
+cd YOLOv8-multi-task
+pip install -e .
+
+## Usage
+```bash
+python run_demo.py
+```
