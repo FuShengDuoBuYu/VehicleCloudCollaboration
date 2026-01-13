@@ -1,0 +1,78 @@
+# Long-tail Scene Classifier Configuration
+
+threshold: 0.5
+
+detectors:
+  - type: clip
+    weight: 0.35
+    config:
+      model_name: "openai/clip-vit-base-patch32"
+      max_prob_threshold: 0.22
+      entropy_threshold: 0.72
+      labels:
+        - "normal road driving scene"
+        - "ordinary street scene"
+        - "highway driving scene"
+        - "pedestrian"
+        - "car"
+        - "truck"
+        - "bus"
+        - "motorcycle"
+        - "bicycle"
+        - "traffic cone"
+        - "traffic bollard"
+        - "road barrier"
+        - "barricade"
+        - "construction sign"
+        - "detour sign"
+        - "lane closed sign"
+        - "temporary traffic sign"
+        - "warning sign"
+        - "arrow board"
+        - "road work"
+        - "traffic light"
+        - "stop sign"
+
+  - type: yoloworld
+    weight: 0.30
+    config:
+      model_path: "yolov8x-worldv2.pt"
+      conf_threshold: 0.20
+      classes:
+        - "person"
+        - "car"
+        - "truck"
+        - "bus"
+        - "motorcycle"
+        - "bicycle"
+        - "scooter"
+        - "traffic cone"
+        - "traffic bollard"
+        - "road barrier"
+        - "traffic barrier"
+        - "barricade"
+        - "construction sign"
+        - "road work sign"
+        - "detour sign"
+        - "lane closed sign"
+        - "temporary sign"
+        - "arrow board"
+        - "warning sign"
+
+  - type: yolov8
+    weight: 0.20
+    config:
+      model_path: "weights/yolov8n.pt"
+      conf_threshold: 0.25
+      unusual_indicators:
+        - "stop sign"
+        - "parking meter"
+        - "fire hydrant"
+
+  - type: yolopv2
+    weight: 0.15
+    config:
+      weights_path: "weights/yolopv2.pt"
+      img_size: 640
+      conf_threshold: 0.3
+      use_full_model: false

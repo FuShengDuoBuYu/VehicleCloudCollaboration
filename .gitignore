@@ -1,1 +1,4 @@
 yolov8x-worldv2.pt
+**.pyc
+weights/yolov8n.pt
+weights/yolopv2.pt
