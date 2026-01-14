@@ -4,6 +4,8 @@ import argparse
 import yaml
 import os
 import glob
+import time
+from datetime import datetime
 
 from classifier import LongTailClassifier
 
@@ -64,6 +66,71 @@ def process_directory(classifier: LongTailClassifier, directory: str, output_fil
         print(f"\nResults saved to: {output_file}")
 
 
+def process_camera_stream(
+    classifier: LongTailClassifier,
+    camera_index: int = 0,
+    interval_sec: float = 5.0,
+    save_dir: str = "captured_frames",
+    width: int = 640,
+    height: int = 480,
+    verbose: bool = False,
+):
+    """Capture from camera every interval and run long-tail classification."""
+    try:
+        import cv2
+    except ImportError as e:
+        print(f"OpenCV is required for camera capture: {e}")
+        return
+
+    os.makedirs(save_dir, exist_ok=True)
+
+    cap = cv2.VideoCapture(camera_index)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+
+    if not cap.isOpened():
+        print(f"Failed to open camera index {camera_index}")
+        return
+
+    print(f"\n{'='*70}")
+    print(f"Camera capture started (index={camera_index}, every {interval_sec}s)")
+    print(f"Frames will be saved to: {save_dir}")
+    print(f"{'='*70}")
+
+    last_capture = 0.0
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print("⚠️ 读取帧失败，等待 1s 后重试")
+                time.sleep(1)
+                continue
+
+            now = time.time()
+            if now - last_capture >= interval_sec:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"frame_{timestamp}.jpg"
+                path = os.path.join(save_dir, filename)
+                cv2.imwrite(path, frame)
+                print(f"📸 保存帧: {path}")
+
+                result = classifier.predict(path)
+                if verbose:
+                    classifier.print_summary()
+                else:
+                    status = "LONG-TAIL ⚠️" if result['is_long_tail'] else "NORMAL ✓"
+                    print(f"   → 结果: {status} | 分数: {result['score']:.3f} | FPS: {result['fps']:.2f}")
+
+                last_capture = now
+
+            time.sleep(0.05)
+    except KeyboardInterrupt:
+        print("\n🛑 手动停止摄像头识别")
+    finally:
+        cap.release()
+        print("✅ 摄像头已释放")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Long-tail scenario classifier")
     parser.add_argument('--config', type=str, default='config.yaml', help='Path to configuration file')
@@ -72,6 +139,11 @@ def main():
     parser.add_argument('--output', type=str, help='Output CSV file for batch processing results')
     parser.add_argument('--verbose', action='store_true', help='Print detailed results')
     parser.add_argument('--threshold', type=float, help='Override classification threshold from config')
+    parser.add_argument('--camera-index', type=int, default=0, help='Camera index to use when no image/directory is provided')
+    parser.add_argument('--camera-interval', type=float, default=5.0, help='Seconds between frames when using camera input')
+    parser.add_argument('--camera-save-dir', type=str, default='captured_frames', help='Where to store captured frames when using camera input')
+    parser.add_argument('--camera-width', type=int, default=640, help='Camera capture width')
+    parser.add_argument('--camera-height', type=int, default=480, help='Camera capture height')
     args = parser.parse_args()
     if os.path.exists(args.config):
         config = load_config(args.config)
@@ -89,8 +161,15 @@ def main():
     elif args.directory:
         process_directory(classifier, args.directory, output_file=args.output)
     else:
-        print("\nError: Please specify either --image or --directory")
-        parser.print_help()
+        process_camera_stream(
+            classifier,
+            camera_index=args.camera_index,
+            interval_sec=args.camera_interval,
+            save_dir=args.camera_save_dir,
+            width=args.camera_width,
+            height=args.camera_height,
+            verbose=args.verbose,
+        )
 
 
 if __name__ == '__main__':

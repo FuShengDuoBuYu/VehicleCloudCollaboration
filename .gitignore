@@ -1,2 +1,4 @@
 **.pyc
 weights
+captured_frames
+__pycache__

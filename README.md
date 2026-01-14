@@ -6,23 +6,26 @@ A multi-model ensemble system designed to detect long-tail (corner case) driving
 
 ```
 VehicleCloudCollaboration/
-├── classifier.py       # Core ensemble classifier
-├── config.yaml         # System configuration
-├── main.py            # Command-line interface
-├── benchmark.py       # Performance benchmarking tool
-├── evaluate.py        # Dataset evaluation tool
-├── requirements.txt   # Python dependencies
-├── weights/           # Model weights directory
-│   ├── yolov8n.pt
-│   └── yolopv2.pt
-├── detectors/         # Detector implementations
-│   └── yolov8_multi_task/
-│       └── run_demo.py
+├── main.py                # CLI; image/dir processing or camera fallback every 5s
+├── capture_every_5s.py    # Standalone camera capture + classify loop
+├── classifier.py          # Core ensemble classifier
+├── config.yaml            # System configuration (weights, thresholds, detectors)
+├── benchmark.py           # Performance benchmarking tool
+├── evaluate.py            # Dataset evaluation tool
+├── requirements.txt       # Python dependencies
+├── detectors/             # Detector implementations
+│   ├── base_detector.py
 │   ├── clip_detector.py
-│   ├── yolov8_detector.py
 │   ├── yoloworld_detector.py
-│   └── yolopv2_detector.py
-└── dataset/           # Dataset directory
+│   ├── yolov8_detector.py
+│   ├── yolopv2_detector.py
+│   └── YOLOv8-multi-task/ # Vendor code, weights, and demos
+├── weights/               # Model weights directory
+│   ├── yolov8n.pt
+│   ├── yolov8x-worldv2.pt
+│   └── yolopv2.pt
+├── dataset/               # Sample datasets (BDD100K, CODA, etc.)
+└── runs/                  # Output runs and predictions
 ```
 
 ## Setup
@@ -36,14 +39,27 @@ VehicleCloudCollaboration/
 
 ## Usage
 
-### Single Image Inference
+### Single image
 ```bash
-python main.py --image path/to/image.jpg
+python main.py --image path/to/image.jpg --verbose
 ```
 
-### Batch Processing
+### Directory batch
 ```bash
-python main.py --dir path/to/images --output results/
+python main.py --directory path/to/images --output results.csv
+```
+
+### Camera (fallback when no --image/--directory)
+- Default: if you run without `--image` or `--directory`, the app opens the camera, captures one frame every 5s, saves it to `captured_frames/`, and classifies each frame.
+- You can override camera settings:
+```bash
+python main.py \
+   --camera-index 0 \
+   --camera-interval 5 \
+   --camera-save-dir captured_frames \
+   --camera-width 640 \
+   --camera-height 480 \
+   --verbose
 ```
 
 ### Benchmarking
@@ -60,7 +76,7 @@ python evaluate.py --dataset path/to/dataset --output evaluation_results/
 
 ## Configuration
 
-Adjust weights and thresholds in `config.yaml` to tune the sensitivity of the ensemble.
+Adjust weights and thresholds in `config.yaml` to tune the sensitivity of the ensemble. Camera capture requires OpenCV (`opencv-python`).
 
 ## YOLOv8-multi-task
 ## Setup
