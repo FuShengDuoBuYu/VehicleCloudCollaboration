@@ -12,15 +12,37 @@ from .base_detector import BaseDetector
 class CLIPDetector(BaseDetector):
     """Uses CLIP to detect long-tail scenarios via semantic analysis"""
     
+    # Labels are arranged to highlight long-tail scenarios first, especially cones
     DEFAULT_LABELS = [
+        # Long-tail: construction with cones (most typical)
+        "road construction with traffic cones",
+        "traffic cones on road",
+        "construction zone cones",
+        "cones blocking lane",
+        "orange safety cones",
+        "temporary cones in lane",
+        "work zone with cones",
+        # Long-tail: visibility/clarity issues
+        "heavy fog low visibility",
+        "sudden fog on road",
+        "blurry image scene",
+        "motion blur driving scene",
+        "camera defocus road scene",
+        # Long-tail: traffic disorder/accident
+        "chaotic traffic scene",
+        "traffic accident scene",
+        "multiple vehicles disorderly",
+        "wrong-way driving detected",
+        # Long-tail: temporary/barricades
+        "road closure barricade",
+        "temporary detour sign",
+        "lane closed sign",
+        "arrow board road work",
+        # Normal baselines
         "normal road driving scene",
         "ordinary street scene",
         "highway driving scene",
-        "pedestrian", "car", "truck", "bus", "motorcycle", "bicycle",
-        "traffic cone", "traffic bollard", "road barrier", "barricade",
-        "construction sign", "detour sign", "lane closed sign",
-        "temporary traffic sign", "warning sign", "arrow board", "road work",
-        "traffic light", "stop sign", "speed limit sign",
+        "clear weather good visibility",
     ]
     
     def __init__(self, config: Dict[str, Any] = None):
@@ -47,11 +69,22 @@ class CLIPDetector(BaseDetector):
             logits = outputs.logits_per_image[0].float()
         probs = torch.softmax(logits, dim=-1)
         max_prob = probs.max().item()
+        top_idx = int(probs.argmax().item())
+        top_label = self.labels[top_idx].lower()
         norm_entropy = self._calculate_entropy(probs)
+        # Base scoring from uncertainty
         if norm_entropy > self.entropy_threshold:
             score = min(1.0, norm_entropy)
         elif max_prob < self.max_prob_threshold:
             score = 1.0 - max_prob
         else:
             score = norm_entropy * 0.5
+        # Minimal explicit boost for typical long-tail cues
+        long_tail_keywords = [
+            "cone", "traffic cone", "construction", "work zone", "barricade",
+            "fog", "low visibility", "blurry", "motion blur", "accident",
+            "chaotic", "wrong-way", "detour", "lane closed"
+        ]
+        if any(k in top_label for k in long_tail_keywords):
+            score = max(score, 0.85)
         return float(np.clip(score, 0.0, 1.0))

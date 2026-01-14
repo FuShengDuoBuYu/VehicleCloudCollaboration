@@ -10,9 +10,12 @@ class YOLOWorldDetector(BaseDetector):
     """Uses YOLO-World to detect long-tail objects"""
     
     LONG_TAIL_CLASSES = [
-        "traffic cone", "traffic bollard", "road barrier", "traffic barrier",
-        "barricade", "construction sign", "road work sign", "detour sign",
-        "lane closed sign", "temporary sign", "arrow board", "warning sign",
+        # Cones (most typical long-tail)
+        "traffic cone", "cone", "orange cone", "construction cone",
+        # Barricades / barriers / temporary controls
+        "traffic bollard", "road barrier", "traffic barrier", "barricade",
+        "construction sign", "road work sign", "detour sign", "lane closed sign",
+        "temporary sign", "arrow board", "warning sign",
     ]
     
     def __init__(self, config: Dict[str, Any] = None):

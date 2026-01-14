@@ -4,9 +4,9 @@ threshold: 0.5
 
 detectors:
   - type: clip
-    weight: 0.35
+    weight: 0.5
     config:
-      model_name: "openai/clip-vit-base-patch32"
+      model_name: "weights/clip-vit-base-patch32"
       max_prob_threshold: 0.22
       entropy_threshold: 0.72
       labels:
@@ -36,7 +36,7 @@ detectors:
   - type: yoloworld
     weight: 0.30
     config:
-      model_path: "yolov8x-worldv2.pt"
+      model_path: "weights/yolov8x-worldv2.pt"
       conf_threshold: 0.20
       classes:
         - "person"
@@ -60,7 +60,7 @@ detectors:
         - "warning sign"
 
   - type: yolov8
-    weight: 0.20
+    weight: 0.1
     config:
       model_path: "weights/yolov8n.pt"
       conf_threshold: 0.25
@@ -70,7 +70,7 @@ detectors:
         - "fire hydrant"
 
   - type: yolopv2
-    weight: 0.15
+    weight: 0.1
     config:
       weights_path: "weights/yolopv2.pt"
       img_size: 640

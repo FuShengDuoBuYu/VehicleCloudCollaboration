@@ -17,6 +17,7 @@ class YOLOv8Detector(BaseDetector):
             self.conf_threshold = self.config.get('conf_threshold', 0.25)
             self.model = YOLO(model_path)
             self.unusual_indicators = self.config.get('unusual_indicators', [
+                'traffic cone', 'cone', 'barricade', 'road barrier', 'construction sign',
                 'stop sign', 'parking meter', 'fire hydrant',
             ])
         except ImportError:
