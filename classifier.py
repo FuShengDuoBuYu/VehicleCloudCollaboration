@@ -8,6 +8,7 @@ from detectors import (
     YOLOWorldDetector,
     YOLOv8Detector,
     YOLOPv2Detector,
+    # YOLOv8MultiTaskDetector,
 )
 
 
@@ -30,12 +31,14 @@ class LongTailClassifier:
                 {'type': 'yoloworld', 'weight': 0.30, 'config': {}},
                 {'type': 'yolov8', 'weight': 0.20, 'config': {}},
                 {'type': 'yolopv2', 'weight': 0.15, 'config': {}},
+                # {'type': 'yolov8m', 'weight': 0.4, 'config': {}},
             ]
         detector_map = {
             'clip': CLIPDetector,
             'yoloworld': YOLOWorldDetector,
             'yolov8': YOLOv8Detector,
             'yolopv2': YOLOPv2Detector,
+            # 'yolov8m': YOLOv8MultiTaskDetector,
         }
         for det_config in detector_configs:
             det_type = det_config.get('type', '').lower()

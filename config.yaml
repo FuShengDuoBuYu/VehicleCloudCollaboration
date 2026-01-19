@@ -76,3 +76,22 @@ detectors:
       img_size: 640
       conf_threshold: 0.3
       use_full_model: false
+
+  - type: yolov8m
+    weight: 0.4
+    config:
+      model_path: "detectors/utils/weights/v4.pt"
+      ultralytics_path: "detectors/utils"
+      imgsz: [384, 672]
+      long_tail_config:
+        conf_range: [0.1, 0.45]      # 置信度“犹豫”区间
+        low_conf_count_limit: 5      # 犹豫目标数量阈值
+        density_limit: 10            # 目标密度阈值
+        size_ratio_limit: 0.6        # 尺寸占比阈值
+        rare_classes: [9]            # 罕见类别 (如火车)
+        drivable_area_min: 0.15      # 可行驶区域最小比例
+        drivable_fragment_limit: 3    # 路面破碎度上限
+        lane_fragment_limit: 5       # 车道线破碎度上限
+        lane_width_min_ratio: 0.02   # 车道线最小宽度比
+        weight_det: 0.3              # 检测维度在子分数中的权重
+        weight_seg: 0.7              # 分割维度在子分数中的权重
