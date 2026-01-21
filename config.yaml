@@ -10,6 +10,10 @@ detectors:
       max_prob_threshold: 0.22
       entropy_threshold: 0.72
       labels:
+        - "road construction with traffic cones"
+        - "traffic cones on road"
+        - "orange safety cones blocking the way"
+        - "construction zone with cones"
         - "normal road driving scene"
         - "ordinary street scene"
         - "highway driving scene"
@@ -33,31 +37,31 @@ detectors:
         - "traffic light"
         - "stop sign"
 
-  - type: yoloworld
-    weight: 0.30
-    config:
-      model_path: "weights/yolov8x-worldv2.pt"
-      conf_threshold: 0.20
-      classes:
-        - "person"
-        - "car"
-        - "truck"
-        - "bus"
-        - "motorcycle"
-        - "bicycle"
-        - "scooter"
-        - "traffic cone"
-        - "traffic bollard"
-        - "road barrier"
-        - "traffic barrier"
-        - "barricade"
-        - "construction sign"
-        - "road work sign"
-        - "detour sign"
-        - "lane closed sign"
-        - "temporary sign"
-        - "arrow board"
-        - "warning sign"
+#  - type: yoloworld
+#    weight: 0.30
+#    config:
+#      model_path: "weights/yolov8x-worldv2.pt"
+#      conf_threshold: 0.20
+#      classes:
+#        - "person"
+#        - "car"
+#        - "truck"
+#        - "bus"
+#        - "motorcycle"
+#        - "bicycle"
+#        - "scooter"
+#        - "traffic cone"
+#        - "traffic bollard"
+#        - "road barrier"
+#        - "traffic barrier"
+#        - "barricade"
+#        - "construction sign"
+#        - "road work sign"
+#        - "detour sign"
+#        - "lane closed sign"
+#        - "temporary sign"
+#        - "arrow board"
+#        - "warning sign"
 
   - type: yolov8
     weight: 0.1

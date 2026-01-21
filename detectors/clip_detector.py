@@ -79,12 +79,14 @@ class CLIPDetector(BaseDetector):
             score = 1.0 - max_prob
         else:
             score = norm_entropy * 0.5
-        # Minimal explicit boost for typical long-tail cues
+        # Explicit boost for typical long-tail cues (including traffic cones)
         long_tail_keywords = [
-            "cone", "traffic cone", "construction", "work zone", "barricade",
-            "fog", "low visibility", "blurry", "motion blur", "accident",
-            "chaotic", "wrong-way", "detour", "lane closed"
+            "cone", "traffic cone", "orange cone", "construction", "work zone", 
+            "barricade", "fog", "low visibility", "blurry", "motion blur", 
+            "accident", "chaotic", "wrong-way", "detour", "lane closed"
         ]
+        
         if any(k in top_label for k in long_tail_keywords):
-            score = max(score, 0.85)
+            score = max(score, 0.90)  # Unified high score for all long-tail scenarios
+            
         return float(np.clip(score, 0.0, 1.0))

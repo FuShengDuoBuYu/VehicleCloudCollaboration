@@ -5,7 +5,13 @@ import yaml
 import os
 import glob
 import time
+import sys
 from datetime import datetime
+
+# Add utils directory to path for car control imports
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'utils'))
+from McLumk_Wheel_Sports import move_forward, stop
+from visualizer import Visualizer
 
 from classifier import LongTailClassifier
 
@@ -74,6 +80,9 @@ def process_camera_stream(
     width: int = 640,
     height: int = 480,
     verbose: bool = False,
+    speed: int = 100,
+    visualize: bool = False,
+    viz_port: int = 8080,
 ):
     """Capture from camera every interval and run long-tail classification."""
     try:
@@ -92,10 +101,20 @@ def process_camera_stream(
         print(f"Failed to open camera index {camera_index}")
         return
 
+    viz = None
+    if visualize:
+        viz = Visualizer(port=viz_port)
+        viz.start()
+
     print(f"\n{'='*70}")
     print(f"Camera capture started (index={camera_index}, every {interval_sec}s)")
     print(f"Frames will be saved to: {save_dir}")
+    print(f"Car initialized - Normal Speed: {speed}")
     print(f"{'='*70}")
+
+    # Start moving forward initially
+    print("🚗 开始前进...")
+    move_forward(speed)
 
     last_capture = 0.0
     try:
@@ -106,27 +125,42 @@ def process_camera_stream(
                 time.sleep(1)
                 continue
 
+            if viz:
+                viz.update_live(frame)
+
             now = time.time()
             if now - last_capture >= interval_sec:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"frame_{timestamp}.jpg"
-                path = os.path.join(save_dir, filename)
+                path = os.path.join(save_dir, "latest_frame.jpg")
                 cv2.imwrite(path, frame)
-                print(f"📸 保存帧: {path}")
+                print(f"📸 更新分析帧: {path}")
 
                 result = classifier.predict(path)
+                
+                if viz:
+                    viz.update_analysis(frame, result)
+
                 if verbose:
                     classifier.print_summary()
                 else:
                     status = "LONG-TAIL ⚠️" if result['is_long_tail'] else "NORMAL ✓"
                     print(f"   → 结果: {status} | 分数: {result['score']:.3f} | FPS: {result['fps']:.2f}")
 
+                # Control car based on classification
+                if result['is_long_tail']:
+                    print("🛑 [警告] 检测到长尾场景！紧急制动...")
+                    stop()
+                else:
+                    print(f"✅ [正常] 场景正常，继续以速度 {speed} 前进")
+                    move_forward(speed)
+
                 last_capture = now
 
-            time.sleep(0.05)
+            # Removed artificial sleep to improve camera streaming responsiveness
     except KeyboardInterrupt:
         print("\n🛑 手动停止摄像头识别")
     finally:
+        print("🛑 停止小车运动")
+        stop()
         cap.release()
         print("✅ 摄像头已释放")
 
@@ -140,10 +174,13 @@ def main():
     parser.add_argument('--verbose', action='store_true', help='Print detailed results')
     parser.add_argument('--threshold', type=float, help='Override classification threshold from config')
     parser.add_argument('--camera-index', type=int, default=0, help='Camera index to use when no image/directory is provided')
-    parser.add_argument('--camera-interval', type=float, default=5.0, help='Seconds between frames when using camera input')
+    parser.add_argument('--camera-interval', type=float, default=2.0, help='Seconds between frames when using camera input')
     parser.add_argument('--camera-save-dir', type=str, default='captured_frames', help='Where to store captured frames when using camera input')
     parser.add_argument('--camera-width', type=int, default=640, help='Camera capture width')
     parser.add_argument('--camera-height', type=int, default=480, help='Camera capture height')
+    parser.add_argument('--speed', type=int, default=5, help='Car movement speed (0-255)')
+    parser.add_argument('--visualize', action='store_true', default=True, help='Start real-time monitoring dashboard')
+    parser.add_argument('--viz-port', type=int, default=8080, help='Dashboard port')
     args = parser.parse_args()
     if os.path.exists(args.config):
         config = load_config(args.config)
@@ -169,6 +206,9 @@ def main():
             width=args.camera_width,
             height=args.camera_height,
             verbose=args.verbose,
+            speed=args.speed,
+            visualize=args.visualize,
+            viz_port=args.viz_port,
         )
 
 
