@@ -1,4 +1,9 @@
 **.pyc
-weights
 captured_frames
 __pycache__
+runs
+dataset
+mycar/data/
+mycar/models/
+*.h5
+*.tflite
