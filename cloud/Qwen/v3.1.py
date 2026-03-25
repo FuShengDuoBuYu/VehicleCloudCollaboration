@@ -3,6 +3,7 @@ import uvicorn
 import base64
 import gc
 import os
+import sys
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
@@ -12,17 +13,18 @@ from PIL import Image
 from typing import Optional
 from contextlib import asynccontextmanager
 
-# 全局变量初始化
+# --- 全局变量初始化 ---
 model = None
 processor = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # --- 【启动阶段】 ---
-    print("🚀 云端推理服务启动中...")
+    # 声明全局变量必须在函数的最开始
     global model, processor
-    MODEL_PATH = "./Qwen2-VL-7B-Instruct"
+
+    print("🚀 云端推理服务启动中...")
+    MODEL_PATH = "./Qwen2-VL-2B-Instruct"
 
     try:
         model = Qwen2VLForConditionalGeneration.from_pretrained(
@@ -40,27 +42,27 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # --- 【关闭阶段】 ---
-    # 这是关键：当 Ctrl+C 或 kill 信号到达时，强制执行清理
-    print("\n🛑 接收到停止信号，正在释放资源并关闭端口...")
+    # --- 【关闭阶段】强制释放资源 ---
+    print("\n🛑 正在释放资源并关闭端口...")
     try:
-        global model, processor
         if model is not None:
+            # 将模型移至 CPU 并删除，确保显存释放
+            model.to("cpu")
             del model
         if processor is not None:
             del processor
 
-        # 强制垃圾回收
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()  # 清理多进程显存残留
+            torch.cuda.ipc_collect()
 
-        print("✨ 显存资源已释放")
+        # 显式重置全局变量
+        model = None
+        processor = None
+        print("✨ 资源清理完毕")
     except Exception as e:
-        print(f"⚠️ 清理过程出现异常: {e}")
-    finally:
-        print("💤 服务已彻底退出")
+        print(f"⚠️ 清理异常: {e}")
 
 
 app = FastAPI(lifespan=lifespan)
@@ -98,14 +100,14 @@ async def predict(request: InferenceRequest, raw_req: Request):
 
 
 if __name__ == "__main__":
-    # 使用 uvicorn.Config 配合 uvicorn.Server 可以更精细控制停止行为
     config = uvicorn.Config(
         app,
         host="0.0.0.0",
         port=9526,
         log_level="info",
         timeout_keep_alive=5,
-        loop="auto"
+        # 允许端口快速重用
+        limit_max_requests=None,
     )
     server = uvicorn.Server(config)
     server.run()
