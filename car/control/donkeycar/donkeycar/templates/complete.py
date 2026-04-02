@@ -698,7 +698,14 @@ def add_user_controller(V, cfg, use_joystick, input_image='ui/image_array'):
     # This web controller will create a web server that is capable
     # of managing steering, throttle, and modes, and more.
     #
-    ctr = LocalWebController(port=cfg.WEB_CONTROL_PORT, mode=cfg.WEB_INIT_MODE)
+    button_labels = {
+        'w1': getattr(cfg, 'WEB_BTN_LABEL_W1', '1'),
+        'w2': getattr(cfg, 'WEB_BTN_LABEL_W2', '2'),
+        'w3': getattr(cfg, 'WEB_BTN_LABEL_W3', '3'),
+        'w4': getattr(cfg, 'WEB_BTN_LABEL_W4', '4'),
+        'w5': getattr(cfg, 'WEB_BTN_LABEL_W5', '5'),
+    }
+    ctr = LocalWebController(port=cfg.WEB_CONTROL_PORT, mode=cfg.WEB_INIT_MODE, button_labels=button_labels)
     V.add(ctr,
           inputs=[input_image, 'tub/num_records', 'user/mode', 'recording'],
           outputs=['user/steering', 'user/throttle', 'user/mode', 'recording', 'web/buttons'],
