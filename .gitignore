@@ -1,11 +1,13 @@
 **.pyc
-captured_frames
 __pycache__
 runs
-dataset
-mycar/data/
-mycar/models/
 *.h5
 *.tflite
+
+car/longtail/captured_frames
+car/longtail/runs
+car/control/mycar/data/
+car/control/mycar/models/
+
 Qwen2-VL-2B-Instruct
 cloud/nohup.out
