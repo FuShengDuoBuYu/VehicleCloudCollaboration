@@ -8,3 +8,4 @@ mycar/models/
 *.h5
 *.tflite
 Qwen2-VL-2B-Instruct
+cloud/nohup.out
