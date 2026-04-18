@@ -1,68 +1,113 @@
-# control 模块说明
+# 车辆控制说明
 
-本模块负责底层车控能力与 DonkeyCar 运行栈，提供车辆驱动、训练、校准与硬件接口代码。
+`car/control/` 目录现在已经重构为一套独立的本地车控层，不再以 `path_follow` 作为主控制方案。
 
-## 模块职责
+## 当前目录职责
 
-- 提供 DonkeyCar 主体框架与运行脚本
-- 提供 mycar 工程入口（drive/train/calibrate）
-- 提供底层电机控制与可视化辅助工具
+当前主要子目录与入口如下：
 
-## 目录结构
+- `vehicle_control/`：新的车控核心逻辑、相机取流与网页控制服务
+- `run_vehicle_control.py`：网页控制入口
+- `train_car/`：TODO: 后续替换自动驾驶端到端小模型
+- `utils/`：Raspbot 底层驱动与辅助工具
+- `donkeycar/`：DonkeyCar 源码与模板
 
-- donkeycar/：DonkeyCar 框架源码
-- mycar/：车辆工程目录（manage.py, train.py, calibrate.py, 配置）
-- utils/：底层车控与辅助工具
 
-## 运行入口
+## 四个基础动作
 
-主要入口在 mycar/manage.py。
+当前车控层提供 4 个基础动作：
 
-支持命令：
+- `forward`：车辆正常直行
+- `stop`：车辆停止
+- `lane-left`：车辆左变道
+- `lane-right`：车辆右变道
 
-- drive：启动驾驶流程
-- train：训练模型
+这些动作已经内置了当前验证过的一组参数，其中右变道与回正参数已经按实车测试结果固化。
 
-示例：
+## Python 调用方式
 
-cd mycar
-python manage.py drive --myconfig=myconfig.py
+推荐直接通过 `VehicleController` 调用：
 
-训练示例：
+```python
+from vehicle_control.controller import VehicleController
 
-cd mycar
-python manage.py train --tubs=data --model=models/mypilot.h5
+controller = VehicleController()
 
-校准入口：
+controller.drive_forward()
+controller.lane_left()
+controller.lane_right()
+controller.stop()
+```
 
-cd mycar
-python calibrate.py
+如果你的上层逻辑更适合统一分发动作名，也可以使用字符串接口：
 
-## 逻辑关系
+```python
+controller.execute("forward")
+controller.execute("lane-left")
+controller.execute("lane-right")
+controller.execute("stop")
+```
 
-1. mycar/manage.py 负责构建车辆运行流水线
-2. donkeycar/ 提供各类 parts（相机、控制器、执行器、记录、训练）
-3. utils/ 提供底层轮控函数，供 longtail 模块或自定义脚本调用
+这更适合后续把长尾检测结果直接映射成车辆动作。
 
-## 与 longtail 模块关系
+## 推荐接入方式
 
-longtail/main.py 在摄像头模式下会导入 control/utils 里的：
+建议采用如下调用链：
 
-- McLumk_Wheel_Sports.py
-- visualizer.py
+1. 检测模块输出动作决策
+2. 上层逻辑将结果映射为 `forward`、`stop`、`lane-left` 或 `lane-right`
+3. 通过 `VehicleController.execute(...)` 执行对应底层动作
 
-因此 control/utils 目录需保持不变或同步更新导入路径。
+例如：
 
-## 依赖与环境
+```python
+action = "lane-right"
+controller.execute(action)
+```
 
-- Python 版本与 DonkeyCar 版本需匹配
-- 常见依赖包含 docopt、opencv、tensorflow/torch（取决于你的训练与推理路径）
-- 若提示 ModuleNotFoundError: docopt，请先安装：
+## 网页控制页面
 
-python -m pip install docopt
+启动方式：
 
-## 常见问题
+```bash
+cd /home/pi/Desktop/VehicleCloudCollaboration/car/control
+python run_vehicle_control.py
+```
 
-- manage.py 无法导入 donkeycar：确认当前目录与 PYTHONPATH
-- 硬件无响应：检查串口、PWM、驱动板连接与权限
-- 训练命令失败：检查 tubs 路径、模型输出目录与依赖版本
+启动后在浏览器访问：
+
+```text
+http://<车辆IP>:8080
+```
+
+页面提供以下能力：
+
+- 展示摄像头实时流画面
+- 展示当前车辆控制状态
+- 提供四个基础控制按钮
+
+## HTTP API
+
+当前网页服务同时提供 HTTP 接口，便于外部程序直接调用：
+
+- `GET /api/state`：获取当前车辆状态
+- `POST /api/control?action=forward`：执行正常行驶
+- `POST /api/control?action=stop`：执行停止
+- `POST /api/control?action=lane-left`：执行左变道
+- `POST /api/control?action=lane-right`：执行右变道
+
+## 相机流说明
+
+当前网页中的视频流来自本地摄像头，默认使用 OpenCV 的 `VideoCapture(0)`。
+
+如果后续需要调整摄像头设备号、分辨率或帧率，可以修改：
+
+- [car/control/vehicle_control/settings.py](/home/pi/Desktop/VehicleCloudCollaboration/car/control/vehicle_control/settings.py)
+
+## 当前建议
+
+如果你的目标已经变成“长尾检测结果直接控制车辆动作”，那么建议：
+
+1. `vehicle_control/` 作为后续唯一主控制层
+2. 旧的 `path_follow` 不再作为主方案保留
+3. 不再需要的旧测试脚本可以逐步清理

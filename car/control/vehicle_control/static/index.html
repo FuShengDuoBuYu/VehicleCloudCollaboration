@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vehicle Control</title>
+  <style>
+    :root {
+      --bg: #eef2e8;
+      --panel: rgba(255, 253, 247, 0.92);
+      --ink: #142013;
+      --accent: #186a3b;
+      --accent-2: #c74f2a;
+      --line: rgba(20, 32, 19, 0.12);
+      --shadow: 0 24px 60px rgba(20, 32, 19, 0.16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(24, 106, 59, 0.18), transparent 36%),
+        radial-gradient(circle at right, rgba(199, 79, 42, 0.12), transparent 30%),
+        linear-gradient(180deg, #f4f7ef 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+    .shell {
+      width: min(1100px, calc(100vw - 32px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 20px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .video-frame {
+      padding: 18px;
+    }
+    .video-frame img {
+      width: 100%;
+      display: block;
+      border-radius: 18px;
+      background: #dfe8da;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+    .controls {
+      padding: 24px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+    p {
+      margin: 0;
+      line-height: 1.6;
+      color: rgba(20, 32, 19, 0.76);
+    }
+    .status {
+      padding: 14px 16px;
+      background: rgba(24, 106, 59, 0.08);
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 16px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: var(--accent);
+      transition: transform 120ms ease, opacity 120ms ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button.stop { background: var(--accent-2); }
+    .hint {
+      font-size: 13px;
+      color: rgba(20, 32, 19, 0.66);
+    }
+    @media (max-width: 900px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="panel video-frame">
+      <img src="/stream.mjpg" alt="实时摄像头画面">
+    </section>
+    <aside class="panel controls">
+      <div>
+        <h1>车辆控制台</h1>
+        <p>提供 4 个基础动作接口：正常行驶、左变道、右变道、停止。</p>
+      </div>
+      <div class="status" id="status">状态加载中...</div>
+      <div class="buttons">
+        <button data-action="forward">正常行驶</button>
+        <button data-action="stop" class="stop">车辆停止</button>
+        <button data-action="lane-left">左变道</button>
+        <button data-action="lane-right">右变道</button>
+      </div>
+      <div class="hint">后端接口：POST /api/control?action=forward|stop|lane-left|lane-right</div>
+    </aside>
+  </div>
+  <script>
+    const statusNode = document.getElementById('status');
+
+    async function refreshState() {
+      const response = await fetch('/api/state');
+      const state = await response.json();
+      statusNode.textContent = `当前动作: ${state.current_action} | 状态: ${state.status}`;
+    }
+
+    async function sendAction(action) {
+      await fetch(`/api/control?action=${encodeURIComponent(action)}`, {
+        method: 'POST'
+      });
+      await refreshState();
+    }
+
+    document.querySelectorAll('button[data-action]').forEach((button) => {
+      button.addEventListener('click', () => sendAction(button.dataset.action));
+    });
+
+    refreshState();
+    setInterval(refreshState, 1000);
+  </script>
+</body>
+</html>
