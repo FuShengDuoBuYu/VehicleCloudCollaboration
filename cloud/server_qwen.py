@@ -26,7 +26,7 @@ DEFAULT_PROMPT = "请分析当前自动驾驶长尾场景。"
 
 # 驾驶指令+描述 合并 prompt：一次推理同时返回指令和中文描述
 # 格式固定为两行，便于解析：
-#   第一行：指令（left / right / straight）
+#   第一行：指令（left / right / straight / stop）
 #   第二行：中文场景描述
 DRIVING_CMD_PROMPT = (
     "You are an autonomous driving assistant for a small indoor/outdoor RC car (Donkey Car).\n"
@@ -35,14 +35,17 @@ DRIVING_CMD_PROMPT = (
     "=== COMMAND DEFINITIONS ===\n"
     "Commands describe WHERE THE VEHICLE SHOULD STEER, not where obstacles are located.\n"
     "\n"
-    "straight — Keep going forward / slow down / stop in place.\n"
+    "straight — Keep going forward at current speed.\n"
     "  Use when:\n"
     "  • Road ahead is clear, follow the lane.\n"
-    "  • Obstacle directly ahead (pedestrian, cone, box, barrier) → slow down or stop, do NOT swerve.\n"
-    "  • Pedestrian anywhere in the scene → always straight (wait or slow down).\n"
-    "  • Traffic cone / traffic barrel blocking the forward path → straight (stop and wait).\n"
     "  • Traffic cone on the SIDE of the road (not blocking) → straight (pass alongside).\n"
     "  • Narrow passage but still passable straight ahead → straight.\n"
+    "\n"
+    "stop — Halt the vehicle immediately and wait.\n"
+    "  Use when:\n"
+    "  • Pedestrian anywhere in the scene → always stop.\n"
+    "  • Obstacle (cone, box, barrier) directly blocking the forward path → stop and wait.\n"
+    "  • No safe passage in any direction → stop.\n"
     "\n"
     "left — Steer the vehicle to the LEFT.\n"
     "  Use ONLY when:\n"
@@ -57,16 +60,16 @@ DRIVING_CMD_PROMPT = (
     "  • The only open passage is to the right.\n"
     "\n"
     "=== CRITICAL RULES ===\n"
-    "1. PEDESTRIAN anywhere → always output: straight\n"
-    "2. Single cone / multiple cones blocking center → straight (stop)\n"
+    "1. PEDESTRIAN anywhere → always output: stop\n"
+    "2. Single cone / multiple cones blocking center → stop\n"
     "3. Cones forming a LEFT channel → left\n"
     "4. Cones forming a RIGHT channel → right\n"
     "5. NEVER output left/right just because an obstacle is on the left/right side.\n"
     "   Obstacle position ≠ steering direction.\n"
-    "6. When in doubt, output: straight\n"
+    "6. When in doubt, output: stop\n"
     "\n"
     "=== OUTPUT FORMAT (exactly two lines, no extra text) ===\n"
-    "Line 1: one word only — left, right, or straight\n"
+    "Line 1: one word only — left, right, straight, or stop\n"
     "Line 2: Chinese description of scene and reason, within 25 characters\n"
     "\n"
     "=== EXAMPLES ===\n"
@@ -74,16 +77,16 @@ DRIVING_CMD_PROMPT = (
     "道路平直无障碍，保持前行。\n"
     "\n"
     "straight\n"
-    "前方有行人，减速等待通过。\n"
-    "\n"
-    "straight\n"
-    "行人在左侧，保持直行慢行。\n"
-    "\n"
-    "straight\n"
-    "锥形桶挡在正前方，停车等待。\n"
-    "\n"
-    "straight\n"
     "路侧有锥桶，不影响直行通道。\n"
+    "\n"
+    "stop\n"
+    "前方有行人，停车等待通过。\n"
+    "\n"
+    "stop\n"
+    "行人在左侧，停车等待。\n"
+    "\n"
+    "stop\n"
+    "锥形桶挡在正前方，停车等待。\n"
     "\n"
     "left\n"
     "锥桶引导向左，左转通过。\n"
@@ -97,13 +100,12 @@ DRIVING_CMD_PROMPT = (
     "right\n"
     "道路在前方向右转弯，需右转。"
 )
-VALID_COMMANDS = {"left", "right", "straight"}
+VALID_COMMANDS = {"left", "right", "straight", "stop"}
 MODEL_PATH = str(CURRENT_DIR / "Qwen" / "Qwen2.5-VL-3B-Instruct")
 MAX_NEW_TOKENS = 80  # 需要容纳指令行 + 中文描述行
 
 model = None
 processor = None
-
 
 class InferenceRequest(BaseModel):
     """JSON 模式请求体（兼容旧版客户端）"""
@@ -123,12 +125,8 @@ class InferenceRequest(BaseModel):
 class InferenceResponse(BaseModel):
     status: str = Field(description="请求处理状态", examples=["success"])
     command: str = Field(
-        description="转向指令：left / right / straight",
+        description="转向指令：left / right / straight / stop",
         examples=["straight"],
-    )
-    description: str = Field(
-        description="当前场景的中文描述及转向原因",
-        examples=["道路平直，前方无障碍，保持直行。"],
     )
     raw_output: str = Field(
         description="模型原始输出（用于调试）",
@@ -145,53 +143,21 @@ def _resolve_prompt(user_prompt: Optional[str]) -> str:
     return user_prompt.strip() if user_prompt and user_prompt.strip() else DEFAULT_PROMPT
 
 
-def _parse_driving_output(raw_text: str) -> tuple[str, str]:
-    """从模型原始输出中同时解析指令和中文描述。
-
-    期望格式（两行）：
-        straight
-        道路平直，前方无障碍，保持直行。
-
-    解析策略：
-    - 第一行（去空格小写）匹配合法指令；若不匹配则全文搜索指令词。
-    - 第二行作为中文描述；若不存在则使用指令对应的默认描述。
-    """
+def _parse_driving_output(raw_text: str) -> str:
     import re
 
     lines = [ln.strip() for ln in raw_text.strip().splitlines() if ln.strip()]
 
-    # ---- 解析指令 ----
-    command = ""
-    cmd_line_idx = -1
     for i, line in enumerate(lines):
         normalized = line.lower()
         if normalized in VALID_COMMANDS:
-            command = normalized
-            cmd_line_idx = i
-            break
-        for cmd in ("straight", "left", "right"):
+            return normalized
+        for cmd in ("straight", "stop", "left", "right"):
             if re.search(rf"\b{cmd}\b", normalized):
-                command = cmd
-                cmd_line_idx = i
-                break
-        if command:
-            break
+                return cmd
 
-    if not command:
-        print(f"⚠️ 无法解析指令，原始输出: {repr(raw_text)}，降级为 straight")
-        command = "straight"
-
-    # ---- 解析描述 ----
-    _default_desc = {
-        "straight": "道路平直，前方无障碍，保持直行。",
-        "left": "前方需要左转或障碍物在右侧，建议左转。",
-        "right": "前方需要右转或障碍物在左侧，建议右转。",
-    }
-    # 取指令行之后的第一个非空行作为描述
-    desc_lines = [ln for i, ln in enumerate(lines) if i != cmd_line_idx]
-    description = desc_lines[0] if desc_lines else _default_desc[command]
-
-    return command, description
+    print(f"⚠️ 无法解析指令，原始输出: {repr(raw_text)}，降级为 stop")
+    return "stop"
 
 
 def _get_model_device() -> torch.device:
@@ -286,19 +252,11 @@ def _run_inference(parsed_image: Image.Image, user_prompt: str) -> str:
     return output_text[0] if output_text else ""
 
 
-def _run_driving_inference(parsed_image: Image.Image) -> tuple[str, str, str]:
-    """专用驾驶指令推理入口（一次推理同时返回指令和中文描述）。
-
-    Returns:
-        (command, description, raw_output):
-            command     - 解析后的指令：left / right / straight
-            description - 中文场景描述及转向原因
-            raw_output  - 模型原始输出文本（供调试用）
-    """
+def _run_driving_inference(parsed_image: Image.Image) -> tuple[str, str]:
     raw_output = _run_inference(parsed_image, DRIVING_CMD_PROMPT)
-    command, description = _parse_driving_output(raw_output)
-    print(f"🚗 指令: {command} | 描述: {description} | 原始: {repr(raw_output)}")
-    return command, description, raw_output
+    command = _parse_driving_output(raw_output)
+    print(f"🚗 指令: {command} | 原始: {repr(raw_output)}")
+    return command, raw_output
 
 
 def _load_model_and_processor() -> None:
@@ -417,7 +375,6 @@ async def health() -> dict:
                     "example": {
                         "status": "success",
                         "command": "straight",
-                        "description": "道路平直，前方无障碍，保持直行。",
                         "raw_output": "straight\n道路平直，前方无障碍，保持直行。",
                     }
                 }
@@ -494,8 +451,8 @@ async def predict(
 
     try:
         parsed_image, _ = await _parse_request_image(raw_req, image_file, image, prompt)
-        command, description, raw_output = _run_driving_inference(parsed_image)
-        return InferenceResponse(status="success", command=command, description=description, raw_output=raw_output)
+        command, raw_output = _run_driving_inference(parsed_image)
+        return InferenceResponse(status="success", command=command, raw_output=raw_output)
     except HTTPException:
         raise
     except Exception as exc:
@@ -505,7 +462,7 @@ async def predict(
 
 if __name__ == "__main__":
     uvicorn.run(
-        "server:app",
+        "server_qwen:app",
         host="0.0.0.0",
         port=9526,
         log_level="info",

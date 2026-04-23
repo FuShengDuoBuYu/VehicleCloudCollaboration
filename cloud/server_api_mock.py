@@ -1,0 +1,307 @@
+import base64
+import binascii
+import re
+from contextlib import asynccontextmanager
+from io import BytesIO
+from pathlib import Path
+from typing import Optional
+
+import uvicorn
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from PIL import Image, UnidentifiedImageError
+from pydantic import BaseModel, Field, ValidationError
+
+CURRENT_DIR = Path(__file__).resolve().parent
+
+GEMINI_MODEL = "gemini-2.5-flash-lite"
+VALID_COMMANDS = {"left", "right", "straight", "stop"}
+
+DRIVING_CMD_PROMPT = """你是一个车云协同场景下的自动驾驶辅助决策助手，你接收到的是车辆前视摄像头图片，请根据图片给出本车辆下一步更安全的通行方向。
+
+输出格式：
+第一行:left/right/straight/stop,只能是 left、right、straight、stop 之一
+第二行:描述你做出该指令的原因，必须用中文描述，且不能包含英文。
+
+其中：
+- left：向左绕行或向左转向
+- right：向右绕行或向右转向
+- straight：继续直行，前方道路畅通无阻
+- stop：立即停车等待，前方有行人或障碍物直接阻挡通道
+
+示例 1:
+left
+前方锥桶和车辆占道，左侧空间更安全，建议向左绕行。
+
+示例 2:
+right
+道路在前方向右转弯，右侧为唯一通道，建议向右行驶。
+
+示例 3:
+straight
+前方道路基本畅通，未见明显障碍，建议保持直行。
+
+示例 4:
+stop
+前方有行人横穿，停车等待通过。
+
+示例 5:
+stop
+锥形桶直接挡在正前方，停车等待。
+
+"""
+
+class InferenceRequest(BaseModel):
+    image_base64: str = Field(
+        ...,
+        description="Base64 编码后的图像字符串（不带 data:image 前缀）",
+        examples=["/9j/4AAQSkZJRgABAQAAAQABAAD..."],
+    )
+    prompt: Optional[str] = Field(
+        default=None,
+        description="可选文本提示词。留空时使用默认驾驶提示词。",
+        examples=["请分析当前自动驾驶长尾场景并给出转向指令。"],
+    )
+
+
+class InferenceResponse(BaseModel):
+    status: str = Field(description="请求处理状态", examples=["success"])
+    command: str = Field(
+        description="转向指令：left / right / straight / stop",
+        examples=["straight"],
+    )
+    raw_output: str = Field(
+        description="大模型原始输出",
+        examples=["straight\n道路平直，前方无障碍，保持直行。"],
+    )
+
+
+class ErrorResponse(BaseModel):
+    detail: str = Field(description="错误信息")
+
+
+def _resolve_prompt(user_prompt: Optional[str]) -> str:
+    return user_prompt.strip() if user_prompt and user_prompt.strip() else DRIVING_CMD_PROMPT
+
+
+def _parse_driving_output(raw_text: str) -> str:
+    lines = [line.strip() for line in raw_text.strip().splitlines() if line.strip()]
+
+    for line in lines:
+        normalized = line.lower()
+        if normalized in VALID_COMMANDS:
+            return normalized
+        for candidate in ("straight", "stop", "left", "right"):
+            if re.search(rf"\b{candidate}\b", normalized):
+                return candidate
+
+    return "stop"
+
+
+def _image_to_jpeg_base64(parsed_image: Image.Image) -> str:
+    output = BytesIO()
+    parsed_image.save(output, format="JPEG", quality=90)
+    return base64.b64encode(output.getvalue()).decode("utf-8")
+
+
+def _decode_base64_image(image_base64: str) -> Image.Image:
+    try:
+        image_data = base64.b64decode(image_base64, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid image_base64: {exc}") from exc
+
+    try:
+        return Image.open(BytesIO(image_data)).convert("RGB")
+    except (UnidentifiedImageError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid image content: {exc}") from exc
+
+
+async def _parse_request_image(
+    raw_req: Request,
+    image_file: UploadFile | None,
+    image_alias: UploadFile | None,
+    prompt: Optional[str],
+) -> tuple[Image.Image, str]:
+    upload = image_file or image_alias
+
+    if upload is not None:
+        image_bytes = await upload.read()
+        if not image_bytes:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+        try:
+            parsed_image = Image.open(BytesIO(image_bytes)).convert("RGB")
+        except (UnidentifiedImageError, OSError) as exc:
+            raise HTTPException(status_code=400, detail=f"Invalid uploaded image: {exc}") from exc
+        return parsed_image, _resolve_prompt(prompt)
+
+    try:
+        body = await raw_req.json()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="No image provided. Expected multipart file or JSON with image_base64.",
+        ) from exc
+
+    try:
+        payload = InferenceRequest.model_validate(body)
+    except ValidationError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {exc.errors()}") from exc
+
+    parsed_image = _decode_base64_image(payload.image_base64)
+    return parsed_image, _resolve_prompt(payload.prompt)
+
+
+def _run_driving_inference(parsed_image: Image.Image, user_prompt: Optional[str] = None) -> tuple[str, str]:
+    # Mock: 完整执行图片编码流程，跳过 Gemini API 调用，固定返回 left 指令
+    _image_to_jpeg_base64(parsed_image)
+    command = "left"
+    raw_output = "left\n前方障碍物占道，左侧空间充裕，建议向左绕行。"
+    print(f"🚗 [MOCK] 指令: {command} | 原始: {repr(raw_output)}")
+    return command, raw_output
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print(f"🚀 [MOCK] Gemini 云端推理服务启动中，模型: {GEMINI_MODEL}，监听端口: 9526")
+    print("✅ [MOCK] 已跳过 API 调用，固定返回 left 指令")
+    yield
+    print("🛑 [MOCK] Gemini 云端推理服务关闭")
+
+
+app = FastAPI(
+    title="Vehicle Cloud Inference API",
+    description="基于 Gemini 2.5 Flash-Lite 的自动驾驶长尾场景云端推理服务。",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+
+@app.get(
+    "/health",
+    summary="服务健康检查",
+    description="检查服务是否在线以及 Gemini API key 是否已配置。",
+)
+async def health() -> dict:
+    return {
+        "status": "ok",
+        "model": GEMINI_MODEL,
+        "mock": True,
+    }
+
+
+@app.post(
+    "/predict",
+    response_model=InferenceResponse,
+    summary="多模态场景推理",
+    description=(
+        "支持两种输入方式：\n"
+        "1) multipart/form-data: 上传图像文件（字段名 image_file 或 image）+ 可选 prompt；\n"
+        "2) application/json: 提交 image_base64 + 可选 prompt。"
+    ),
+    responses={
+        200: {
+            "description": "推理成功",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "success",
+                        "command": "straight",
+                        "raw_output": "straight\n道路平直，前方无障碍，保持直行。",
+                    }
+                }
+            },
+        },
+        400: {
+            "model": ErrorResponse,
+            "description": "请求参数错误或图片格式非法",
+            "content": {"application/json": {"example": {"detail": "Invalid image_base64: Incorrect padding"}}},
+        },
+        500: {
+            "model": ErrorResponse,
+            "description": "服务内部错误",
+            "content": {"application/json": {"example": {"detail": "Internal server error"}}},
+        },
+        502: {
+            "model": ErrorResponse,
+            "description": "Gemini 接口调用失败",
+            "content": {"application/json": {"example": {"detail": "Gemini API error: request failed"}}},
+        },
+    },
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "multipart/form-data": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "image_file": {
+                                "type": "string",
+                                "format": "binary",
+                                "description": "推荐字段：图片文件（jpg/png）。",
+                            },
+                            "image": {
+                                "type": "string",
+                                "format": "binary",
+                                "description": "兼容字段：与 image_file 二选一。",
+                            },
+                            "prompt": {
+                                "type": "string",
+                                "description": "可选。为空时默认使用驾驶提示词；传入后可直接测试自定义提示词效果。",
+                            },
+                        },
+                    },
+                    "examples": {
+                        "form_example": {
+                            "summary": "表单上传示例",
+                            "value": {
+                                "prompt": "请分析当前画面，并严格按两行输出：第一行 left/right/straight/stop，第二行中文原因。",
+                            },
+                        }
+                    },
+                },
+                "application/json": {
+                    "schema": InferenceRequest.model_json_schema(),
+                    "examples": {
+                        "json_example": {
+                            "summary": "JSON Base64 示例",
+                            "value": {
+                                "image_base64": "/9j/4AAQSkZJRgABAQAAAQABAAD...",
+                                "prompt": "请分析当前画面，并严格按两行输出：第一行 left/right/straight/stop，第二行中文原因。",
+                            },
+                        }
+                    },
+                },
+            },
+        }
+    },
+)
+async def predict(
+    raw_req: Request,
+    image_file: UploadFile | None = File(default=None, description="上传图片，推荐字段名。可选。"),
+    image: UploadFile | None = File(default=None, description="兼容字段名。可选。"),
+    prompt: Optional[str] = Form(default=None, description="可选提示词，留空则使用默认驾驶提示词。"),
+):
+    client_host = raw_req.client.host if raw_req.client else "unknown"
+    print(f"📥 接收请求来自: {client_host}")
+
+    try:
+        parsed_image, resolved_prompt = await _parse_request_image(raw_req, image_file, image, prompt)
+        command, raw_output = _run_driving_inference(parsed_image, resolved_prompt)
+        return InferenceResponse(status="success", command=command, raw_output=raw_output)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f"💥 错误: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "server_api_mock:app",
+        host="0.0.0.0",
+        port=9526,
+        log_level="info",
+        timeout_keep_alive=5,
+        reload=True,
+        reload_dirs=[str(CURRENT_DIR)],
+    )

@@ -23,18 +23,19 @@ GEMINI_API_URL = (
     f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
 )
 
-VALID_COMMANDS = {"left", "right", "straight"}
+VALID_COMMANDS = {"left", "right", "straight", "stop"}
 
 DRIVING_CMD_PROMPT = """你是一个车云协同场景下的自动驾驶辅助决策助手，你接收到的是车辆前视摄像头图片，请根据图片给出本车辆下一步更安全的通行方向。
 
 输出格式：
-第一行:left/right/straight,只能是 left、right、straight 之一
+第一行:left/right/straight/stop,只能是 left、right、straight、stop 之一
 第二行:描述你做出该指令的原因，必须用中文描述，且不能包含英文。
 
 其中：
 - left：向左绕行或向左转向
 - right：向右绕行或向右转向
-- straight：继续直行，或者减速直行/停车等待
+- straight：继续直行，前方道路畅通无阻
+- stop：立即停车等待，前方有行人或障碍物直接阻挡通道
 
 示例 1:
 left
@@ -42,11 +43,19 @@ left
 
 示例 2:
 right
-前方行人靠近本车道，右侧可安全通过，建议向右避让。
+道路在前方向右转弯，右侧为唯一通道，建议向右行驶。
 
 示例 3:
 straight
 前方道路基本畅通，未见明显障碍，建议保持直行。
+
+示例 4:
+stop
+前方有行人横穿，停车等待通过。
+
+示例 5:
+stop
+锥形桶直接挡在正前方，停车等待。
 
 """
 
@@ -66,7 +75,7 @@ class InferenceRequest(BaseModel):
 class InferenceResponse(BaseModel):
     status: str = Field(description="请求处理状态", examples=["success"])
     command: str = Field(
-        description="转向指令：left / right / straight",
+        description="转向指令：left / right / straight / stop",
         examples=["straight"],
     )
     raw_output: str = Field(
@@ -90,11 +99,11 @@ def _parse_driving_output(raw_text: str) -> str:
         normalized = line.lower()
         if normalized in VALID_COMMANDS:
             return normalized
-        for candidate in ("left", "right", "straight"):
+        for candidate in ("straight", "stop", "left", "right"):
             if re.search(rf"\b{candidate}\b", normalized):
                 return candidate
 
-    return "straight"
+    return "stop"
 
 
 def _decode_base64_image(image_base64: str) -> Image.Image:
@@ -332,7 +341,7 @@ async def health() -> dict:
                         "form_example": {
                             "summary": "表单上传示例",
                             "value": {
-                                "prompt": "请分析当前画面，并严格按两行输出：第一行 left/right/straight，第二行中文原因。",
+                                "prompt": "请分析当前画面，并严格按两行输出：第一行 left/right/straight/stop，第二行中文原因。",
                             },
                         }
                     },
@@ -344,7 +353,7 @@ async def health() -> dict:
                             "summary": "JSON Base64 示例",
                             "value": {
                                 "image_base64": "/9j/4AAQSkZJRgABAQAAAQABAAD...",
-                                "prompt": "请分析当前画面，并严格按两行输出：第一行 left/right/straight，第二行中文原因。",
+                                "prompt": "请分析当前画面，并严格按两行输出：第一行 left/right/straight/stop，第二行中文原因。",
                             },
                         }
                     },
@@ -375,7 +384,7 @@ async def predict(
 
 if __name__ == "__main__":
     uvicorn.run(
-        "server:app",
+        "server_api:app",
         host="0.0.0.0",
         port=9526,
         log_level="info",
