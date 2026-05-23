@@ -13,15 +13,17 @@ from .settings import CAMERA_CONFIG, SERVER_CONFIG
 
 
 class VehicleControlServer:
-    def __init__(self, controller=None, camera=None, server_config=SERVER_CONFIG):
+    def __init__(self, controller=None, camera=None, server_config=SERVER_CONFIG, runtime_control=None):
         self.controller = controller or VehicleController()
         self.camera = camera or CameraStream()
         self.server_config = server_config
+        self.runtime_control = runtime_control
         self._httpd = None
 
     def build_handler(self):
         controller = self.controller
         camera = self.camera
+        runtime_control = self.runtime_control
         static_dir = os.path.join(os.path.dirname(__file__), "static")
 
         class Handler(BaseHTTPRequestHandler):
@@ -31,7 +33,13 @@ class VehicleControlServer:
                     self._serve_file(os.path.join(static_dir, "index.html"), "text/html; charset=utf-8")
                     return
                 if parsed.path == "/api/state":
-                    self._send_json(controller.get_state())
+                    self._send_json(self._current_state())
+                    return
+                if parsed.path == "/api/closed-loop":
+                    if runtime_control is None:
+                        self._send_json({"enabled": False}, status=HTTPStatus.NOT_FOUND)
+                        return
+                    self._send_json(runtime_control.get_state())
                     return
                 if parsed.path == "/stream.mjpg":
                     self._serve_stream()
@@ -40,6 +48,9 @@ class VehicleControlServer:
 
             def do_POST(self):
                 parsed = urlparse(self.path)
+                if parsed.path == "/api/closed-loop":
+                    self._handle_closed_loop(parsed)
+                    return
                 if parsed.path != "/api/control":
                     self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
                     return
@@ -53,10 +64,34 @@ class VehicleControlServer:
                 except ValueError as exc:
                     self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
                     return
-                self._send_json(controller.get_state())
+                if action == "stop" and runtime_control is not None:
+                    runtime_control.pause("stopped from web")
+                self._send_json(self._current_state())
+
+            def _handle_closed_loop(self, parsed):
+                if runtime_control is None:
+                    self._send_json({"error": "closed loop runtime is not available"}, status=HTTPStatus.NOT_FOUND)
+                    return
+                params = parse_qs(parsed.query)
+                action = params.get("action", [None])[0]
+                if action == "start":
+                    runtime_control.start()
+                elif action in ("pause", "stop"):
+                    runtime_control.pause("paused from web")
+                    controller.execute("stop")
+                else:
+                    self._send_json({"error": "unsupported closed-loop action"}, status=HTTPStatus.BAD_REQUEST)
+                    return
+                self._send_json(self._current_state())
 
             def log_message(self, fmt, *args):
                 return
+
+            def _current_state(self):
+                state = controller.get_state()
+                if runtime_control is not None:
+                    state["closed_loop"] = runtime_control.get_state()
+                return state
 
             def _serve_file(self, path, content_type):
                 try:

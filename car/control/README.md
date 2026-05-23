@@ -80,11 +80,15 @@ http://<车辆IP>:8080
 
 - 显示摄像头实时画面
 - 显示当前动作和状态
+- 触发闭环 `start`、`pause`
 - 触发 `forward`、`stop`、`lane-left`、`lane-right`
 
 ## HTTP API
 
 - `GET /api/state`
+- `GET /api/closed-loop`
+- `POST /api/closed-loop?action=start`
+- `POST /api/closed-loop?action=pause`
 - `POST /api/control?action=forward`
 - `POST /api/control?action=stop`
 - `POST /api/control?action=lane-left`

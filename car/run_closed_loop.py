@@ -25,6 +25,44 @@ DEFAULT_CONFIG = os.path.join(LONGTAIL_DIR, "config.yaml")
 DEFAULT_FRAME_DIR = os.path.join(CURRENT_DIR, "captured_frames")
 
 
+class ClosedLoopRuntimeControl:
+    def __init__(self):
+        self._started = threading.Event()
+        self._lock = threading.Lock()
+        self._last_command = "waiting"
+        self._message = "waiting for web start"
+
+    def start(self):
+        with self._lock:
+            self._last_command = "start"
+            self._message = "closed loop start requested"
+        self._started.set()
+
+    def pause(self, message="closed loop paused"):
+        with self._lock:
+            self._last_command = "pause"
+            self._message = message
+        self._started.clear()
+
+    def set_message(self, message):
+        with self._lock:
+            self._message = message
+
+    def is_started(self):
+        return self._started.is_set()
+
+    def wait_until_started(self, timeout=0.2):
+        return self._started.wait(timeout)
+
+    def get_state(self):
+        with self._lock:
+            return {
+                "started": self._started.is_set(),
+                "last_command": self._last_command,
+                "message": self._message,
+            }
+
+
 def load_config(config_path):
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found: {config_path}")
@@ -55,10 +93,11 @@ def build_parser():
     web_group = parser.add_mutually_exclusive_group()
     web_group.add_argument("--web", dest="web", action="store_true", default=True, help="Start vehicle web UI")
     web_group.add_argument("--no-web", dest="web", action="store_false", help="Disable vehicle web UI")
+    parser.add_argument("--start-immediately", action="store_true", help="Start the closed loop without waiting for the web start button")
     return parser
 
 
-def start_web_server(controller, camera, host=None, port=None):
+def start_web_server(controller, camera, runtime_control=None, host=None, port=None):
     from vehicle_control.settings import SERVER_CONFIG
     from vehicle_control.web import VehicleControlServer
 
@@ -70,7 +109,12 @@ def start_web_server(controller, camera, host=None, port=None):
             port=port if port is not None else SERVER_CONFIG.port,
         )
 
-    server = VehicleControlServer(controller=controller, camera=camera, server_config=server_config)
+    server = VehicleControlServer(
+        controller=controller,
+        camera=camera,
+        server_config=server_config,
+        runtime_control=runtime_control,
+    )
 
     def serve():
         try:
@@ -109,6 +153,86 @@ def wait_for_fresh_frame(camera, timeout, stale_timeout):
     return None
 
 
+def run_active_loop(args, controller, camera, classifier, cloud_client, runtime_control):
+    print("Closed loop started")
+    runtime_control.set_message("closed loop running")
+    last_check = 0.0
+    last_cloud_action = 0.0
+    waiting_for_camera = False
+
+    controller.execute("forward")
+    while runtime_control.is_started():
+        frame = camera.get_frame()
+        frame_age = camera.get_frame_age()
+        frame_stale = frame_age is None or frame_age > args.frame_stale_timeout
+        if frame is None or frame_stale:
+            if not waiting_for_camera:
+                print("Camera frame missing or stale; stopping until fresh frames return")
+                runtime_control.set_message("waiting for fresh camera frame")
+                controller.execute("stop")
+                waiting_for_camera = True
+            time.sleep(0.1)
+            continue
+
+        if waiting_for_camera:
+            print("Camera frame recovered; resuming forward motion")
+            runtime_control.set_message("closed loop running")
+            controller.execute("forward")
+            waiting_for_camera = False
+
+        now = time.monotonic()
+        if now - last_check < args.interval:
+            time.sleep(0.05)
+            continue
+
+        frame_path = save_frame(frame, args.frame_dir)
+        result = classifier.predict(frame_path)
+        status = "LONG-TAIL" if result["is_long_tail"] else "NORMAL"
+        print(f"[{status}] score={result['score']:.3f}, fps={result['fps']:.2f}, frame={frame_path}")
+
+        if should_hold_action(last_cloud_action, args.action_cooldown):
+            print("Holding current cloud action during cooldown")
+            last_check = now
+            continue
+
+        if not result["is_long_tail"]:
+            controller.execute("forward")
+            last_check = now
+            continue
+
+        if cloud_client is None:
+            print("Long-tail triggered without cloud client; stopping")
+            runtime_control.set_message("long-tail triggered without cloud client")
+            controller.execute("stop")
+            last_cloud_action = time.monotonic()
+            last_check = now
+            continue
+
+        try:
+            decision = cloud_client.request_decision(frame_path, result)
+        except Exception as exc:
+            print(f"Cloud mock request failed: {exc}; stopping")
+            runtime_control.set_message("cloud mock request failed")
+            controller.execute("stop")
+            last_cloud_action = time.monotonic()
+            last_check = now
+            continue
+
+        print(
+            "Cloud decision: "
+            f"command={decision.command}, action={decision.action}, "
+            f"latency={decision.latency_ms:.0f}ms, reason={decision.reason}"
+        )
+        controller.execute(decision.action)
+        runtime_control.set_message(f"cloud action: {decision.action}")
+        last_cloud_action = time.monotonic()
+        last_check = now
+
+    controller.execute("stop")
+    runtime_control.set_message("waiting for web start")
+    print("Closed loop paused; vehicle stopped")
+
+
 def run_closed_loop(args):
     from cloud_client.mock_client import CloudMockClient
     from classifier import LongTailClassifier
@@ -133,6 +257,9 @@ def run_closed_loop(args):
     )
     camera = CameraStream(config=camera_config)
     controller = VehicleController()
+    runtime_control = ClosedLoopRuntimeControl()
+    if args.start_immediately or not args.web:
+        runtime_control.start()
 
     cloud_client = None
     if args.cloud_mode == "mock":
@@ -143,7 +270,13 @@ def run_closed_loop(args):
 
     try:
         if args.web:
-            server = start_web_server(controller, camera, host=args.web_host, port=args.web_port)
+            server = start_web_server(
+                controller,
+                camera,
+                runtime_control=runtime_control,
+                host=args.web_host,
+                port=args.web_port,
+            )
 
         print("\nClosed loop starting")
         print(f"Camera index: {args.camera_index}")
@@ -155,79 +288,19 @@ def run_closed_loop(args):
             port = args.web_port if args.web_port is not None else SERVER_CONFIG.port
             print(f"Vehicle web UI: http://{host}:{port}")
 
-        first_frame = wait_for_fresh_frame(camera, args.startup_frame_timeout, args.frame_stale_timeout)
-        if first_frame is None:
-            print("No fresh camera frame available; refusing to start vehicle motion")
-            controller.execute("stop")
-            return
-
-        print("Closed loop started")
-        last_check = 0.0
-        last_cloud_action = 0.0
-        waiting_for_camera = False
-
-        controller.execute("forward")
         while True:
-            frame = camera.get_frame()
-            frame_age = camera.get_frame_age()
-            frame_stale = frame_age is None or frame_age > args.frame_stale_timeout
-            if frame is None or frame_stale:
-                if not waiting_for_camera:
-                    print("Camera frame missing or stale; stopping until fresh frames return")
-                    controller.execute("stop")
-                    waiting_for_camera = True
-                time.sleep(0.1)
+            if not runtime_control.wait_until_started(timeout=0.2):
                 continue
 
-            if waiting_for_camera:
-                print("Camera frame recovered; resuming forward motion")
-                controller.execute("forward")
-                waiting_for_camera = False
-
-            now = time.monotonic()
-            if now - last_check < args.interval:
-                time.sleep(0.05)
-                continue
-
-            frame_path = save_frame(frame, args.frame_dir)
-            result = classifier.predict(frame_path)
-            status = "LONG-TAIL" if result["is_long_tail"] else "NORMAL"
-            print(f"[{status}] score={result['score']:.3f}, fps={result['fps']:.2f}, frame={frame_path}")
-
-            if should_hold_action(last_cloud_action, args.action_cooldown):
-                print("Holding current cloud action during cooldown")
-                last_check = now
-                continue
-
-            if not result["is_long_tail"]:
-                controller.execute("forward")
-                last_check = now
-                continue
-
-            if cloud_client is None:
-                print("Long-tail triggered without cloud client; stopping")
+            print("Start signal received; checking camera frame")
+            first_frame = wait_for_fresh_frame(camera, args.startup_frame_timeout, args.frame_stale_timeout)
+            if first_frame is None:
+                print("No fresh camera frame available; staying idle")
                 controller.execute("stop")
-                last_cloud_action = time.monotonic()
-                last_check = now
+                runtime_control.pause("no fresh camera frame")
                 continue
 
-            try:
-                decision = cloud_client.request_decision(frame_path, result)
-            except Exception as exc:
-                print(f"Cloud mock request failed: {exc}; stopping")
-                controller.execute("stop")
-                last_cloud_action = time.monotonic()
-                last_check = now
-                continue
-
-            print(
-                "Cloud decision: "
-                f"command={decision.command}, action={decision.action}, "
-                f"latency={decision.latency_ms:.0f}ms, reason={decision.reason}"
-            )
-            controller.execute(decision.action)
-            last_cloud_action = time.monotonic()
-            last_check = now
+            run_active_loop(args, controller, camera, classifier, cloud_client, runtime_control)
 
     except KeyboardInterrupt:
         print("\nClosed loop interrupted")

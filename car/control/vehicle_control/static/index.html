@@ -90,6 +90,7 @@
     }
     button:hover { transform: translateY(-1px); }
     button.stop { background: var(--accent-2); }
+    button.secondary { background: #355d7a; }
     .hint {
       font-size: 13px;
       color: rgba(20, 32, 19, 0.66);
@@ -109,16 +110,20 @@
     <aside class="panel controls">
       <div>
         <h1>车辆控制台</h1>
-        <p>提供 4 个基础动作接口：正常行驶、左变道、右变道、停止。</p>
+        <p>车辆启动后保持待命，点击开始闭环后进入自动检测与云端决策。</p>
       </div>
       <div class="status" id="status">状态加载中...</div>
       <div class="buttons">
+        <button data-loop-action="start">开始闭环</button>
+        <button data-loop-action="pause" class="stop">暂停闭环</button>
+      </div>
+      <div class="buttons">
         <button data-action="forward">正常行驶</button>
         <button data-action="stop" class="stop">车辆停止</button>
-        <button data-action="lane-left">左变道</button>
-        <button data-action="lane-right">右变道</button>
+        <button data-action="lane-left" class="secondary">左变道</button>
+        <button data-action="lane-right" class="secondary">右变道</button>
       </div>
-      <div class="hint">后端接口：POST /api/control?action=forward|stop|lane-left|lane-right</div>
+      <div class="hint">闭环接口：POST /api/closed-loop?action=start|pause</div>
     </aside>
   </div>
   <script>
@@ -127,7 +132,10 @@
     async function refreshState() {
       const response = await fetch('/api/state');
       const state = await response.json();
-      statusNode.textContent = `当前动作: ${state.current_action} | 状态: ${state.status}`;
+      const loop = state.closed_loop || {};
+      const loopStatus = loop.started ? '运行中' : '待命';
+      const message = loop.message ? ` | ${loop.message}` : '';
+      statusNode.textContent = `闭环: ${loopStatus}${message} | 当前动作: ${state.current_action} | 状态: ${state.status}`;
     }
 
     async function sendAction(action) {
@@ -137,8 +145,18 @@
       await refreshState();
     }
 
+    async function sendLoopAction(action) {
+      await fetch(`/api/closed-loop?action=${encodeURIComponent(action)}`, {
+        method: 'POST'
+      });
+      await refreshState();
+    }
+
     document.querySelectorAll('button[data-action]').forEach((button) => {
       button.addEventListener('click', () => sendAction(button.dataset.action));
+    });
+    document.querySelectorAll('button[data-loop-action]').forEach((button) => {
+      button.addEventListener('click', () => sendLoopAction(button.dataset.loopAction));
     });
 
     refreshState();

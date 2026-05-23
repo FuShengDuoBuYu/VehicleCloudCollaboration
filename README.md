@@ -28,11 +28,12 @@ python run_closed_loop.py --camera-index 0 --interval 2
 默认流程：
 
 1. `CameraStream` 读取本地摄像头画面。
-2. `LongTailClassifier` 输出长尾分数。
-3. 分数达到阈值时调用 `cloud_client` 的 mock `/chat` 接口。
-4. mock 决策返回。
-5. 车端将 `left` 映射为 `lane-left` 并通过 `VehicleController` 执行。
-6. `vehicle_control` 网页控制台展示摄像头画面、车辆状态和手动控制按钮。
+2. `vehicle_control` 网页控制台展示摄像头画面、车辆状态和闭环开始按钮。
+3. 点击网页里的“开始闭环”后，车辆才会进入自动行驶。
+4. `LongTailClassifier` 输出长尾分数。
+5. 分数达到阈值时调用 `cloud_client` 的 mock `/chat` 接口。
+6. mock 决策返回。
+7. 车端将 `left` 映射为 `lane-left` 并通过 `VehicleController` 执行。
 
 常用参数：
 
@@ -41,6 +42,7 @@ python run_closed_loop.py --threshold 0.6 --camera-index 0 --interval 2
 python run_closed_loop.py --cloud-mode none
 python run_closed_loop.py --web-port 8081
 python run_closed_loop.py --no-web
+python run_closed_loop.py --start-immediately
 ```
 
 网页控制台默认地址：

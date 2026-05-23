@@ -5,6 +5,7 @@ runs
 *.tflite
 
 car/longtail/captured_frames
+car/captured_frames
 car/longtail/runs
 car/control/mycar/data/
 car/control/mycar/models/

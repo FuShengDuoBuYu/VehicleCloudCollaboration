@@ -1,11 +1,11 @@
 {
   "ok": true,
-  "total_latency_ms": 7120.416,
+  "total_latency_ms": 6819.49,
   "stages": [
     {
       "name": "image_input",
       "ok": true,
-      "latency_ms": 19.882,
+      "latency_ms": 18.493,
       "expected_input": {
         "image_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/test/test_image.jpg",
         "expected": "readable image file"
@@ -22,7 +22,7 @@
     {
       "name": "longtail_detection",
       "ok": true,
-      "latency_ms": 6598.152,
+      "latency_ms": 6298.374,
       "expected_input": {
         "input": {
           "image_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/test/test_image.jpg",
@@ -41,21 +41,21 @@
           {
             "detector": "CLIPDetector",
             "score": 0.7752088705935579,
-            "inference_time": 0.7129299640655518
+            "inference_time": 0.6576354503631592
           },
           {
             "detector": "YOLOv8Detector",
             "score": 0.3065009117126465,
-            "inference_time": 0.4367673397064209
+            "inference_time": 0.26581668853759766
           },
           {
             "detector": "YOLOPv2Detector",
             "score": 0.005068423202614379,
-            "inference_time": 0.07462263107299805
+            "inference_time": 0.07430100440979004
           }
         ],
-        "inference_time": 1.22434663772583,
-        "fps": 0.8167621563918008,
+        "inference_time": 0.9977836608886719,
+        "fps": 1.0022212621815776,
         "detector": "LongTailClassifier",
         "detector_count": 3,
         "detector_names": [
@@ -65,14 +65,14 @@
         ],
         "config_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/longtail/config.yaml",
         "image_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/test/test_image.jpg",
-        "end_to_end_detector_time": 2.3086689470001147
+        "end_to_end_detector_time": 2.0490922190001584
       },
       "error": null
     },
     {
       "name": "cloud_decision",
       "ok": true,
-      "latency_ms": 501.95,
+      "latency_ms": 502.198,
       "expected_input": {
         "detection": {
           "is_long_tail": true,
@@ -87,9 +87,9 @@
         "command": "left",
         "action": "lane-left",
         "reason": "offline closed-loop test: traffic cone triggers left lane change",
-        "latency_ms": 1.083,
+        "latency_ms": 1.261,
         "backend": "local-http",
-        "mock_url": "http://127.0.0.1:43337/chat",
+        "mock_url": "http://127.0.0.1:40867/chat",
         "request_path": "/chat",
         "request_has_prompt": true,
         "request_json_mode": true,
@@ -105,7 +105,7 @@
     {
       "name": "vehicle_control",
       "ok": true,
-      "latency_ms": 0.338,
+      "latency_ms": 0.33,
       "expected_input": {
         "action": "lane-left",
         "expected": "VehicleController accepts lane-left without hardware"
