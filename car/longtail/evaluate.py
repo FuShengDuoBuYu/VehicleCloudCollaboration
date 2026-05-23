@@ -74,7 +74,7 @@ def evaluate_on_dataset(classifier: LongTailClassifier, dataset_path: str, outpu
         try:
             result = classifier.predict(img_path)
             y_pred.append(1 if result['is_long_tail'] else 0)
-            y_scores.append(result['confidence_score'])
+            y_scores.append(result['score'])
         except Exception as e:
             print(f"Error processing {img_path}: {e}")
             y_pred.append(0) # Default to negative on error

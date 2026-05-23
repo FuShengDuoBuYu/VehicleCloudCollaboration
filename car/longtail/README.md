@@ -1,70 +1,75 @@
-# longtail 模块说明
+# longtail
 
-本模块负责长尾场景检测与评估，包含单图检测、目录批处理、摄像头实时检测三种运行方式。
-
-## 模块职责
-
-- 基于多检测器融合输出长尾风险分数
-- 在摄像头模式下周期性取帧并判断是否触发停车
-- 提供离线评估与性能基准脚本
+`car/longtail/` 是车端长尾场景检测模块。闭环入口 `../run_closed_loop.py` 会加载这里的分类器与配置文件。
 
 ## 主要文件
 
-- main.py：统一入口（单图 / 目录 / 摄像头）
-- classifier.py：多检测器融合分类器
-- config.yaml：阈值与检测器参数配置
-- benchmark.py：性能基准测试
-- evaluate.py：数据集评估
-- detectors/：具体检测器实现
-- dataset/：样例数据
-- requirements.txt：本模块依赖
+- `classifier.py`：多检测器融合分类器，提供 `LongTailClassifier`
+- `config.yaml`：检测器类型、权重、阈值与模型参数
+- `detectors/`：检测器实现
+- `benchmark.py`：单张图片多轮推理性能测试
+- `evaluate.py`：数据集评估脚本
+- `dataset/`：样例数据集
+- `requirements.txt`：依赖列表
 
-## 逻辑流程
+## 分类器接口
 
-1. 读取 config.yaml
-2. 初始化 LongTailClassifier（加载 detectors）
-3. 按输入模式运行：
-- 单图：调用 classifier.predict
-- 目录：循环图片并统计汇总
-- 摄像头：定时保存 latest_frame.jpg 并推理
-4. 当摄像头模式判定 is_long_tail=True 时调用停车；否则继续前进
+```python
+import yaml
+from classifier import LongTailClassifier
 
-## 运行方式
+with open("config.yaml", "r", encoding="utf-8") as handle:
+    config = yaml.safe_load(handle)
 
-在本目录执行。
+classifier = LongTailClassifier(config)
+result = classifier.predict("path/to/image.jpg")
+print(result["is_long_tail"], result["score"])
+```
 
-安装依赖：
+`predict(image_path)` 返回：
 
-python -m pip install -r requirements.txt
+- `is_long_tail`：是否达到长尾阈值
+- `score`：融合后的长尾分数
+- `threshold`：当前阈值
+- `individual_scores`：各检测器输出
+- `inference_time`：总推理耗时
+- `fps`：按本次耗时估算的 FPS
 
-单图检测：
+## 配置
 
-python main.py --image path/to/image.jpg --verbose
+`config.yaml` 中的核心字段：
 
-目录批处理：
+- `threshold`：长尾触发阈值
+- `detectors`：检测器列表
+- `type`：检测器类型，例如 `clip`、`yoloworld`、`yolov8`、`yolopv2`
+- `weight`：融合权重
+- `config`：单个检测器的模型路径和参数
 
-python main.py --directory path/to/images --output results.csv
+## 性能测试
 
-摄像头模式：
+```bash
+cd /home/pi/Desktop/VehicleCloudCollaboration/car/longtail
+python benchmark.py --image dataset/Long-tail/000001_1616005254200.jpg --runs 5
+```
 
-python main.py --camera-index 0 --camera-interval 2 --camera-width 640 --camera-height 480 --speed 5 --visualize
+## 数据集评估
 
-## 关键配置
+```bash
+cd /home/pi/Desktop/VehicleCloudCollaboration/car/longtail
+python evaluate.py --dataset dataset --output evaluation_results
+```
 
-- threshold：长尾阈值
-- detectors：检测器类型、权重、模型路径
-- camera-* 参数：可由命令行覆盖
+评估脚本会根据目录名中的关键词识别正负样本，例如：
 
-## 与 control 模块关系
+- 正样本关键词：`long-tail`、`corner-case`、`accident`、`construction`、`positive`
+- 负样本关键词：`non-long-tail`、`normal`、`negative`、`clear`
 
-main.py 会通过相对路径加载 ../control/utils 下的底层车控与可视化工具。
+## 闭环调用
 
-- McLumk_Wheel_Sports.py：前进/停车控制
-- visualizer.py：实时监控面板
+`../run_closed_loop.py` 会将 `car/longtail` 加入 Python 路径，并按以下方式使用：
 
-## 常见问题
-
-- 缺少 yaml：安装 pyyaml
-- 缺少 cv2：安装 opencv-python
-- 模型加载失败：检查 config.yaml 中模型路径
-- 摄像头打不开：检查 camera-index 与设备权限
+1. 读取 `config.yaml`
+2. 初始化 `LongTailClassifier`
+3. 周期性保存摄像头帧
+4. 调用 `classifier.predict(frame_path)`
+5. 根据 `is_long_tail` 决定是否请求云端 mock 决策

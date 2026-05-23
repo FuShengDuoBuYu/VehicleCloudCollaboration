@@ -1,151 +1,115 @@
 # VehicleCloudCollaboration
 
-这是一个面向车云协同实验的仓库，当前包含三条核心能力链路：
-
-- `cloud/`：云端推理与服务端能力
-- `car/longtail/`：车端长尾场景检测与评估
-- `car/control/`：车端本地控制、相机流与网页控制界面
+这是一个车云协同实验仓库，车端闭环由摄像头、长尾检测、云端 mock 决策、车辆控制和网页控制台组成。
 
 ![整体架构图](arch.svg)
 
-## 仓库结构
+## 目录结构
 
 ```text
 VehicleCloudCollaboration/
-├── cloud/
-└── car/
-    ├── longtail/
-    └── control/
+├── car/
+│   ├── run_closed_loop.py
+│   ├── cloud_client/
+│   ├── longtail/
+│   └── control/
+└── cloud/
 ```
 
-## cloud
+## 车端闭环
 
-`cloud/` 目录主要用于承载云端服务、模型调用与多端协同逻辑。
-
-如果你需要启动云端推理服务，请优先查看：
-
-- [cloud/README.md](/home/pi/Desktop/VehicleCloudCollaboration/cloud/README.md)
-
-## car/longtail
-
-`car/longtail/` 负责长尾场景检测与评估，保留了原有的检测器、分类器、数据集和测试脚本。
-
-主要内容包括：
-
-- `main.py`：主程序入口
-- `classifier.py`：融合分类器
-- `benchmark.py`：性能测试
-- `evaluate.py`：评估脚本
-- `config.yaml`：配置文件
-- `detectors/`：各类检测器实现
-- `dataset/`：数据集与样例数据
-
-运行示例：
+中期演示入口：
 
 ```bash
-cd /home/pi/Desktop/VehicleCloudCollaboration/car/longtail
-pip install -r requirements.txt
-python main.py
+cd /home/pi/Desktop/VehicleCloudCollaboration/car
+python run_closed_loop.py --camera-index 0 --interval 2
 ```
 
-## car/control
+默认流程：
 
-`car/control/` 目录现在已经从旧的路径跟随实验，重构为一套独立的本地车控层。
+1. `CameraStream` 读取本地摄像头画面。
+2. `LongTailClassifier` 输出长尾分数。
+3. 分数达到阈值时调用 `cloud_client` 的 mock `/chat` 接口。
+4. mock 决策返回。
+5. 车端将 `left` 映射为 `lane-left` 并通过 `VehicleController` 执行。
+6. `vehicle_control` 网页控制台展示摄像头画面、车辆状态和手动控制按钮。
 
-当前主要组成如下：
-
-- `vehicle_control/`：新的车控核心逻辑
-- `run_vehicle_control.py`：网页控制服务启动入口
-- `train_car/`：原有训练车与 DonkeyCar 驱动整合代码
-- `utils/`：Raspbot 底层驱动与工具脚本
-- `donkeycar/`：DonkeyCar 源码与模板
-
-新的车控层已经提供 4 个基础动作接口：
-
-- `forward`：正常直行
-- `stop`：停止
-- `lane-left`：左变道
-- `lane-right`：右变道
-
-启动车控页面：
+常用参数：
 
 ```bash
-cd /home/pi/Desktop/VehicleCloudCollaboration/car/control
-python run_vehicle_control.py
+python run_closed_loop.py --threshold 0.6 --camera-index 0 --interval 2
+python run_closed_loop.py --cloud-mode none
+python run_closed_loop.py --web-port 8081
+python run_closed_loop.py --no-web
 ```
 
-启动后可在浏览器访问：
+网页控制台默认地址：
 
 ```text
 http://<车辆IP>:8080
 ```
 
-页面会展示：
+## 车端模块
 
-- 摄像头实时画面
-- 当前车辆控制状态
-- 四个基础控制按钮
+### car/longtail
 
-详细说明请查看：
+长尾检测模块，核心类是 `LongTailClassifier`。它读取 `config.yaml`，组合多个检测器，对单张图片输出：
 
-- [car/control/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/control/README.md)
+- `is_long_tail`
+- `score`
+- `threshold`
+- `individual_scores`
+- `inference_time`
+- `fps`
 
-## 推荐调用链路
+模块说明见 [car/longtail/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/longtail/README.md)。
 
-当前更推荐的整体工作流是：
+### car/cloud_client
 
-1. `car/longtail/` 负责识别长尾场景
-2. 上层逻辑输出动作决策
-3. `car/control/vehicle_control/` 负责执行对应的车辆动作
-4. `cloud/` 负责需要上云的推理与协同能力
+车端云服务客户端模块。当前包含 mock 客户端 `CloudMockClient`，用于调用通用 LLM mock `/chat` 服务并生成车辆动作决策。
 
+模块说明见 [car/cloud_client/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/cloud_client/README.md)。
 
-## 性能优化建议
+### car/control
 
-### 1. CPU环境
-- 使用轻量级模型（已默认配置）
-- 减少检测器数量
-- 降低置信度阈值以加快推理
+车辆控制模块，包含底层底盘封装、动作控制、摄像头流和网页控制服务。
 
-## 常见问题
+支持动作：
 
-### Q: 如何添加新的检测器？
+- `forward`
+- `stop`
+- `lane-left`
+- `lane-right`
 
-1. 在 `detectors/` 目录创建新文件
-2. 继承 `BaseDetector` 类
-3. 实现 `detect(image_path) -> float` 方法
-4. 在 `detectors/__init__.py` 中导入
-5. 在 `classifier.py` 的 `detector_map` 中注册
-6. 在 `config.yaml` 中配置
+模块说明见 [car/control/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/control/README.md)。
 
-### Q: 如何调整权重？
+## 云端目录
 
-修改 `config.yaml` 中的权重值，系统会自动归一化。建议：
-- 语义检测器（CLIP）权重较高
-- 特定目标检测器（YOLO-World）次之
-- 通用检测器权重较低
+`cloud/` 放置云端推理与服务端代码。车端中期闭环默认使用 `car/cloud_client/mock_client.py` 调用 mock 服务。
 
-### Q: 为什么FPS很低？
+云端说明见 [cloud/README.md](/home/pi/Desktop/VehicleCloudCollaboration/cloud/README.md)。
 
-这是正常的，因为系统组合了多个深度学习模型。优化方法：
-- 使用GPU加速
-- 减少检测器数量
-- 使用更轻量的模型
-- 对视频进行跳帧处理
+## 运行检查
 
-## 开发路线图
+只检查入口参数和语法，不启动电机：
 
-- [ ] 添加GPU加速支持
-- [ ] 实现异步检测提高吞吐量
-- [ ] 添加更多检测器（语义分割、深度估计等）
-- [ ] 支持视频流实时处理
-- [ ] 添加Web界面
-- [ ] 模型量化和加速
+```bash
+cd /home/pi/Desktop/VehicleCloudCollaboration
+python -m py_compile car/run_closed_loop.py car/cloud_client/mock_client.py
+python car/run_closed_loop.py --help
+```
+
+## 闭环数据测试
+
+不启动车辆硬件的完整数据闭环测试：
+
+```bash
+cd /home/pi/Desktop/VehicleCloudCollaboration
+python car/test/closed_loop_test.py
+```
+
+测试说明见 [car/test/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/test/README.md)。
 
 ## 许可证
 
 本项目仅供研究使用。
-
-## 联系方式
-
-如有问题，请提交 Issue。

@@ -86,6 +86,10 @@ class CameraStream:
             return b""
         return encoded.tobytes()
 
+    def get_frame(self):
+        with self._lock:
+            return None if self._latest_frame is None else self._latest_frame.copy()
+
     def _placeholder_frame(self):
         frame = 255 * self._blank_image()
         cv2.putText(
