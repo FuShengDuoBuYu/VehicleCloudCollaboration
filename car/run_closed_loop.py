@@ -27,8 +27,7 @@ DEFAULT_FRAME_DIR = os.path.join(CURRENT_DIR, "captured_frames")
 
 def load_config(config_path):
     if not os.path.exists(config_path):
-        print(f"Config file not found: {config_path}, using classifier defaults")
-        return {}
+        raise FileNotFoundError(f"Config file not found: {config_path}")
 
     with open(config_path, "r", encoding="utf-8") as handle:
         return yaml.safe_load(handle) or {}
@@ -45,6 +44,8 @@ def build_parser():
     parser.add_argument("--interval", type=float, default=2.0, help="Seconds between long-tail checks")
     parser.add_argument("--frame-dir", default=DEFAULT_FRAME_DIR, help="Directory for latest analysis frame")
     parser.add_argument("--action-cooldown", type=float, default=5.0, help="Seconds to keep a cloud action before changing")
+    parser.add_argument("--startup-frame-timeout", type=float, default=10.0, help="Seconds to wait for the first camera frame before refusing to drive")
+    parser.add_argument("--frame-stale-timeout", type=float, default=2.0, help="Stop the vehicle if the latest camera frame is older than this many seconds")
     parser.add_argument("--cloud-mode", choices=["mock", "none"], default="mock", help="Cloud decision mode")
     parser.add_argument("--cloud-mock-url", default=DEFAULT_MOCK_CHAT_URL, help="Mock LLM chat endpoint")
     parser.add_argument("--cloud-timeout", type=float, default=30.0, help="Cloud mock timeout in seconds")
@@ -97,6 +98,17 @@ def save_frame(frame, frame_dir):
     return path
 
 
+def wait_for_fresh_frame(camera, timeout, stale_timeout):
+    start = time.monotonic()
+    while time.monotonic() - start < timeout:
+        frame = camera.get_frame()
+        frame_age = camera.get_frame_age()
+        if frame is not None and frame_age is not None and frame_age <= stale_timeout:
+            return frame
+        time.sleep(0.1)
+    return None
+
+
 def run_closed_loop(args):
     from cloud_client.mock_client import CloudMockClient
     from classifier import LongTailClassifier
@@ -128,29 +140,49 @@ def run_closed_loop(args):
 
     server = None
     camera.start()
-    if args.web:
-        server = start_web_server(controller, camera, host=args.web_host, port=args.web_port)
-
-    print("\nClosed loop started")
-    print(f"Camera index: {args.camera_index}")
-    print(f"Frame interval: {args.interval}s")
-    if cloud_client:
-        print(f"Cloud mock: {args.cloud_mock_url}")
-    if args.web:
-        host = args.web_host if args.web_host is not None else SERVER_CONFIG.host
-        port = args.web_port if args.web_port is not None else SERVER_CONFIG.port
-        print(f"Vehicle web UI: http://{host}:{port}")
-
-    last_check = 0.0
-    last_cloud_action = 0.0
 
     try:
+        if args.web:
+            server = start_web_server(controller, camera, host=args.web_host, port=args.web_port)
+
+        print("\nClosed loop starting")
+        print(f"Camera index: {args.camera_index}")
+        print(f"Frame interval: {args.interval}s")
+        if cloud_client:
+            print(f"Cloud mock: {args.cloud_mock_url}")
+        if args.web:
+            host = args.web_host if args.web_host is not None else SERVER_CONFIG.host
+            port = args.web_port if args.web_port is not None else SERVER_CONFIG.port
+            print(f"Vehicle web UI: http://{host}:{port}")
+
+        first_frame = wait_for_fresh_frame(camera, args.startup_frame_timeout, args.frame_stale_timeout)
+        if first_frame is None:
+            print("No fresh camera frame available; refusing to start vehicle motion")
+            controller.execute("stop")
+            return
+
+        print("Closed loop started")
+        last_check = 0.0
+        last_cloud_action = 0.0
+        waiting_for_camera = False
+
         controller.execute("forward")
         while True:
             frame = camera.get_frame()
-            if frame is None:
+            frame_age = camera.get_frame_age()
+            frame_stale = frame_age is None or frame_age > args.frame_stale_timeout
+            if frame is None or frame_stale:
+                if not waiting_for_camera:
+                    print("Camera frame missing or stale; stopping until fresh frames return")
+                    controller.execute("stop")
+                    waiting_for_camera = True
                 time.sleep(0.1)
                 continue
+
+            if waiting_for_camera:
+                print("Camera frame recovered; resuming forward motion")
+                controller.execute("forward")
+                waiting_for_camera = False
 
             now = time.monotonic()
             if now - last_check < args.interval:

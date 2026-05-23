@@ -33,13 +33,10 @@ class YOLOWorldDetector(BaseDetector):
             ])
             self.model.set_classes(all_classes)
             self.long_tail_set = set(self.LONG_TAIL_CLASSES)
-        except ImportError:
-            print("Warning: ultralytics not available, YOLOWorldDetector will return 0.5")
-            self.model = None
+        except ImportError as exc:
+            raise RuntimeError("ultralytics is required for YOLOWorldDetector") from exc
     
     def detect(self, image_path: str) -> float:
-        if self.model is None:
-            return 0.5
         results = self.model.predict(source=image_path, imgsz=640, conf=self.conf_threshold, verbose=False)
         if len(results) == 0:
             return 0.0

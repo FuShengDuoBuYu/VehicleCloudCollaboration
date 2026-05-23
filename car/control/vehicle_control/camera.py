@@ -13,6 +13,7 @@ class CameraStream:
         self.active_camera_index = None
         self._lock = threading.Lock()
         self._latest_frame = None
+        self._latest_frame_time = None
         self._running = False
         self._thread = None
 
@@ -37,6 +38,7 @@ class CameraStream:
                 self.active_camera_index = camera_index
                 with self._lock:
                     self._latest_frame = frame
+                    self._latest_frame_time = time.monotonic()
                 break
 
             capture.release()
@@ -66,6 +68,7 @@ class CameraStream:
             if ok:
                 with self._lock:
                     self._latest_frame = frame
+                    self._latest_frame_time = time.monotonic()
             else:
                 time.sleep(0.1)
             time.sleep(interval)
@@ -89,6 +92,12 @@ class CameraStream:
     def get_frame(self):
         with self._lock:
             return None if self._latest_frame is None else self._latest_frame.copy()
+
+    def get_frame_age(self):
+        with self._lock:
+            if self._latest_frame_time is None:
+                return None
+            return time.monotonic() - self._latest_frame_time
 
     def _placeholder_frame(self):
         frame = 255 * self._blank_image()

@@ -21,7 +21,7 @@ class YOLOPv2Detector(BaseDetector):
     def _analyze_image_heuristics(self, image_path: str) -> float:
         img = cv2.imread(image_path)
         if img is None:
-            return 0.5
+            raise ValueError(f"failed to read image: {image_path}")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         brightness = np.mean(gray)

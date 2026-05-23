@@ -1,0 +1,213 @@
+{
+  "ok": true,
+  "total_latency_ms": 7120.416,
+  "stages": [
+    {
+      "name": "image_input",
+      "ok": true,
+      "latency_ms": 19.882,
+      "expected_input": {
+        "image_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/test/test_image.jpg",
+        "expected": "readable image file"
+      },
+      "actual_output": {
+        "image_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/test/test_image.jpg",
+        "width": 1920,
+        "height": 1020,
+        "channels": 3,
+        "file_size_bytes": 543557
+      },
+      "error": null
+    },
+    {
+      "name": "longtail_detection",
+      "ok": true,
+      "latency_ms": 6598.152,
+      "expected_input": {
+        "input": {
+          "image_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/test/test_image.jpg",
+          "width": 1920,
+          "height": 1020,
+          "channels": 3,
+          "file_size_bytes": 543557
+        },
+        "expected": "LongTailClassifier returns is_long_tail=true"
+      },
+      "actual_output": {
+        "is_long_tail": true,
+        "score": 0.5982305268404358,
+        "threshold": 0.5,
+        "individual_scores": [
+          {
+            "detector": "CLIPDetector",
+            "score": 0.7752088705935579,
+            "inference_time": 0.7129299640655518
+          },
+          {
+            "detector": "YOLOv8Detector",
+            "score": 0.3065009117126465,
+            "inference_time": 0.4367673397064209
+          },
+          {
+            "detector": "YOLOPv2Detector",
+            "score": 0.005068423202614379,
+            "inference_time": 0.07462263107299805
+          }
+        ],
+        "inference_time": 1.22434663772583,
+        "fps": 0.8167621563918008,
+        "detector": "LongTailClassifier",
+        "detector_count": 3,
+        "detector_names": [
+          "CLIPDetector",
+          "YOLOv8Detector",
+          "YOLOPv2Detector"
+        ],
+        "config_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/longtail/config.yaml",
+        "image_path": "/home/pi/Desktop/VehicleCloudCollaboration/car/test/test_image.jpg",
+        "end_to_end_detector_time": 2.3086689470001147
+      },
+      "error": null
+    },
+    {
+      "name": "cloud_decision",
+      "ok": true,
+      "latency_ms": 501.95,
+      "expected_input": {
+        "detection": {
+          "is_long_tail": true,
+          "score": 0.5982305268404358,
+          "threshold": 0.5,
+          "detector": "LongTailClassifier",
+          "object": null
+        },
+        "expected": "command=left, action=lane-left"
+      },
+      "actual_output": {
+        "command": "left",
+        "action": "lane-left",
+        "reason": "offline closed-loop test: traffic cone triggers left lane change",
+        "latency_ms": 1.083,
+        "backend": "local-http",
+        "mock_url": "http://127.0.0.1:43337/chat",
+        "request_path": "/chat",
+        "request_has_prompt": true,
+        "request_json_mode": true,
+        "request_prompt_preview": "当前车辆已经触发长尾检测，需要云端 mock 返回一个控制决策。\n\n中期联调要求：\n- 不根据图片内容做真实推理\n- 不返回 right、straight 或 stop\n- 始终返回向左改道\n\n检测信息：\n- image_path: /home/pi/Desktop/VehicleCloudCollaboration/car/test/test_image.jpg\n- long_tail_score: 0.598\n- threshold: 0.500\n\n请严格只返回如下 JS",
+        "raw_response": {
+          "command": "left",
+          "action": "lane-left",
+          "reason": "offline closed-loop test: traffic cone triggers left lane change"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "vehicle_control",
+      "ok": true,
+      "latency_ms": 0.338,
+      "expected_input": {
+        "action": "lane-left",
+        "expected": "VehicleController accepts lane-left without hardware"
+      },
+      "actual_output": {
+        "action_requested": "lane-left",
+        "state_after_action": {
+          "current_action": "forward",
+          "status": "cruising",
+          "cruise": {
+            "speed": 40,
+            "left_trim": 10,
+            "right_trim": 0,
+            "ramp_time": 0.25
+          },
+          "lane_change": {
+            "speed": 40,
+            "left_trim": 10,
+            "right_trim": 0,
+            "ramp_time": 0.25,
+            "steer_delta": 36,
+            "brake_speed_scale": 0.05,
+            "brake_time": 0.45,
+            "lane_speed_scale": 0.22,
+            "min_turn_speed_scale": 0.45,
+            "return_steer_scale": 1,
+            "pre_lane_time": 0.05,
+            "turn_time": 1.1,
+            "return_time": 0.9,
+            "settle_time": 0.6,
+            "lane_transition_time": 0.28,
+            "recover_transition_time": 0.45,
+            "post_brake_time": 0.15
+          }
+        },
+        "command_count": 12,
+        "ramp_command_count": 6,
+        "contains_left_turn_arc": true,
+        "first_commands": [
+          {
+            "op": "ramp_to",
+            "left_speed": 50,
+            "right_speed": 40,
+            "duration_s": 0.25
+          },
+          {
+            "op": "ramp_to",
+            "left_speed": 2,
+            "right_speed": 2,
+            "duration_s": 0.28
+          },
+          {
+            "op": "hold",
+            "duration_s": 0.45
+          },
+          {
+            "op": "hold",
+            "duration_s": 0.05
+          },
+          {
+            "op": "ramp_to",
+            "left_speed": 3,
+            "right_speed": 47,
+            "duration_s": 0.28
+          },
+          {
+            "op": "hold",
+            "duration_s": 1.1
+          },
+          {
+            "op": "ramp_to",
+            "left_speed": 44,
+            "right_speed": 4,
+            "duration_s": 0.28
+          },
+          {
+            "op": "hold",
+            "duration_s": 0.9
+          },
+          {
+            "op": "ramp_to",
+            "left_speed": 2,
+            "right_speed": 2,
+            "duration_s": 0.28
+          },
+          {
+            "op": "hold",
+            "duration_s": 0.15
+          },
+          {
+            "op": "ramp_to",
+            "left_speed": 50,
+            "right_speed": 40,
+            "duration_s": 0.45
+          },
+          {
+            "op": "hold",
+            "duration_s": 0.6
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

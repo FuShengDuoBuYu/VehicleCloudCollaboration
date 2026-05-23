@@ -1,6 +1,7 @@
 import base64
 import binascii
 import json
+import os
 import re
 import urllib.error
 import urllib.request
@@ -17,11 +18,7 @@ from pydantic import BaseModel, Field, ValidationError
 CURRENT_DIR = Path(__file__).resolve().parent
 
 GEMINI_MODEL = "gemini-2.5-flash-lite"
-GEMINI_API_KEY = "AIzaSyD2fTI2bmCw_P9izV4LD5r-FIQbv0bwPF0"
-GEMINI_API_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
-)
+GEMINI_API_KEY_ENV = "GEMINI_API_KEY"
 
 VALID_COMMANDS = {"left", "right", "straight", "stop"}
 
@@ -179,6 +176,20 @@ def _parse_gemini_error(error_body: str) -> str:
         return error_body
 
 
+def _get_gemini_api_key() -> str:
+    return os.environ.get(GEMINI_API_KEY_ENV, "").strip()
+
+
+def _build_gemini_api_url() -> str:
+    api_key = _get_gemini_api_key()
+    if not api_key:
+        raise HTTPException(status_code=503, detail=f"{GEMINI_API_KEY_ENV} is not configured")
+    return (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{GEMINI_MODEL}:generateContent?key={api_key}"
+    )
+
+
 def _call_gemini_api(parsed_image: Image.Image, prompt: str) -> str:
     image_b64 = _image_to_jpeg_base64(parsed_image)
     payload = {
@@ -204,7 +215,7 @@ def _call_gemini_api(parsed_image: Image.Image, prompt: str) -> str:
     }
 
     request = urllib.request.Request(
-        url=GEMINI_API_URL,
+        url=_build_gemini_api_url(),
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"},
         method="POST",
@@ -235,8 +246,8 @@ def _run_driving_inference(parsed_image: Image.Image, user_prompt: Optional[str]
 
 
 def _validate_api_key() -> None:
-    if not GEMINI_API_KEY.strip():
-        raise RuntimeError("Gemini API key is empty")
+    if not _get_gemini_api_key():
+        raise RuntimeError(f"{GEMINI_API_KEY_ENV} is empty")
 
 
 @asynccontextmanager
@@ -271,7 +282,7 @@ async def health() -> dict:
     return {
         "status": "ok",
         "model": GEMINI_MODEL,
-        "api_key_configured": bool(GEMINI_API_KEY.strip()),
+        "api_key_configured": bool(_get_gemini_api_key()),
     }
 
 

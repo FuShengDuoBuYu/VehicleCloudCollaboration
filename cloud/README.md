@@ -79,6 +79,7 @@ uvicorn server_qwen_mock:app --host 0.0.0.0 --port 9526 --reload
 ### 3.3 Gemini API（正式）
 
 ```bash
+export GEMINI_API_KEY="你的 Gemini API Key"
 uvicorn server_api:app --host 0.0.0.0 --port 9526 --reload
 ```
 

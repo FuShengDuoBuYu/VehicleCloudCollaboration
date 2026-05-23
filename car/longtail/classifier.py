@@ -3,12 +3,20 @@
 from typing import Dict, List, Any
 import time
 
-from detectors import (
-    CLIPDetector,
-    YOLOWorldDetector,
-    YOLOv8Detector,
-    YOLOPv2Detector,
-)
+try:
+    from .detectors import (
+        CLIPDetector,
+        YOLOWorldDetector,
+        YOLOv8Detector,
+        YOLOPv2Detector,
+    )
+except ImportError:
+    from detectors import (
+        CLIPDetector,
+        YOLOWorldDetector,
+        YOLOv8Detector,
+        YOLOPv2Detector,
+    )
 
 
 class LongTailClassifier:
@@ -41,21 +49,29 @@ class LongTailClassifier:
             det_type = det_config.get('type', '').lower()
             weight = det_config.get('weight', 0.25)
             det_specific_config = det_config.get('config', {})
-            if det_type in detector_map:
-                try:
-                    detector = detector_map[det_type](det_specific_config)
-                    self.detectors.append((detector, weight))
-                    print(f"Initialized {detector.__class__.__name__} with weight {weight}")
-                except Exception as e:
-                    print(f"Warning: Failed to initialize {det_type}: {e}")
+            if det_type not in detector_map:
+                raise ValueError(f"Unknown detector type in config: {det_type}")
+
+            try:
+                detector = detector_map[det_type](det_specific_config)
+            except Exception as e:
+                raise RuntimeError(f"Failed to initialize detector '{det_type}': {e}") from e
+
+            self.detectors.append((detector, weight))
+            print(f"Initialized {detector.__class__.__name__} with weight {weight}")
+
+        if not self.detectors:
+            raise RuntimeError("LongTailClassifier initialized zero detectors")
+
         self._normalize_weights()
     
     def _normalize_weights(self):
         if not self.detectors:
             return
         total_weight = sum(weight for _, weight in self.detectors)
-        if total_weight > 0:
-            self.detectors = [ (detector, weight / total_weight) for detector, weight in self.detectors ]
+        if total_weight <= 0:
+            raise ValueError("Detector weights must sum to a positive value")
+        self.detectors = [ (detector, weight / total_weight) for detector, weight in self.detectors ]
     
     def predict(self, image_path: str) -> Dict[str, Any]:
         start_time = time.time()
@@ -64,16 +80,15 @@ class LongTailClassifier:
         for detector, weight in self.detectors:
             try:
                 result = detector(image_path)
-                individual_results.append(result)
-                weighted_score += result['score'] * weight
             except Exception as e:
-                print(f"Warning: {detector.__class__.__name__} failed: {e}")
-                individual_results.append({
-                    'detector': detector.__class__.__name__,
-                    'score': 0.5,
-                    'inference_time': 0.0,
-                    'error': str(e)
-                })
+                raise RuntimeError(f"{detector.__class__.__name__} failed on {image_path}: {e}") from e
+
+            score = float(result['score'])
+            if score < 0.0 or score > 1.0:
+                raise ValueError(f"{detector.__class__.__name__} returned invalid score: {score}")
+            result['score'] = score
+            individual_results.append(result)
+            weighted_score += score * weight
         self.total_inference_time = time.time() - start_time
         is_long_tail = weighted_score >= self.threshold
         result = {

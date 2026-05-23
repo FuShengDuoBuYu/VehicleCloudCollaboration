@@ -20,13 +20,10 @@ class YOLOv8Detector(BaseDetector):
                 'traffic cone', 'cone', 'barricade', 'road barrier', 'construction sign',
                 'stop sign', 'parking meter', 'fire hydrant',
             ])
-        except ImportError:
-            print("Warning: ultralytics not available, YOLOv8Detector will return 0.5")
-            self.model = None
+        except ImportError as exc:
+            raise RuntimeError("ultralytics is required for YOLOv8Detector") from exc
     
     def detect(self, image_path: str) -> float:
-        if self.model is None:
-            return 0.5
         results = self.model.predict(source=image_path, conf=self.conf_threshold, verbose=False)
         if len(results) == 0:
             return 0.0
