@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class CruiseConfig:
-    speed: int = 40
+    speed: int = 18
     left_trim: int = 10
     right_trim: int = 0
     ramp_time: float = 0.25
@@ -11,21 +11,22 @@ class CruiseConfig:
 
 @dataclass(frozen=True)
 class LaneChangeConfig:
-    speed: int = 40
+    speed: int = 22
     left_trim: int = 10
     right_trim: int = 0
     ramp_time: float = 0.25
-    steer_delta: int = 36
+    approach_time: float = 0.55
+    steer_delta: int = 18
     brake_speed_scale: float = 0.05
-    brake_time: float = 0.45
-    lane_speed_scale: float = 0.22
-    min_turn_speed_scale: float = 0.45
+    brake_time: float = 0.25
+    lane_speed_scale: float = 0.70
+    min_turn_speed_scale: float = 0.6
     return_steer_scale: float = 1
     pre_lane_time: float = 0.05
-    turn_time: float = 1.1
-    return_time: float = 0.9
+    turn_time: float = 1.05
+    return_time: float = 0.75
     settle_time: float = 0.6
-    lane_transition_time: float = 0.28
+    lane_transition_time: float = 0.80
     recover_transition_time: float = 0.45
     post_brake_time: float = 0.15
 

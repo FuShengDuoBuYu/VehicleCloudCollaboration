@@ -1,0 +1,39 @@
+# Reference lane-change parameters for the current cone-bypass test field.
+# These values match the validated default values in settings.py.
+
+closed_loop:
+  interval: 1.0
+  stop_for_detection: true
+
+cruise:
+  speed: 18
+  left_trim: 10
+  right_trim: 0
+  ramp_time: 0.25
+
+lane_change:
+  speed: 22
+  left_trim: 10
+  right_trim: 0
+  ramp_time: 0.25
+  approach_time: 0.55
+  steer_delta: 18
+  brake_speed_scale: 0.05
+  brake_time: 0.25
+  lane_speed_scale: 0.70
+  min_turn_speed_scale: 0.60
+  return_steer_scale: 1.0
+  pre_lane_time: 0.05
+  turn_time: 1.05
+  return_time: 0.75
+  settle_time: 0.60
+  lane_transition_time: 0.80
+  recover_transition_time: 0.45
+  post_brake_time: 0.15
+
+tuning_notes:
+  too_early: increase approach_time
+  too_little_lateral_shift: increase steer_delta or turn_time
+  too_sharp: decrease steer_delta or increase lane_transition_time
+  not_enough_forward_motion: increase lane_speed_scale or min_turn_speed_scale
+  over_corrects_on_return: decrease return_time or return_steer_scale

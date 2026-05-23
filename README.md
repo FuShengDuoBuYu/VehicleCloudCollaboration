@@ -22,7 +22,7 @@ VehicleCloudCollaboration/
 
 ```bash
 cd /home/pi/Desktop/VehicleCloudCollaboration/car
-python run_closed_loop.py --camera-index 0 --interval 2
+python run_closed_loop.py
 ```
 
 默认流程：
@@ -38,12 +38,16 @@ python run_closed_loop.py --camera-index 0 --interval 2
 常用参数：
 
 ```bash
-python run_closed_loop.py --threshold 0.6 --camera-index 0 --interval 2
+python run_closed_loop.py
+python run_closed_loop.py --threshold 0.6
 python run_closed_loop.py --cloud-mode none
 python run_closed_loop.py --web-port 8081
 python run_closed_loop.py --no-web
 python run_closed_loop.py --start-immediately
+python run_closed_loop.py --no-stop-for-detection
 ```
+
+当前默认变道参数参考见 `car/control/vehicle_control/lane_change_reference.yaml`。
 
 网页控制台默认地址：
 

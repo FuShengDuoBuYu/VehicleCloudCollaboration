@@ -228,12 +228,17 @@ def execute_vehicle_action(action: str, timeout: float):
         left_turn_arcs = [
             cmd for cmd in ramp_commands if cmd["left_speed"] < cmd["right_speed"]
         ]
+        approach_holds = [
+            cmd for cmd in chassis.commands
+            if cmd["op"] == "hold" and cmd["duration_s"] == controller.lane_change_config.approach_time
+        ]
         return {
             "action_requested": action,
             "state_after_action": state,
             "command_count": len(chassis.commands),
             "ramp_command_count": len(ramp_commands),
             "contains_left_turn_arc": bool(left_turn_arcs),
+            "contains_approach_hold": bool(approach_holds),
             "first_commands": chassis.commands[:12],
         }
     finally:
@@ -372,6 +377,7 @@ def main():
             reports,
         )
         assert_stage(vehicle["action_requested"] == "lane-left", "vehicle action was not lane-left")
+        assert_stage(vehicle["contains_approach_hold"], "lane-left sequence did not include forward approach hold")
         assert_stage(vehicle["contains_left_turn_arc"], "vehicle command sequence did not contain a left-turn arc")
         assert_stage(vehicle["ramp_command_count"] >= 5, "lane-left sequence produced too few ramp commands")
 

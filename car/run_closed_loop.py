@@ -79,7 +79,19 @@ def build_parser():
     parser.add_argument("--camera-width", type=int, default=640, help="Camera capture width")
     parser.add_argument("--camera-height", type=int, default=480, help="Camera capture height")
     parser.add_argument("--camera-fps", type=int, default=20, help="Camera capture FPS")
-    parser.add_argument("--interval", type=float, default=2.0, help="Seconds between long-tail checks")
+    parser.add_argument("--cruise-speed", type=int, help="Override forward cruise wheel speed")
+    parser.add_argument("--lane-speed", type=int, help="Override lane-change base wheel speed")
+    parser.add_argument("--lane-approach-time", type=float, help="Seconds to keep moving forward before lane-change steering")
+    parser.add_argument("--lane-steer-delta", type=int, help="Lane-change wheel-speed steering delta; lower is gentler")
+    parser.add_argument("--lane-speed-scale", type=float, help="Lane-change forward speed scale; higher keeps the car moving while steering")
+    parser.add_argument("--lane-min-turn-speed-scale", type=float, help="Minimum inner-wheel speed scale during lane-change steering")
+    parser.add_argument("--lane-transition-time", type=float, help="Seconds for each lane-change speed ramp; higher is smoother")
+    parser.add_argument("--lane-turn-time", type=float, help="Seconds to hold the outward steering arc")
+    parser.add_argument("--lane-return-time", type=float, help="Seconds to hold the return steering arc")
+    detection_group = parser.add_mutually_exclusive_group()
+    detection_group.add_argument("--stop-for-detection", dest="stop_for_detection", action="store_true", default=True, help="Stop the vehicle while running each long-tail detection pass")
+    detection_group.add_argument("--no-stop-for-detection", dest="stop_for_detection", action="store_false", help="Keep moving while running long-tail detection")
+    parser.add_argument("--interval", type=float, default=1.0, help="Seconds between long-tail checks")
     parser.add_argument("--frame-dir", default=DEFAULT_FRAME_DIR, help="Directory for latest analysis frame")
     parser.add_argument("--action-cooldown", type=float, default=5.0, help="Seconds to keep a cloud action before changing")
     parser.add_argument("--startup-frame-timeout", type=float, default=10.0, help="Seconds to wait for the first camera frame before refusing to drive")
@@ -153,6 +165,17 @@ def wait_for_fresh_frame(camera, timeout, stale_timeout):
     return None
 
 
+def wait_for_vehicle_action(controller, runtime_control, action):
+    action_start = time.monotonic()
+    runtime_control.set_message(f"executing {action}")
+    while controller.is_action_running():
+        if not runtime_control.is_started():
+            controller.execute("stop")
+            return False, (time.monotonic() - action_start) * 1000
+        controller.wait_for_current_action(timeout=0.1)
+    return True, (time.monotonic() - action_start) * 1000
+
+
 def run_active_loop(args, controller, camera, classifier, cloud_client, runtime_control):
     print("Closed loop started")
     runtime_control.set_message("closed loop running")
@@ -185,20 +208,35 @@ def run_active_loop(args, controller, camera, classifier, cloud_client, runtime_
             time.sleep(0.05)
             continue
 
-        frame_path = save_frame(frame, args.frame_dir)
-        result = classifier.predict(frame_path)
-        status = "LONG-TAIL" if result["is_long_tail"] else "NORMAL"
-        print(f"[{status}] score={result['score']:.3f}, fps={result['fps']:.2f}, frame={frame_path}")
+        if args.stop_for_detection:
+            controller.execute("stop")
 
-        if should_hold_action(last_cloud_action, args.action_cooldown):
-            print("Holding current cloud action during cooldown")
-            last_check = now
-            continue
+        cycle_start = time.monotonic()
+        frame_path = save_frame(frame, args.frame_dir)
+        detect_start = time.monotonic()
+        result = classifier.predict(frame_path)
+        detect_latency_ms = (time.monotonic() - detect_start) * 1000
+        status = "LONG-TAIL" if result["is_long_tail"] else "NORMAL"
+        print(
+            f"[{status}] score={result['score']:.3f}, "
+            f"detect={detect_latency_ms:.0f}ms, fps={result['fps']:.2f}, frame={frame_path}"
+        )
 
         if not result["is_long_tail"]:
             controller.execute("forward")
             last_check = now
             continue
+
+        if should_hold_action(last_cloud_action, args.action_cooldown):
+            print("Skipping repeated long-tail trigger during action cooldown")
+            runtime_control.set_message("cooldown after cloud action")
+            controller.execute("forward")
+            last_check = now
+            continue
+
+        print("Long-tail detected; stopping before cloud decision")
+        runtime_control.set_message("long-tail detected; waiting for cloud")
+        controller.execute("stop")
 
         if cloud_client is None:
             print("Long-tail triggered without cloud client; stopping")
@@ -221,12 +259,22 @@ def run_active_loop(args, controller, camera, classifier, cloud_client, runtime_
         print(
             "Cloud decision: "
             f"command={decision.command}, action={decision.action}, "
-            f"latency={decision.latency_ms:.0f}ms, reason={decision.reason}"
+            f"cloud={decision.latency_ms:.0f}ms, "
+            f"cycle={(time.monotonic() - cycle_start) * 1000:.0f}ms, reason={decision.reason}"
         )
         controller.execute(decision.action)
-        runtime_control.set_message(f"cloud action: {decision.action}")
+        if decision.action.startswith("lane-"):
+            completed, action_latency_ms = wait_for_vehicle_action(controller, runtime_control, decision.action)
+            print(
+                f"Vehicle action: action={decision.action}, "
+                f"completed={completed}, duration={action_latency_ms:.0f}ms"
+            )
+            if not completed:
+                break
+
+        runtime_control.set_message(f"cloud action completed: {decision.action}")
         last_cloud_action = time.monotonic()
-        last_check = now
+        last_check = time.monotonic()
 
     controller.execute("stop")
     runtime_control.set_message("waiting for web start")
@@ -238,7 +286,7 @@ def run_closed_loop(args):
     from classifier import LongTailClassifier
     from vehicle_control.camera import CameraStream
     from vehicle_control.controller import VehicleController
-    from vehicle_control.settings import CAMERA_CONFIG, SERVER_CONFIG
+    from vehicle_control.settings import CAMERA_CONFIG, CRUISE_CONFIG, LANE_CHANGE_CONFIG, SERVER_CONFIG
 
     config = load_config(args.config)
     if args.threshold is not None:
@@ -256,7 +304,27 @@ def run_closed_loop(args):
         fps=args.camera_fps,
     )
     camera = CameraStream(config=camera_config)
-    controller = VehicleController()
+    cruise_config = CRUISE_CONFIG
+    lane_change_config = LANE_CHANGE_CONFIG
+    if args.cruise_speed is not None:
+        cruise_config = replace(cruise_config, speed=args.cruise_speed)
+    if args.lane_speed is not None:
+        lane_change_config = replace(lane_change_config, speed=args.lane_speed)
+    if args.lane_approach_time is not None:
+        lane_change_config = replace(lane_change_config, approach_time=args.lane_approach_time)
+    if args.lane_steer_delta is not None:
+        lane_change_config = replace(lane_change_config, steer_delta=args.lane_steer_delta)
+    if args.lane_speed_scale is not None:
+        lane_change_config = replace(lane_change_config, lane_speed_scale=args.lane_speed_scale)
+    if args.lane_min_turn_speed_scale is not None:
+        lane_change_config = replace(lane_change_config, min_turn_speed_scale=args.lane_min_turn_speed_scale)
+    if args.lane_transition_time is not None:
+        lane_change_config = replace(lane_change_config, lane_transition_time=args.lane_transition_time)
+    if args.lane_turn_time is not None:
+        lane_change_config = replace(lane_change_config, turn_time=args.lane_turn_time)
+    if args.lane_return_time is not None:
+        lane_change_config = replace(lane_change_config, return_time=args.lane_return_time)
+    controller = VehicleController(cruise_config=cruise_config, lane_change_config=lane_change_config)
     runtime_control = ClosedLoopRuntimeControl()
     if args.start_immediately or not args.web:
         runtime_control.start()

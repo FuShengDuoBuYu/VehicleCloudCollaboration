@@ -31,6 +31,18 @@ class VehicleController:
                 "lane_change": asdict(self.lane_change_config),
             }
 
+    def is_action_running(self):
+        with self._action_lock:
+            return bool(self._action_thread and self._action_thread.is_alive())
+
+    def wait_for_current_action(self, timeout=None):
+        with self._action_lock:
+            thread = self._action_thread
+        if not thread:
+            return True
+        thread.join(timeout=timeout)
+        return not thread.is_alive()
+
     def _cancel_active_action(self, keep_wheels=False):
         thread = None
         with self._action_lock:
@@ -124,6 +136,8 @@ class VehicleController:
         )
 
         self.chassis.ramp_to(base_left, base_right, cfg.ramp_time, stop_event)
+        if not self.chassis.hold(cfg.approach_time, stop_event):
+            return
         self.chassis.ramp_to(brake_left, brake_right, cfg.lane_transition_time, stop_event)
         if not self.chassis.hold(cfg.brake_time, stop_event):
             return
