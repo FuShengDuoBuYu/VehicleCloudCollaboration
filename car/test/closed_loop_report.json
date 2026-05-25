@@ -1,11 +1,11 @@
 {
   "ok": true,
-  "total_latency_ms": 19459.663,
+  "total_latency_ms": 62284.632,
   "stages": [
     {
       "name": "image_input",
       "ok": true,
-      "latency_ms": 116.31,
+      "latency_ms": 95.972,
       "expected_input": {
         "image_path": "/workspaces/VehicleCloudCollaboration/car/test/test_image.jpg",
         "expected": "readable image file"
@@ -22,7 +22,7 @@
     {
       "name": "longtail_detection",
       "ok": true,
-      "latency_ms": 19342.59,
+      "latency_ms": 62150.225,
       "expected_input": {
         "input": {
           "image_path": "/workspaces/VehicleCloudCollaboration/car/test/test_image.jpg",
@@ -35,27 +35,27 @@
       },
       "actual_output": {
         "is_long_tail": true,
-        "score": 0.5981773080032077,
-        "threshold": 0.5,
+        "score": 0.7088427646668436,
+        "threshold": 0.3269,
         "individual_scores": [
           {
             "detector": "CLIPDetector",
             "score": 0.7751343761423675,
-            "inference_time": 3.2178943157196045
+            "inference_time": 11.915780067443848
           },
           {
             "detector": "YOLOv8Detector",
             "score": 0.3065008521080017,
-            "inference_time": 0.35161542892456055
+            "inference_time": 1.5069196224212646
           },
           {
             "detector": "YOLOPv2Detector",
             "score": 0.005068423202614379,
-            "inference_time": 0.08290266990661621
+            "inference_time": 0.3567392826080322
           }
         ],
-        "inference_time": 3.652447462081909,
-        "fps": 0.2737890169212718,
+        "inference_time": 13.782075881958008,
+        "fps": 0.07255801002438907,
         "detector": "LongTailClassifier",
         "detector_count": 3,
         "detector_names": [
@@ -65,19 +65,19 @@
         ],
         "config_source": "environment",
         "image_path": "/workspaces/VehicleCloudCollaboration/car/test/test_image.jpg",
-        "end_to_end_detector_time": 6.275004810999235
+        "end_to_end_detector_time": 22.407292624999172
       },
       "error": null
     },
     {
       "name": "cloud_decision",
       "ok": true,
-      "latency_ms": 0.204,
+      "latency_ms": 33.202,
       "expected_input": {
         "detection": {
           "is_long_tail": true,
-          "score": 0.5981773080032077,
-          "threshold": 0.5,
+          "score": 0.7088427646668436,
+          "threshold": 0.3269,
           "detector": "LongTailClassifier",
           "object": null
         },
@@ -87,13 +87,13 @@
         "command": "left",
         "action": "lane-left",
         "reason": "offline in-process mock: traffic cone triggers left lane change",
-        "latency_ms": 0.001,
+        "latency_ms": 0.003,
         "backend": "inprocess",
         "mock_url": "inprocess://offline-mock",
         "request_path": null,
         "request_has_prompt": true,
         "request_json_mode": true,
-        "request_prompt_preview": "当前车辆已经触发长尾检测，需要云端 mock 返回一个控制决策。\n\n中期联调要求：\n- 不根据图片内容做真实推理\n- 不返回 right、straight 或 stop\n- 始终返回向左改道\n\n检测信息：\n- image_path: /workspaces/VehicleCloudCollaboration/car/test/test_image.jpg\n- long_tail_score: 0.598\n- threshold: 0.500\n\n请严格只返回如下 JSON：\n{",
+        "request_prompt_preview": "当前车辆已经触发长尾检测，需要云端 mock 返回一个控制决策。\n\n中期联调要求：\n- 不根据图片内容做真实推理\n- 不返回 right、straight 或 stop\n- 始终返回向左改道\n\n检测信息：\n- image_path: /workspaces/VehicleCloudCollaboration/car/test/test_image.jpg\n- long_tail_score: 0.709\n- threshold: 0.327\n\n请严格只返回如下 JSON：\n{",
         "raw_response": {
           "command": "left",
           "action": "lane-left",
@@ -105,7 +105,7 @@
     {
       "name": "vehicle_control",
       "ok": true,
-      "latency_ms": 0.489,
+      "latency_ms": 5.13,
       "expected_input": {
         "action": "lane-left",
         "expected": "VehicleController accepts lane-left without hardware"
