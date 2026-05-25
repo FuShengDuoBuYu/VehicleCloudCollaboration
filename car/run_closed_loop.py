@@ -7,8 +7,6 @@ import threading
 import time
 from dataclasses import replace
 
-import yaml
-
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 LONGTAIL_DIR = os.path.join(CURRENT_DIR, "longtail")
@@ -21,7 +19,6 @@ for path in (CURRENT_DIR, LONGTAIL_DIR, CONTROL_DIR):
 from cloud_client.mock_client import DEFAULT_MOCK_CHAT_URL
 
 
-DEFAULT_CONFIG = os.path.join(LONGTAIL_DIR, "config.yaml")
 DEFAULT_FRAME_DIR = os.path.join(CURRENT_DIR, "captured_frames")
 
 
@@ -63,18 +60,8 @@ class ClosedLoopRuntimeControl:
             }
 
 
-def load_config(config_path):
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Config file not found: {config_path}")
-
-    with open(config_path, "r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle) or {}
-
-
 def build_parser():
     parser = argparse.ArgumentParser(description="Run the car-side vehicle-cloud closed loop.")
-    parser.add_argument("--config", default=DEFAULT_CONFIG, help="Long-tail detector config path")
-    parser.add_argument("--threshold", type=float, help="Override long-tail threshold")
     parser.add_argument("--camera-index", type=int, default=0, help="OpenCV camera index")
     parser.add_argument("--camera-width", type=int, default=640, help="Camera capture width")
     parser.add_argument("--camera-height", type=int, default=480, help="Camera capture height")
@@ -284,13 +271,12 @@ def run_active_loop(args, controller, camera, classifier, cloud_client, runtime_
 def run_closed_loop(args):
     from cloud_client.mock_client import CloudMockClient
     from classifier import LongTailClassifier
+    from env_config import load_longtail_config_from_env
     from vehicle_control.camera import CameraStream
     from vehicle_control.controller import VehicleController
     from vehicle_control.settings import CAMERA_CONFIG, CRUISE_CONFIG, LANE_CHANGE_CONFIG, SERVER_CONFIG
 
-    config = load_config(args.config)
-    if args.threshold is not None:
-        config["threshold"] = args.threshold
+    config = load_longtail_config_from_env()
 
     print("Initializing long-tail classifier...")
     classifier = LongTailClassifier(config)

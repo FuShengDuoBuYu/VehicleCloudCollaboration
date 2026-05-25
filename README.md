@@ -39,7 +39,7 @@ python run_closed_loop.py
 
 ```bash
 python run_closed_loop.py
-python run_closed_loop.py --threshold 0.6
+CAR_LONGTAIL_THRESHOLD=0.6 python run_closed_loop.py
 python run_closed_loop.py --cloud-mode none
 python run_closed_loop.py --web-port 8081
 python run_closed_loop.py --no-web
@@ -59,7 +59,7 @@ http://<车辆IP>:8080
 
 ### car/longtail
 
-长尾检测模块，核心类是 `LongTailClassifier`。它读取 `config.yaml`，组合多个检测器，对单张图片输出：
+长尾检测模块，核心类是 `LongTailClassifier`。检测器配置由 `.env` 环境变量文件生成，示例见根目录 `.env_example`。它组合多个检测器，对单张图片输出：
 
 - `is_long_tail`
 - `score`
@@ -96,6 +96,13 @@ http://<车辆IP>:8080
 云端说明见 [cloud/README.md](/home/pi/Desktop/VehicleCloudCollaboration/cloud/README.md)。
 
 ## 运行检查
+
+安装依赖：
+
+```bash
+conda activate car
+pip install -r requirements.txt
+```
 
 只检查入口参数和语法，不启动电机：
 

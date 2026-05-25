@@ -5,9 +5,8 @@ Performance benchmarking script for long-tail classifier
 import argparse
 import time
 import numpy as np
-import yaml
-from pathlib import Path
 from classifier import LongTailClassifier
+from env_config import load_longtail_config_from_env
 
 
 def benchmark_detector(classifier: LongTailClassifier, image_path: str, num_runs: int = 10):
@@ -74,13 +73,9 @@ def benchmark_detector(classifier: LongTailClassifier, image_path: str, num_runs
 def main():
     parser = argparse.ArgumentParser(description="Benchmark long-tail classifier performance")
     parser.add_argument('--image', type=str, required=True, help='Path to test image')
-    parser.add_argument('--config', type=str, default='config.yaml', help='Path to configuration file')
     parser.add_argument('--runs', type=int, default=10, help='Number of benchmark runs')
     args = parser.parse_args()
-    config = {}
-    if Path(args.config).exists():
-        with open(args.config, 'r') as f:
-            config = yaml.safe_load(f)
+    config = load_longtail_config_from_env()
     print("\nInitializing classifier...")
     classifier = LongTailClassifier(config)
     benchmark_detector(classifier, args.image, num_runs=args.runs)

@@ -1,10 +1,14 @@
 **.pyc
 __pycache__
+.conda/
+.env
 runs
 *.h5
 *.tflite
+*.pt
 
 car/longtail/captured_frames
+car/longtail/models/
 car/captured_frames
 car/longtail/runs
 car/control/mycar/data/

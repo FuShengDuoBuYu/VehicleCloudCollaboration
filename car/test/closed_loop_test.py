@@ -85,17 +85,12 @@ def load_image(image_path: Path):
     }
 
 
-def run_longtail_detector(image_path: Path, config_path: Path):
-    import yaml
+def run_longtail_detector(image_path: Path):
     from classifier import LongTailClassifier
+    from env_config import load_longtail_config_from_env
 
     start = time.monotonic()
-    if not config_path.exists():
-        raise ClosedLoopTestError(f"longtail config does not exist: {config_path}")
-
-    with open(config_path, "r", encoding="utf-8") as handle:
-        config = yaml.safe_load(handle) or {}
-
+    config = load_longtail_config_from_env()
     classifier = LongTailClassifier(config)
     if not classifier.detectors:
         raise ClosedLoopTestError("LongTailClassifier initialized zero detectors")
@@ -104,7 +99,7 @@ def run_longtail_detector(image_path: Path, config_path: Path):
     result["detector"] = "LongTailClassifier"
     result["detector_count"] = len(classifier.detectors)
     result["detector_names"] = [detector.__class__.__name__ for detector, _ in classifier.detectors]
-    result["config_path"] = str(config_path)
+    result["config_source"] = "environment"
     result["image_path"] = str(image_path)
     result["end_to_end_detector_time"] = time.monotonic() - start
     return result
@@ -279,7 +274,6 @@ def assert_stage(condition: bool, message: str):
 def build_parser():
     parser = argparse.ArgumentParser(description="Run an offline vehicle-cloud closed-loop data test.")
     parser.add_argument("--image", type=Path, default=default_image_path(), help="Test image path")
-    parser.add_argument("--config", type=Path, default=LONGTAIL_DIR / "config.yaml", help="Long-tail config path")
     parser.add_argument(
         "--cloud-backend",
         choices=["inprocess", "local-http"],
@@ -397,7 +391,7 @@ def _stage_image_input(args, context):
 
 
 def _stage_detection(args, context):
-    return run_longtail_detector(args.image, args.config)
+    return run_longtail_detector(args.image)
 
 
 def _compact_detection(detection: Dict[str, Any]):

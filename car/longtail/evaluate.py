@@ -4,7 +4,6 @@ Evaluation script for long-tail classifier on dataset
 
 import argparse
 import os
-import yaml
 import glob
 from pathlib import Path
 from tqdm import tqdm
@@ -17,6 +16,7 @@ except ImportError:
     HAS_PLOT = False
 
 from classifier import LongTailClassifier
+from env_config import load_longtail_config_from_env
 
 def evaluate_on_dataset(classifier: LongTailClassifier, dataset_path: str, output_dir: str = 'results'):
     """
@@ -120,14 +120,10 @@ def evaluate_on_dataset(classifier: LongTailClassifier, dataset_path: str, outpu
 def main():
     parser = argparse.ArgumentParser(description="Evaluate long-tail classifier")
     parser.add_argument('--dataset', type=str, required=True, help='Path to dataset root folder')
-    parser.add_argument('--config', type=str, default='config.yaml', help='Path to config file')
     parser.add_argument('--output', type=str, default='evaluation_results', help='Output directory')
     args = parser.parse_args()
 
-    config = {}
-    if Path(args.config).exists():
-        with open(args.config, 'r') as f:
-            config = yaml.safe_load(f)
+    config = load_longtail_config_from_env()
             
     print("\nInitializing classifier...")
     classifier = LongTailClassifier(config)

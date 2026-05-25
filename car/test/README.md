@@ -30,11 +30,10 @@ car/test/closed_loop_report.json
 
 ```bash
 python car/test/closed_loop_test.py --image car/test/test_image.jpg
-python car/test/closed_loop_test.py --config car/longtail/config.yaml
 python car/test/closed_loop_test.py --report /tmp/closed_loop_report.json
 python car/test/closed_loop_test.py --cloud-backend local-http
 ```
 
-脚本会加载 `LongTailClassifier` 和 `config.yaml` 中配置的检测器。测试图片没有触发 `is_long_tail=True` 时，脚本会失败并在报告里保留每个检测器的输出。
+脚本会加载 `LongTailClassifier`，检测器配置来自环境变量。测试图片没有触发 `is_long_tail=True` 时，脚本会失败并在报告里保留每个检测器的输出。
 
 `--cloud-backend local-http` 会在本机启动一个临时 HTTP mock 服务，用来额外检查 HTTP 发送和 JSON 序列化。默认 `inprocess` 不依赖网络、端口或外部服务。

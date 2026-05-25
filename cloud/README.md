@@ -25,6 +25,7 @@ cloud/
 - 建议使用 conda 环境：
 
 ```bash
+cd /home/pi/Desktop/VehicleCloudCollaboration
 conda activate car
 pip install -r requirements.txt
 ```
@@ -43,7 +44,7 @@ pip install -r requirements.txt
 | `bitsandbytes>=0.43.0` | 4-bit 量化，节省显存 | 仅 `server_qwen.py` |
 | `qwen_vl_utils` | 视觉输入预处理 | 仅 `server_qwen.py`，本地源码包，见下方说明 |
 
-> **qwen_vl_utils 安装说明**：该包为本地源码，路径为 `./Qwen/qwen-vl-utils/src`，`server_qwen.py` 启动时会自动将其加入 `sys.path`，无需通过 pip 安装。
+> **qwen_vl_utils 安装说明**：该包为本地源码，根目录 `requirements.txt` 会以 editable 方式安装 `./cloud/Qwen/qwen-vl-utils`。`server_qwen.py` 也会在启动时自动将其源码路径加入 `sys.path`。
 >
 > **仅运行 Mock 或 Gemini 版本时**，`torch` / `transformers` / `accelerate` / `bitsandbytes` 均不需要安装。
 

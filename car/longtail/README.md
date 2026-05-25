@@ -1,26 +1,26 @@
 # longtail
 
-`car/longtail/` 是车端长尾场景检测模块。闭环入口 `../run_closed_loop.py` 会加载这里的分类器与配置文件。
+`car/longtail/` 是车端长尾场景检测模块。闭环入口 `../run_closed_loop.py` 会从环境变量生成检测器配置。
 
 ## 主要文件
 
 - `classifier.py`：多检测器融合分类器，提供 `LongTailClassifier`
-- `config.yaml`：检测器类型、权重、阈值与模型参数
+- `env_config.py`：从环境变量构造检测器配置
+- `../../.env_example`：环境变量示例
 - `detectors/`：检测器实现
 - `benchmark.py`：单张图片多轮推理性能测试
 - `evaluate.py`：数据集评估脚本
 - `dataset/`：样例数据集
-- `requirements.txt`：依赖列表
+
+依赖统一维护在仓库根目录的 `requirements.txt`。
 
 ## 分类器接口
 
 ```python
-import yaml
 from classifier import LongTailClassifier
+from env_config import load_longtail_config_from_env
 
-with open("config.yaml", "r", encoding="utf-8") as handle:
-    config = yaml.safe_load(handle)
-
+config = load_longtail_config_from_env()
 classifier = LongTailClassifier(config)
 result = classifier.predict("path/to/image.jpg")
 print(result["is_long_tail"], result["score"])
@@ -35,15 +35,17 @@ print(result["is_long_tail"], result["score"])
 - `inference_time`：总推理耗时
 - `fps`：按本次耗时估算的 FPS
 
-## 配置
+## 环境变量配置
 
-`config.yaml` 中的核心字段：
+核心环境变量：
 
-- `threshold`：长尾触发阈值
-- `detectors`：检测器列表
-- `type`：检测器类型，例如 `clip`、`yoloworld`、`yolov8`、`yolopv2`
-- `weight`：融合权重
-- `config`：单个检测器的模型路径和参数
+- `CAR_LONGTAIL_THRESHOLD`：长尾触发阈值
+- `CAR_LONGTAIL_DETECTORS`：检测器列表，例如 `clip,yolov8,yolopv2`
+- `CAR_LONGTAIL_*_WEIGHT`：检测器融合权重
+- `CAR_LONGTAIL_*_MODEL` / `CAR_LONGTAIL_*_WEIGHTS`：本地模型路径
+- `CAR_LONGTAIL_*_REMOTE_MODEL` / `CAR_LONGTAIL_*_REMOTE_URL`：本地模型缺失时的下载来源
+
+完整示例见仓库根目录 `.env_example`。运行时优先加载根目录 `.env`；如果 `.env` 不存在，则加载 `.env_example`。如果本地模型路径不存在且 `CAR_LONGTAIL_AUTO_DOWNLOAD=true`，程序会自动使用对应远端模型下载或让底层模型库拉取。
 
 ## 性能测试
 
@@ -68,7 +70,7 @@ python evaluate.py --dataset dataset --output evaluation_results
 
 `../run_closed_loop.py` 会将 `car/longtail` 加入 Python 路径，并按以下方式使用：
 
-1. 读取 `config.yaml`
+1. 从环境变量构造检测器配置
 2. 初始化 `LongTailClassifier`
 3. 周期性保存摄像头帧
 4. 调用 `classifier.predict(frame_path)`
