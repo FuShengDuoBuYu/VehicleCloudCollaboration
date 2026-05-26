@@ -19,6 +19,7 @@ class YOLOPv2Detector(BaseDetector):
         self.use_full_model = self.config.get('use_full_model', False)
         self.device = torch.device(self.config.get('device', 'cpu'))
         self.geometry_mode = self.config.get('geometry_mode', 'weighted')
+        self.fast_mask = self.config.get('fast_mask', True)
         self.geometry_weights = self.config.get('geometry_weights', {})
         self.linear_coefficients = self.config.get('linear_coefficients', [])
         self.linear_intercept = float(self.config.get('linear_intercept', 0.0))
@@ -56,7 +57,7 @@ class YOLOPv2Detector(BaseDetector):
         total_score = 0.25 * brightness_score + 0.35 * orange_score + 0.25 * edge_score + 0.15 * sat_score
         return float(np.clip(total_score, 0.0, 1.0))
 
-    def _letterbox(self, img: np.ndarray) -> np.ndarray:
+    def _letterbox(self, img: np.ndarray) -> tuple:
         shape = img.shape[:2]
         new_shape = (self.img_size, self.img_size)
         r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
@@ -69,29 +70,39 @@ class YOLOPv2Detector(BaseDetector):
             img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
         top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
         left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-        return cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
+        image = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
+        return image, (top, bottom, left, right)
 
-    def _preprocess_for_model(self, image_path: str) -> torch.Tensor:
+    def _preprocess_for_model(self, image_path: str) -> tuple:
         img = cv2.imread(image_path)
         if img is None:
             raise ValueError(f"failed to read image: {image_path}")
         img = cv2.resize(img, (1280, 720), interpolation=cv2.INTER_LINEAR)
-        img = self._letterbox(img)
+        img, padding = self._letterbox(img)
         img = img[:, :, ::-1].transpose(2, 0, 1)
         img = np.ascontiguousarray(img)
         tensor = torch.from_numpy(img).to(self.device).float()
         tensor /= 255.0
-        return tensor.unsqueeze(0)
+        return tensor.unsqueeze(0), padding
 
     def _predict_masks(self, image_path: str) -> tuple:
-        tensor = self._preprocess_for_model(image_path)
+        tensor, padding = self._preprocess_for_model(image_path)
         with torch.no_grad():
             _, seg, lane = self.model(tensor)
-        da_predict = seg[:, :, 12:372, :]
-        da_predict = torch.nn.functional.interpolate(da_predict, scale_factor=2, mode='bilinear')
+
+        if self.fast_mask:
+            top, bottom, left, right = padding
+            h_end = seg.shape[2] - bottom if bottom else seg.shape[2]
+            w_end = seg.shape[3] - right if right else seg.shape[3]
+            da_predict = seg[:, :, top:h_end, left:w_end]
+            lane_predict = lane[:, :, top:h_end, left:w_end]
+        else:
+            da_predict = seg[:, :, 12:372, :]
+            da_predict = torch.nn.functional.interpolate(da_predict, scale_factor=2, mode='bilinear')
+            lane_predict = lane[:, :, 12:372, :]
+            lane_predict = torch.nn.functional.interpolate(lane_predict, scale_factor=2, mode='bilinear')
+
         _, da_mask = torch.max(da_predict, 1)
-        lane_predict = lane[:, :, 12:372, :]
-        lane_predict = torch.nn.functional.interpolate(lane_predict, scale_factor=2, mode='bilinear')
         lane_mask = torch.round(lane_predict).squeeze(1)
         return (
             da_mask.int().squeeze().cpu().numpy().astype(np.uint8),

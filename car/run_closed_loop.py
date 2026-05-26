@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+import tempfile
 import threading
 import time
 from dataclasses import replace
@@ -88,6 +89,9 @@ def build_parser():
     parser.add_argument("--cloud-timeout", type=float, default=30.0, help="Cloud mock timeout in seconds")
     parser.add_argument("--web-host", default=None, help="Web UI bind host; defaults to vehicle_control settings")
     parser.add_argument("--web-port", type=int, default=None, help="Web UI port; defaults to vehicle_control settings")
+    warmup_group = parser.add_mutually_exclusive_group()
+    warmup_group.add_argument("--warmup-detector", dest="warmup_detector", action="store_true", default=True, help="Run one synthetic long-tail detection pass before the vehicle loop starts")
+    warmup_group.add_argument("--no-warmup-detector", dest="warmup_detector", action="store_false", help="Skip detector warmup before the vehicle loop starts")
 
     web_group = parser.add_mutually_exclusive_group()
     web_group.add_argument("--web", dest="web", action="store_true", default=True, help="Start vehicle web UI")
@@ -139,6 +143,25 @@ def save_frame(frame, frame_dir):
     path = os.path.join(frame_dir, "latest_frame.jpg")
     cv2.imwrite(path, frame)
     return path
+
+
+def warmup_longtail_classifier(classifier):
+    try:
+        import cv2
+        import numpy as np
+
+        path = os.path.join(tempfile.gettempdir(), "car_longtail_warmup.jpg")
+        frame = np.zeros((360, 640, 3), dtype=np.uint8)
+        cv2.imwrite(path, frame)
+        start = time.monotonic()
+        result = classifier.predict(path)
+        print(
+            "Detector warmup complete: "
+            f"detect={(time.monotonic() - start) * 1000:.0f}ms, "
+            f"score={result['score']:.3f}"
+        )
+    except Exception as exc:
+        print(f"Detector warmup skipped: {exc}")
 
 
 def wait_for_fresh_frame(camera, timeout, stale_timeout):
@@ -281,6 +304,8 @@ def run_closed_loop(args):
     print("Initializing long-tail classifier...")
     classifier = LongTailClassifier(config)
     print(f"Classifier ready with {len(classifier.detectors)} detector(s)")
+    if args.warmup_detector:
+        warmup_longtail_classifier(classifier)
 
     camera_config = replace(
         CAMERA_CONFIG,

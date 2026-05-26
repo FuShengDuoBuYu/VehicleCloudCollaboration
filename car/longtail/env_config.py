@@ -62,6 +62,7 @@ DEFAULT_YOLOWORLD_CLASSES = [
 
 def load_longtail_config_from_env() -> Dict[str, Any]:
     _load_env_file()
+    _apply_runtime_performance_settings()
     detectors = []
     for detector_type in _env_list("CAR_LONGTAIL_DETECTORS", ["clip", "yolov8", "yolopv2"], sep=","):
         detector_type = detector_type.lower()
@@ -93,6 +94,7 @@ def _clip_detector_config() -> Dict[str, Any]:
         "weight": _env_float("CAR_LONGTAIL_CLIP_WEIGHT", 0.5),
         "config": {
             "model_name": model_name,
+            "device": _env_str("CAR_LONGTAIL_CLIP_DEVICE", "cpu"),
             "max_prob_threshold": _env_float("CAR_LONGTAIL_CLIP_MAX_PROB_THRESHOLD", 0.22),
             "entropy_threshold": _env_float("CAR_LONGTAIL_CLIP_ENTROPY_THRESHOLD", 0.72),
             "labels": _env_list("CAR_LONGTAIL_CLIP_LABELS", DEFAULT_CLIP_LABELS, sep="|"),
@@ -134,6 +136,7 @@ def _yolov8_detector_config() -> Dict[str, Any]:
         "config": {
             "model_path": model_path,
             "conf_threshold": _env_float("CAR_LONGTAIL_YOLOV8_CONF_THRESHOLD", 0.25),
+            "img_size": _env_int("CAR_LONGTAIL_YOLOV8_IMG_SIZE", 320),
             "unusual_indicators": _env_list(
                 "CAR_LONGTAIL_YOLOV8_UNUSUAL_INDICATORS",
                 ["stop sign", "parking meter", "fire hydrant"],
@@ -162,6 +165,7 @@ def _yolopv2_detector_config() -> Dict[str, Any]:
             "use_full_model": use_full_model,
             "device": _env_str("CAR_LONGTAIL_YOLOPV2_DEVICE", "cpu"),
             "geometry_mode": _env_str("CAR_LONGTAIL_YOLOPV2_GEOMETRY_MODE", "weighted"),
+            "fast_mask": _env_bool("CAR_LONGTAIL_YOLOPV2_FAST_MASK", True),
             "geometry_weights": {
                 "near_missing": _env_float("CAR_LONGTAIL_YOLOPV2_NEAR_MISSING_WEIGHT", 0.22),
                 "center_missing": _env_float("CAR_LONGTAIL_YOLOPV2_CENTER_MISSING_WEIGHT", 0.18),
@@ -234,6 +238,32 @@ def _resolve_file_model(configured: str, remote_url: str, cache_name: str) -> st
 
 def _model_dir() -> Path:
     return _expand_path(_env_str("CAR_LONGTAIL_MODEL_DIR", str(DEFAULT_MODEL_DIR)))
+
+
+def _apply_runtime_performance_settings() -> None:
+    torch_threads = _env_int("CAR_LONGTAIL_TORCH_NUM_THREADS", 0)
+    if torch_threads > 0:
+        try:
+            import torch
+
+            torch.set_num_threads(torch_threads)
+            interop_threads = _env_int("CAR_LONGTAIL_TORCH_INTEROP_THREADS", 1)
+            if interop_threads > 0:
+                try:
+                    torch.set_num_interop_threads(interop_threads)
+                except RuntimeError:
+                    pass
+        except ImportError:
+            pass
+
+    opencv_threads = _env_int("CAR_LONGTAIL_OPENCV_NUM_THREADS", 0)
+    if opencv_threads > 0:
+        try:
+            import cv2
+
+            cv2.setNumThreads(opencv_threads)
+        except ImportError:
+            pass
 
 
 def _load_env_file() -> None:

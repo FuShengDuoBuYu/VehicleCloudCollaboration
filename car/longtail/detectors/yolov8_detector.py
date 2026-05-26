@@ -15,6 +15,7 @@ class YOLOv8Detector(BaseDetector):
             from ultralytics import YOLO
             model_path = self.config.get('model_path', 'yolov8n/yolov8n.pt')
             self.conf_threshold = self.config.get('conf_threshold', 0.25)
+            self.img_size = self.config.get('img_size', 320)
             self.model = YOLO(model_path)
             self.unusual_indicators = self.config.get('unusual_indicators', [
                 'traffic cone', 'cone', 'barricade', 'road barrier', 'construction sign',
@@ -24,7 +25,7 @@ class YOLOv8Detector(BaseDetector):
             raise RuntimeError("ultralytics is required for YOLOv8Detector") from exc
     
     def detect(self, image_path: str) -> float:
-        results = self.model.predict(source=image_path, conf=self.conf_threshold, verbose=False)
+        results = self.model.predict(source=image_path, conf=self.conf_threshold, imgsz=self.img_size, verbose=False)
         if len(results) == 0:
             return 0.0
         result = results[0]

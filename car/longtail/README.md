@@ -44,6 +44,9 @@ print(result["is_long_tail"], result["score"])
 - `CAR_LONGTAIL_*_WEIGHT`：检测器融合权重
 - `CAR_LONGTAIL_*_MODEL` / `CAR_LONGTAIL_*_WEIGHTS`：本地模型路径
 - `CAR_LONGTAIL_*_REMOTE_MODEL` / `CAR_LONGTAIL_*_REMOTE_URL`：本地模型缺失时的下载来源
+- `CAR_LONGTAIL_YOLOV8_IMG_SIZE` / `CAR_LONGTAIL_YOLOPV2_IMG_SIZE`：推理输入尺寸，树莓派优先使用 320
+- `CAR_LONGTAIL_YOLOPV2_FAST_MASK`：跳过 YOLOPv2 大尺寸 mask 上采样，降低单帧延迟
+- `CAR_LONGTAIL_TORCH_NUM_THREADS` / `CAR_LONGTAIL_OPENCV_NUM_THREADS`：运行线程数，`0` 表示使用框架默认值
 
 完整示例见仓库根目录 `.env_example`。运行时优先加载根目录 `.env`；如果 `.env` 不存在，则加载 `.env_example`。如果本地模型路径不存在且 `CAR_LONGTAIL_AUTO_DOWNLOAD=true`，程序会自动使用对应远端模型下载或让底层模型库拉取。
 
@@ -75,6 +78,8 @@ python evaluate.py --dataset dataset --output evaluation_results
 3. 周期性保存摄像头帧
 4. 调用 `classifier.predict(frame_path)`
 5. 根据 `is_long_tail` 决定是否请求云端 mock 决策
+
+树莓派运行时可以用 `--interval 3` 控制每 3 秒检测一次。`run_closed_loop.py` 默认会先执行一次 synthetic warmup，让三个模型的首次推理开销发生在闭环开始前；如需关闭可传 `--no-warmup-detector`。
 
 ## TODO
 

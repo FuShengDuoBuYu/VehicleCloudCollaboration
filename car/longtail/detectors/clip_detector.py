@@ -51,9 +51,23 @@ class CLIPDetector(BaseDetector):
         self.labels = self.config.get('labels', self.DEFAULT_LABELS)
         self.max_prob_threshold = self.config.get('max_prob_threshold', 0.22)
         self.entropy_threshold = self.config.get('entropy_threshold', 0.72)
+        self.device = torch.device(self.config.get('device', 'cpu'))
         self.model = CLIPModel.from_pretrained(self.model_name)
         self.processor = CLIPProcessor.from_pretrained(self.model_name)
-        self.model.eval()
+        self.model.to(self.device).eval()
+        self._prepare_text_features()
+
+    def _prepare_text_features(self):
+        inputs = self.processor(text=self.labels, return_tensors="pt", padding=True)
+        inputs = {key: value.to(self.device) for key, value in inputs.items()}
+        with torch.inference_mode():
+            text_features = self.model.get_text_features(**inputs)
+            if hasattr(text_features, "pooler_output"):
+                text_features = text_features.pooler_output
+            text_features = text_features.float()
+            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        self.text_features = text_features
+        self.logit_scale = self.model.logit_scale.exp().detach()
     
     def _calculate_entropy(self, probs: torch.Tensor) -> float:
         eps = 1e-8
@@ -63,10 +77,15 @@ class CLIPDetector(BaseDetector):
     
     def detect(self, image_path: str) -> float:
         img = Image.open(image_path).convert("RGB")
-        inputs = self.processor(text=self.labels, images=img, return_tensors="pt", padding=True)
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-            logits = outputs.logits_per_image[0].float()
+        inputs = self.processor(images=img, return_tensors="pt")
+        inputs = {key: value.to(self.device) for key, value in inputs.items()}
+        with torch.inference_mode():
+            image_features = self.model.get_image_features(**inputs)
+            if hasattr(image_features, "pooler_output"):
+                image_features = image_features.pooler_output
+            image_features = image_features.float()
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+            logits = (self.logit_scale * image_features @ self.text_features.T)[0].float()
         probs = torch.softmax(logits, dim=-1)
         max_prob = probs.max().item()
         top_idx = int(probs.argmax().item())
