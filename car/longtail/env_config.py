@@ -160,6 +160,23 @@ def _yolopv2_detector_config() -> Dict[str, Any]:
             "img_size": _env_int("CAR_LONGTAIL_YOLOPV2_IMG_SIZE", 640),
             "conf_threshold": _env_float("CAR_LONGTAIL_YOLOPV2_CONF_THRESHOLD", 0.3),
             "use_full_model": use_full_model,
+            "device": _env_str("CAR_LONGTAIL_YOLOPV2_DEVICE", "cpu"),
+            "geometry_mode": _env_str("CAR_LONGTAIL_YOLOPV2_GEOMETRY_MODE", "weighted"),
+            "geometry_weights": {
+                "near_missing": _env_float("CAR_LONGTAIL_YOLOPV2_NEAR_MISSING_WEIGHT", 0.22),
+                "center_missing": _env_float("CAR_LONGTAIL_YOLOPV2_CENTER_MISSING_WEIGHT", 0.18),
+                "width_jump": _env_float("CAR_LONGTAIL_YOLOPV2_WIDTH_JUMP_WEIGHT", 0.24),
+                "center_jump": _env_float("CAR_LONGTAIL_YOLOPV2_CENTER_JUMP_WEIGHT", 0.16),
+                "lane_anomaly": _env_float("CAR_LONGTAIL_YOLOPV2_LANE_ANOMALY_WEIGHT", 0.10),
+                "width_std": _env_float("CAR_LONGTAIL_YOLOPV2_WIDTH_STD_WEIGHT", 0.10),
+            },
+            "linear_coefficients": _env_float_list(
+                "CAR_LONGTAIL_YOLOPV2_LINEAR_COEFFICIENTS",
+                [0.408258, 0.611690, 0.900184, 0.261055, 0.375240, -2.352794, 6.273399, -2.959277, -1.691969, -3.064723],
+                sep="|",
+            ),
+            "linear_intercept": _env_float("CAR_LONGTAIL_YOLOPV2_LINEAR_INTERCEPT", 0.554888),
+            "linear_temperature": _env_float("CAR_LONGTAIL_YOLOPV2_LINEAR_TEMPERATURE", 1.0),
         },
     }
 
@@ -266,3 +283,10 @@ def _env_list(name: str, default: List[str], sep: str) -> List[str]:
     if value is None or value.strip() == "":
         return list(default)
     return [item.strip() for item in value.split(sep) if item.strip()]
+
+
+def _env_float_list(name: str, default: List[float], sep: str) -> List[float]:
+    value = os.environ.get(name)
+    if value is None or value.strip() == "":
+        return list(default)
+    return [float(item.strip()) for item in value.split(sep) if item.strip()]

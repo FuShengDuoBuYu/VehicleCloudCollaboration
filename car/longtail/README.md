@@ -75,3 +75,7 @@ python evaluate.py --dataset dataset --output evaluation_results
 3. 周期性保存摄像头帧
 4. 调用 `classifier.predict(frame_path)`
 5. 根据 `is_long_tail` 决定是否请求云端 mock 决策
+
+## TODO
+
+- YOLOPv2 目前使用单帧可行驶区域和车道线 mask 的几何特征评分。后续增加前后帧时序状态，基于相邻帧的可行驶区域面积、底部中心区域、道路宽度、道路中心偏移和车道线密度突变来提高长尾判断稳定性。
