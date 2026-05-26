@@ -37,29 +37,6 @@ DEFAULT_CLIP_LABELS = [
     "stop sign",
 ]
 
-DEFAULT_YOLOWORLD_CLASSES = [
-    "person",
-    "car",
-    "truck",
-    "bus",
-    "motorcycle",
-    "bicycle",
-    "scooter",
-    "traffic cone",
-    "traffic bollard",
-    "road barrier",
-    "traffic barrier",
-    "barricade",
-    "construction sign",
-    "road work sign",
-    "detour sign",
-    "lane closed sign",
-    "temporary sign",
-    "arrow board",
-    "warning sign",
-]
-
-
 def load_longtail_config_from_env() -> Dict[str, Any]:
     _load_env_file()
     _apply_runtime_performance_settings()
@@ -68,8 +45,6 @@ def load_longtail_config_from_env() -> Dict[str, Any]:
         detector_type = detector_type.lower()
         if detector_type == "clip":
             detectors.append(_clip_detector_config())
-        elif detector_type == "yoloworld":
-            detectors.append(_yoloworld_detector_config())
         elif detector_type == "yolov8":
             detectors.append(_yolov8_detector_config())
         elif detector_type == "yolopv2":
@@ -98,24 +73,6 @@ def _clip_detector_config() -> Dict[str, Any]:
             "max_prob_threshold": _env_float("CAR_LONGTAIL_CLIP_MAX_PROB_THRESHOLD", 0.22),
             "entropy_threshold": _env_float("CAR_LONGTAIL_CLIP_ENTROPY_THRESHOLD", 0.72),
             "labels": _env_list("CAR_LONGTAIL_CLIP_LABELS", DEFAULT_CLIP_LABELS, sep="|"),
-        },
-    }
-
-
-def _yoloworld_detector_config() -> Dict[str, Any]:
-    model_path = _resolve_ultralytics_model(
-        configured=_env_str("CAR_LONGTAIL_YOLOWORLD_MODEL", "/media/pi/FSDBY/weights/yolov8x-worldv2.pt"),
-        remote=_env_str("CAR_LONGTAIL_YOLOWORLD_REMOTE_MODEL", "yolov8x-worldv2.pt"),
-        remote_url=_env_str("CAR_LONGTAIL_YOLOWORLD_REMOTE_URL", ""),
-        cache_name="yolov8x-worldv2.pt",
-    )
-    return {
-        "type": "yoloworld",
-        "weight": _env_float("CAR_LONGTAIL_YOLOWORLD_WEIGHT", 0.3),
-        "config": {
-            "model_path": model_path,
-            "conf_threshold": _env_float("CAR_LONGTAIL_YOLOWORLD_CONF_THRESHOLD", 0.20),
-            "classes": _env_list("CAR_LONGTAIL_YOLOWORLD_CLASSES", DEFAULT_YOLOWORLD_CLASSES, sep="|"),
         },
     }
 

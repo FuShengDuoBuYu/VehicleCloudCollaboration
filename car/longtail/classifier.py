@@ -6,14 +6,12 @@ import time
 try:
     from .detectors import (
         CLIPDetector,
-        YOLOWorldDetector,
         YOLOv8Detector,
         YOLOPv2Detector,
     )
 except ImportError:
     from detectors import (
         CLIPDetector,
-        YOLOWorldDetector,
         YOLOv8Detector,
         YOLOPv2Detector,
     )
@@ -34,14 +32,12 @@ class LongTailClassifier:
         detector_configs = self.config.get('detectors', [])
         if not detector_configs:
             detector_configs = [
-                {'type': 'clip', 'weight': 0.35, 'config': {}},
-                {'type': 'yoloworld', 'weight': 0.30, 'config': {}},
-                {'type': 'yolov8', 'weight': 0.20, 'config': {}},
-                {'type': 'yolopv2', 'weight': 0.15, 'config': {}},
+                {'type': 'clip', 'weight': 0.30, 'config': {}},
+                {'type': 'yolov8', 'weight': 0.02, 'config': {}},
+                {'type': 'yolopv2', 'weight': 0.68, 'config': {}},
             ]
         detector_map = {
             'clip': CLIPDetector,
-            'yoloworld': YOLOWorldDetector,
             'yolov8': YOLOv8Detector,
             'yolopv2': YOLOPv2Detector,
         }

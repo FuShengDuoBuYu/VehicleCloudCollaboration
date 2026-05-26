@@ -3,8 +3,6 @@ Evaluation script for long-tail classifier on dataset
 """
 
 import argparse
-import os
-import glob
 from pathlib import Path
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
