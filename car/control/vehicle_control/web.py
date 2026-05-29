@@ -41,6 +41,9 @@ class VehicleControlServer:
                         return
                     self._send_json(runtime_control.get_state())
                     return
+                if parsed.path == "/api/latest-frame.jpg":
+                    self._serve_latest_frame()
+                    return
                 if parsed.path == "/stream.mjpg":
                     self._serve_stream()
                     return
@@ -107,12 +110,30 @@ class VehicleControlServer:
                 self.wfile.write(payload)
 
             def _send_json(self, payload, status=HTTPStatus.OK):
-                body = json.dumps(payload).encode("utf-8")
+                body = json.dumps(payload, ensure_ascii=False, default=str).encode("utf-8")
                 self.send_response(status)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
+
+            def _serve_latest_frame(self):
+                if runtime_control is not None:
+                    frame_path = runtime_control.latest_frame_path()
+                    if frame_path and os.path.exists(frame_path):
+                        self._serve_file(frame_path, "image/jpeg")
+                        return
+
+                frame = camera.get_jpeg_bytes()
+                if not frame:
+                    self.send_error(HTTPStatus.NOT_FOUND, "No frame available")
+                    return
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "image/jpeg")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(frame)))
+                self.end_headers()
+                self.wfile.write(frame)
 
             def _serve_stream(self):
                 self.send_response(HTTPStatus.OK)

@@ -1,7 +1,8 @@
-from .mock_client import CloudDecision, CloudMockClient, DEFAULT_MOCK_CHAT_URL
+from .mock_client import CloudClient, CloudDecision, DEFAULT_CLOUD_API_BASE_URL, DEFAULT_CLOUD_MODEL
 
 __all__ = [
+    "CloudClient",
     "CloudDecision",
-    "CloudMockClient",
-    "DEFAULT_MOCK_CHAT_URL",
+    "DEFAULT_CLOUD_API_BASE_URL",
+    "DEFAULT_CLOUD_MODEL",
 ]

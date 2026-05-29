@@ -77,7 +77,7 @@ python evaluate.py --dataset dataset --output evaluation_results
 2. 初始化 `LongTailClassifier`
 3. 周期性保存摄像头帧
 4. 调用 `classifier.predict(frame_path)`
-5. 根据 `is_long_tail` 决定是否请求云端 mock 决策
+5. 根据 `is_long_tail` 决定是否请求云端 LLM 决策
 
 树莓派运行时可以用 `--interval 3` 控制每 3 秒检测一次。`run_closed_loop.py` 默认会先执行一次 synthetic warmup，让三个模型的首次推理开销发生在闭环开始前；如需关闭可传 `--no-warmup-detector`。
 

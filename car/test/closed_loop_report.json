@@ -1,11 +1,11 @@
 {
   "ok": true,
-  "total_latency_ms": 18210.003,
+  "total_latency_ms": 22863.739,
   "stages": [
     {
       "name": "image_input",
       "ok": true,
-      "latency_ms": 19.614,
+      "latency_ms": 39.942,
       "expected_input": {
         "image_path": "/workspaces/VehicleCloudCollaboration/car/test/test_image.jpg",
         "expected": "readable image file"
@@ -15,47 +15,47 @@
         "width": 1920,
         "height": 1020,
         "channels": 3,
-        "file_size_bytes": 543557
+        "file_size_bytes": 457288
       },
       "error": null
     },
     {
       "name": "longtail_detection",
       "ok": true,
-      "latency_ms": 18189.134,
+      "latency_ms": 19942.7,
       "expected_input": {
         "input": {
           "image_path": "/workspaces/VehicleCloudCollaboration/car/test/test_image.jpg",
           "width": 1920,
           "height": 1020,
           "channels": 3,
-          "file_size_bytes": 543557
+          "file_size_bytes": 457288
         },
         "expected": "LongTailClassifier returns is_long_tail=true"
       },
       "actual_output": {
         "is_long_tail": true,
-        "score": 0.6580435183077535,
+        "score": 0.6814318821306605,
         "threshold": 0.4986,
         "individual_scores": [
           {
             "detector": "CLIPDetector",
-            "score": 0.7751345224968884,
-            "inference_time": 2.201085329055786
+            "score": 0.9,
+            "inference_time": 2.4085285663604736
           },
           {
             "detector": "YOLOv8Detector",
-            "score": 0.0,
-            "inference_time": 0.177872896194458
+            "score": 0.24051009118556976,
+            "inference_time": 0.2585108280181885
           },
           {
             "detector": "YOLOPv2Detector",
-            "score": 0.6257399434686574,
-            "inference_time": 0.6419947147369385
+            "score": 0.5979730592749252,
+            "inference_time": 0.9622406959533691
           }
         ],
-        "inference_time": 3.020986318588257,
-        "fps": 0.33101771889761883,
+        "inference_time": 3.629317283630371,
+        "fps": 0.2755339150176778,
         "detector": "LongTailClassifier",
         "detector_count": 3,
         "detector_names": [
@@ -65,39 +65,72 @@
         ],
         "config_source": "environment",
         "image_path": "/workspaces/VehicleCloudCollaboration/car/test/test_image.jpg",
-        "end_to_end_detector_time": 6.526927326999612
+        "end_to_end_detector_time": 7.690986685000098,
+        "latencies_ms": {
+          "config_load": 33.411,
+          "classifier_init": 4028.225,
+          "predict": 3629.33,
+          "end_to_end": 7691.0
+        }
       },
       "error": null
     },
     {
       "name": "cloud_decision",
       "ok": true,
-      "latency_ms": 0.609,
+      "latency_ms": 2873.789,
       "expected_input": {
         "detection": {
           "is_long_tail": true,
-          "score": 0.6580435183077535,
+          "score": 0.6814318821306605,
           "threshold": 0.4986,
           "detector": "LongTailClassifier",
           "object": null
         },
-        "expected": "command=left, action=lane-left"
+        "expected": "valid cloud command and vehicle action"
       },
       "actual_output": {
-        "command": "left",
-        "action": "lane-left",
-        "reason": "offline in-process mock: traffic cone triggers left lane change",
-        "latency_ms": 0.001,
-        "backend": "inprocess",
-        "mock_url": "inprocess://offline-mock",
-        "request_path": null,
-        "request_has_prompt": true,
-        "request_json_mode": true,
-        "request_prompt_preview": "当前车辆已经触发长尾检测，需要云端 mock 返回一个控制决策。\n\n中期联调要求：\n- 不根据图片内容做真实推理\n- 不返回 right、straight 或 stop\n- 始终返回向左改道\n\n检测信息：\n- image_path: /workspaces/VehicleCloudCollaboration/car/test/test_image.jpg\n- long_tail_score: 0.658\n- threshold: 0.499\n\n请严格只返回如下 JSON：\n{",
+        "command": "straight",
+        "action": "forward",
+        "reason": "前方绿灯，车辆行驶在车道中央，右侧虽有施工但已设置隔离锥桶，保持直行即可安全通过。",
+        "latency_ms": 2853.567,
+        "timings_ms": {
+          "payload_build": 37.961,
+          "http": 2808.803,
+          "parse": 0.2,
+          "total": 2853.567
+        },
+        "backend": "cloud",
+        "api_url": "https://<configured-cloud>/v1/chat/completions",
+        "request_path": "/v1/chat/completions",
+        "request_has_messages": true,
+        "request_has_image": true,
+        "request_response_format": {
+          "type": "json_object"
+        },
+        "request_prompt_preview": "当前车辆已经触发长尾检测，请结合图片和检测信息返回一个车辆动作决策。\n\n可选 command：\n- left：左变道避让\n- right：右变道避让\n- straight：继续直行\n- stop：停车等待\n\n检测信息：\n- image_path: /workspaces/VehicleCloudCollaboration/car/test/test_image.jpg\n- long_tail_score: 0.681\n- threshold: 0.499\n- detector",
         "raw_response": {
-          "command": "left",
-          "action": "lane-left",
-          "reason": "offline in-process mock: traffic cone triggers left lane change"
+          "id": "chatcmpl-3a6c7cee39e849ee838175173c21b0d2",
+          "object": "chat.completion",
+          "created": 1780049044,
+          "model": "qwen3.5:9b",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "```json\n{\"command\":\"straight\",\"action\":\"forward\",\"reason\":\"前方绿灯，车辆行驶在车道中央，右侧虽有施工但已设置隔离锥桶，保持直行即可安全通过。\"}\n```"
+              },
+              "logprobs": null,
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 2333,
+            "completion_tokens": 43,
+            "total_tokens": 2376
+          },
+          "system_fingerprint": "fp_ollama_local"
         }
       },
       "error": null
@@ -105,13 +138,13 @@
     {
       "name": "vehicle_control",
       "ok": true,
-      "latency_ms": 0.558,
+      "latency_ms": 0.145,
       "expected_input": {
-        "action": "lane-left",
-        "expected": "VehicleController accepts lane-left without hardware"
+        "action": "forward",
+        "expected": "VehicleController accepts the cloud action without hardware"
       },
       "actual_output": {
-        "action_requested": "lane-left",
+        "action_requested": "forward",
         "state_after_action": {
           "current_action": "forward",
           "status": "cruising",
@@ -142,70 +175,22 @@
             "post_brake_time": 0.15
           }
         },
-        "command_count": 13,
-        "ramp_command_count": 6,
-        "contains_left_turn_arc": true,
-        "contains_approach_hold": true,
+        "command_count": 1,
+        "ramp_command_count": 1,
+        "contains_left_turn_arc": false,
+        "contains_right_turn_arc": true,
+        "contains_approach_hold": false,
+        "latencies_ms": {
+          "dispatch": 0.024,
+          "wait_for_action": 0.0,
+          "total": 0.099
+        },
         "first_commands": [
           {
             "op": "ramp_to",
-            "left_speed": 32,
-            "right_speed": 22,
+            "left_speed": 28,
+            "right_speed": 18,
             "duration_s": 0.25
-          },
-          {
-            "op": "hold",
-            "duration_s": 0.55
-          },
-          {
-            "op": "ramp_to",
-            "left_speed": 1,
-            "right_speed": 1,
-            "duration_s": 0.8
-          },
-          {
-            "op": "hold",
-            "duration_s": 0.25
-          },
-          {
-            "op": "hold",
-            "duration_s": 0.05
-          },
-          {
-            "op": "ramp_to",
-            "left_speed": 9,
-            "right_speed": 40,
-            "duration_s": 0.8
-          },
-          {
-            "op": "hold",
-            "duration_s": 1.05
-          },
-          {
-            "op": "ramp_to",
-            "left_speed": 33,
-            "right_speed": 13,
-            "duration_s": 0.8
-          },
-          {
-            "op": "hold",
-            "duration_s": 0.75
-          },
-          {
-            "op": "ramp_to",
-            "left_speed": 1,
-            "right_speed": 1,
-            "duration_s": 0.8
-          },
-          {
-            "op": "hold",
-            "duration_s": 0.15
-          },
-          {
-            "op": "ramp_to",
-            "left_speed": 32,
-            "right_speed": 22,
-            "duration_s": 0.45
           }
         ]
       },

@@ -1,6 +1,6 @@
 # VehicleCloudCollaboration
 
-这是一个车云协同实验仓库，车端闭环由摄像头、长尾检测、云端 mock 决策、车辆控制和网页控制台组成。
+这是一个车云协同实验仓库，车端闭环由摄像头、长尾检测、云端 LLM 决策、车辆控制和网页控制台组成。
 
 ![整体架构图](arch.svg)
 
@@ -8,12 +8,11 @@
 
 ```text
 VehicleCloudCollaboration/
-├── car/
-│   ├── run_closed_loop.py
-│   ├── cloud_client/
-│   ├── longtail/
-│   └── control/
-└── cloud/
+└── car/
+    ├── run_closed_loop.py
+    ├── cloud_client/
+    ├── longtail/
+    └── control/
 ```
 
 ## 车端闭环
@@ -31,8 +30,8 @@ python run_closed_loop.py
 2. `vehicle_control` 网页控制台展示摄像头画面、车辆状态和闭环开始按钮。
 3. 点击网页里的“开始闭环”后，车辆才会进入自动行驶。
 4. `LongTailClassifier` 输出长尾分数。
-5. 分数达到阈值时调用 `cloud_client` 的 mock `/chat` 接口。
-6. mock 决策返回。
+5. 分数达到阈值时调用 `cloud_client` 的 OpenAI-compatible `/v1/chat/completions` 接口。
+6. 云端 LLM 返回决策。
 7. 车端将 `left` 映射为 `lane-left` 并通过 `VehicleController` 执行。
 
 常用参数：
@@ -41,6 +40,7 @@ python run_closed_loop.py
 python run_closed_loop.py
 CAR_LONGTAIL_THRESHOLD=0.6 python run_closed_loop.py
 python run_closed_loop.py --cloud-mode none
+python run_closed_loop.py --cloud-url https://your-ngrok-or-cloud-base-url
 python run_closed_loop.py --web-port 8081
 python run_closed_loop.py --no-web
 python run_closed_loop.py --start-immediately
@@ -54,6 +54,8 @@ python run_closed_loop.py --no-stop-for-detection
 ```text
 http://<车辆IP>:8080
 ```
+
+网页控制台会实时展示摄像头流、最新分析帧、闭环日志、检测器分数、阶段时延和云端决策。
 
 ## 车端模块
 
@@ -72,7 +74,7 @@ http://<车辆IP>:8080
 
 ### car/cloud_client
 
-车端云服务客户端模块。当前包含 mock 客户端 `CloudMockClient`，用于调用通用 LLM mock `/chat` 服务并生成车辆动作决策。
+车端云服务客户端模块。`CloudClient` 调用云端 OpenAI-compatible `/v1/chat/completions` 服务，发送文本检测信息和当前图片，解析车辆动作决策。
 
 模块说明见 [car/cloud_client/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/cloud_client/README.md)。
 
@@ -89,11 +91,16 @@ http://<车辆IP>:8080
 
 模块说明见 [car/control/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/control/README.md)。
 
-## 云端目录
+## 云端配置
 
-`cloud/` 放置云端推理与服务端代码。车端中期闭环默认使用 `car/cloud_client/mock_client.py` 调用 mock 服务。
+云端服务地址通过根目录 `.env` 配置：
 
-云端说明见 [cloud/README.md](/home/pi/Desktop/VehicleCloudCollaboration/cloud/README.md)。
+```text
+CAR_CLOUD_API_BASE_URL="https://your-ngrok-or-cloud-base-url"
+CAR_CLOUD_MODEL="qwen3.5:9b"
+```
+
+`.env_example` 只保留占位配置，避免把个人公网 API 地址提交到代码里。
 
 ## 运行检查
 

@@ -6,149 +6,408 @@
   <title>Vehicle Control</title>
   <style>
     :root {
-      --bg: #eef2e8;
-      --panel: rgba(255, 253, 247, 0.92);
-      --ink: #142013;
-      --accent: #186a3b;
-      --accent-2: #c74f2a;
-      --line: rgba(20, 32, 19, 0.12);
-      --shadow: 0 24px 60px rgba(20, 32, 19, 0.16);
+      --bg: #f5f7f8;
+      --panel: #ffffff;
+      --ink: #172026;
+      --muted: #62717c;
+      --line: #d8e0e5;
+      --accent: #116b4f;
+      --danger: #b74332;
+      --blue: #315f8d;
+      --soft: #eef3f5;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       color: var(--ink);
-      background:
-        radial-gradient(circle at top left, rgba(24, 106, 59, 0.18), transparent 36%),
-        radial-gradient(circle at right, rgba(199, 79, 42, 0.12), transparent 30%),
-        linear-gradient(180deg, #f4f7ef 0%, var(--bg) 100%);
+      background: var(--bg);
       min-height: 100vh;
     }
     .shell {
-      width: min(1100px, calc(100vw - 32px));
-      margin: 24px auto;
+      width: min(1440px, calc(100vw - 24px));
+      margin: 12px auto;
       display: grid;
-      grid-template-columns: 1.4fr 0.8fr;
-      gap: 20px;
+      grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.85fr);
+      gap: 12px;
     }
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
+      border-radius: 8px;
       overflow: hidden;
     }
-    .video-frame {
-      padding: 18px;
+    .panel-header {
+      height: 42px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+      font-size: 14px;
+      font-weight: 700;
     }
-    .video-frame img {
+    .video-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.8fr) minmax(260px, 0.9fr);
+      gap: 12px;
+      padding: 12px;
+    }
+    .feed img {
       width: 100%;
       display: block;
-      border-radius: 18px;
-      background: #dfe8da;
       aspect-ratio: 4 / 3;
       object-fit: cover;
+      background: #dce4e8;
+      border: 1px solid var(--line);
+      border-radius: 6px;
     }
-    .controls {
-      padding: 24px;
+    .side {
       display: grid;
-      gap: 14px;
+      gap: 12px;
       align-content: start;
     }
-    h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
+    .subsection {
+      display: grid;
+      gap: 8px;
     }
-    p {
-      margin: 0;
-      line-height: 1.6;
-      color: rgba(20, 32, 19, 0.76);
+    .subsection-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
     }
-    .status {
-      padding: 14px 16px;
-      background: rgba(24, 106, 59, 0.08);
-      border-radius: 16px;
-      font-size: 14px;
-      line-height: 1.7;
+    .controls {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
     }
-    .buttons {
+    .button-row {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 8px;
     }
     button {
       border: 0;
-      border-radius: 16px;
-      padding: 16px 18px;
-      font-size: 16px;
+      border-radius: 6px;
+      padding: 12px 10px;
+      min-height: 42px;
+      font-size: 14px;
       font-weight: 700;
       cursor: pointer;
-      color: white;
+      color: #fff;
       background: var(--accent);
-      transition: transform 120ms ease, opacity 120ms ease;
     }
-    button:hover { transform: translateY(-1px); }
-    button.stop { background: var(--accent-2); }
-    button.secondary { background: #355d7a; }
-    .hint {
+    button:hover { filter: brightness(0.96); }
+    button.stop { background: var(--danger); }
+    button.secondary { background: var(--blue); }
+    .status-line {
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+    .metric {
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--soft);
+      min-width: 0;
+    }
+    .metric .label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    .metric .value {
+      margin-top: 4px;
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .content {
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 6px 10px;
       font-size: 13px;
-      color: rgba(20, 32, 19, 0.66);
+      line-height: 1.45;
     }
-    @media (max-width: 900px) {
-      .shell {
+    .kv .key { color: var(--muted); }
+    .kv .value {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .latency-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #fbfcfd;
+    }
+    .logs {
+      max-height: 300px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      background: #101820;
+      color: #dce6ec;
+      padding: 10px;
+    }
+    .log-line {
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .muted { color: var(--muted); }
+    @media (max-width: 1100px) {
+      .shell,
+      .video-grid {
+        grid-template-columns: 1fr;
+      }
+      .status-line,
+      .latency-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 560px) {
+      .shell { width: calc(100vw - 12px); }
+      .button-row,
+      .status-line,
+      .latency-grid {
         grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <section class="panel video-frame">
-      <img src="/stream.mjpg" alt="实时摄像头画面">
+  <main class="shell">
+    <section class="panel">
+      <div class="panel-header">
+        <span>Camera</span>
+        <span class="muted" id="frameAge">--</span>
+      </div>
+      <div class="video-grid">
+        <div class="feed">
+          <img src="/stream.mjpg" alt="实时摄像头画面">
+        </div>
+        <div class="side">
+          <div class="subsection">
+            <div class="subsection-title">Analysis Frame</div>
+            <div class="feed" style="padding:12px;">
+              <img id="analysisFrame" src="/api/latest-frame.jpg" alt="最新分析帧">
+            </div>
+          </div>
+          <div class="subsection">
+            <div class="subsection-title">Controls</div>
+            <div class="controls">
+              <div class="button-row">
+                <button data-loop-action="start">开始闭环</button>
+                <button data-loop-action="pause" class="stop">暂停闭环</button>
+              </div>
+              <div class="button-row">
+                <button data-action="forward">正常行驶</button>
+                <button data-action="stop" class="stop">车辆停止</button>
+                <button data-action="lane-left" class="secondary">左变道</button>
+                <button data-action="lane-right" class="secondary">右变道</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
-    <aside class="panel controls">
-      <div>
-        <h1>车辆控制台</h1>
-        <p>车辆启动后保持待命，点击开始闭环后进入自动检测与云端决策。</p>
+
+    <section class="panel">
+      <div class="panel-header">State</div>
+      <div class="status-line">
+        <div class="metric">
+          <div class="label">Loop</div>
+          <div class="value" id="loopState">--</div>
+        </div>
+        <div class="metric">
+          <div class="label">Action</div>
+          <div class="value" id="actionState">--</div>
+        </div>
+        <div class="metric">
+          <div class="label">Message</div>
+          <div class="value" id="loopMessage">--</div>
+        </div>
       </div>
-      <div class="status" id="status">状态加载中...</div>
-      <div class="buttons">
-        <button data-loop-action="start">开始闭环</button>
-        <button data-loop-action="pause" class="stop">暂停闭环</button>
+      <div class="content">
+        <div>
+          <div class="panel-header" style="border:1px solid var(--line); border-radius:6px 6px 0 0;">Latencies</div>
+          <div class="latency-grid" id="latencies" style="border:1px solid var(--line); border-top:0; padding:8px; border-radius:0 0 6px 6px;"></div>
+        </div>
+
+        <div>
+          <div class="panel-header" style="border:1px solid var(--line); border-radius:6px 6px 0 0;">Detection</div>
+          <div style="border:1px solid var(--line); border-top:0; border-radius:0 0 6px 6px;">
+            <div class="kv" id="detectionKv" style="padding:10px;"></div>
+            <table>
+              <thead>
+                <tr><th>Detector</th><th>Score</th><th>Latency</th></tr>
+              </thead>
+              <tbody id="detectorRows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel-header" style="border:1px solid var(--line); border-radius:6px 6px 0 0;">Cloud Decision</div>
+          <div class="kv" id="cloudKv" style="border:1px solid var(--line); border-top:0; padding:10px; border-radius:0 0 6px 6px;"></div>
+        </div>
+
+        <div>
+          <div class="panel-header" style="border:1px solid var(--line); border-radius:6px 6px 0 0;">Logs</div>
+          <div class="logs" id="logs"></div>
+        </div>
       </div>
-      <div class="buttons">
-        <button data-action="forward">正常行驶</button>
-        <button data-action="stop" class="stop">车辆停止</button>
-        <button data-action="lane-left" class="secondary">左变道</button>
-        <button data-action="lane-right" class="secondary">右变道</button>
-      </div>
-      <div class="hint">闭环接口：POST /api/closed-loop?action=start|pause</div>
-    </aside>
-  </div>
+    </section>
+  </main>
+
   <script>
-    const statusNode = document.getElementById('status');
+    const nodes = {
+      loopState: document.getElementById('loopState'),
+      actionState: document.getElementById('actionState'),
+      loopMessage: document.getElementById('loopMessage'),
+      frameAge: document.getElementById('frameAge'),
+      analysisFrame: document.getElementById('analysisFrame'),
+      latencies: document.getElementById('latencies'),
+      detectionKv: document.getElementById('detectionKv'),
+      detectorRows: document.getElementById('detectorRows'),
+      cloudKv: document.getElementById('cloudKv'),
+      logs: document.getElementById('logs')
+    };
+
+    function valueText(value, fallback = '--') {
+      return value === null || value === undefined || value === '' ? fallback : String(value);
+    }
+
+    function escapeHtml(value) {
+      return valueText(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function ms(value) {
+      if (value === null || value === undefined) return '--';
+      return `${Number(value).toFixed(1)} ms`;
+    }
+
+    function setKv(node, rows) {
+      node.innerHTML = rows.map(([key, value]) => (
+        `<div class="key">${escapeHtml(key)}</div><div class="value">${escapeHtml(value)}</div>`
+      )).join('');
+    }
+
+    function renderLatencies(latencies) {
+      const order = ['save', 'detect', 'cloud', 'vehicle_action', 'total'];
+      nodes.latencies.innerHTML = order.map((key) => `
+        <div class="metric">
+          <div class="label">${key}</div>
+          <div class="value">${ms(latencies && latencies[key])}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderDetection(detection) {
+      if (!detection) {
+        setKv(nodes.detectionKv, [['status', '--'], ['score', '--'], ['frame', '--']]);
+        nodes.detectorRows.innerHTML = '<tr><td colspan="3" class="muted">--</td></tr>';
+        return;
+      }
+      setKv(nodes.detectionKv, [
+        ['status', detection.is_long_tail ? 'LONG-TAIL' : 'NORMAL'],
+        ['score', detection.score],
+        ['threshold', detection.threshold],
+        ['fps', detection.fps],
+        ['latency', ms(detection.latency_ms)],
+        ['frame', detection.frame_path]
+      ]);
+      const rows = detection.individual_scores || [];
+      nodes.detectorRows.innerHTML = rows.length ? rows.map((row) => `
+        <tr>
+          <td>${escapeHtml(row.detector)}</td>
+          <td>${escapeHtml(row.score)}</td>
+          <td>${ms(row.latency_ms)}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="3" class="muted">--</td></tr>';
+    }
+
+    function renderCloud(decision) {
+      if (!decision) {
+        setKv(nodes.cloudKv, [['command', '--'], ['action', '--'], ['reason', '--']]);
+        return;
+      }
+      const timings = decision.timings_ms || {};
+      setKv(nodes.cloudKv, [
+        ['command', decision.command],
+        ['action', decision.action],
+        ['reason', decision.reason],
+        ['latency', ms(decision.latency_ms)],
+        ['payload', ms(timings.payload_build)],
+        ['http', ms(timings.http)],
+        ['parse', ms(timings.parse)]
+      ]);
+    }
+
+    function renderLogs(logs) {
+      const lines = (logs || []).slice(-80);
+      nodes.logs.innerHTML = lines.length ? lines.map((log) => (
+        `<div class="log-line">[${escapeHtml(log.time)}] ${escapeHtml(log.level)} ${escapeHtml(log.message)}</div>`
+      )).join('') : '<div class="log-line">--</div>';
+      nodes.logs.scrollTop = nodes.logs.scrollHeight;
+    }
 
     async function refreshState() {
-      const response = await fetch('/api/state');
+      const response = await fetch('/api/state', { cache: 'no-store' });
       const state = await response.json();
       const loop = state.closed_loop || {};
-      const loopStatus = loop.started ? '运行中' : '待命';
-      const message = loop.message ? ` | ${loop.message}` : '';
-      statusNode.textContent = `闭环: ${loopStatus}${message} | 当前动作: ${state.current_action} | 状态: ${state.status}`;
+      nodes.loopState.textContent = loop.started ? '运行中' : '待命';
+      nodes.actionState.textContent = `${valueText(state.current_action)} / ${valueText(state.status)}`;
+      nodes.loopMessage.textContent = valueText(loop.message);
+      nodes.frameAge.textContent = loop.latest_frame_path ? loop.latest_frame_path.split('/').slice(-1)[0] : '--';
+      renderLatencies(loop.last_cycle || loop.latencies_ms || {});
+      renderDetection(loop.last_detection);
+      renderCloud(loop.last_cloud_decision);
+      renderLogs(loop.logs);
+      nodes.analysisFrame.src = `/api/latest-frame.jpg?ts=${Date.now()}`;
     }
 
     async function sendAction(action) {
-      await fetch(`/api/control?action=${encodeURIComponent(action)}`, {
-        method: 'POST'
-      });
+      await fetch(`/api/control?action=${encodeURIComponent(action)}`, { method: 'POST' });
       await refreshState();
     }
 
     async function sendLoopAction(action) {
-      await fetch(`/api/closed-loop?action=${encodeURIComponent(action)}`, {
-        method: 'POST'
-      });
+      await fetch(`/api/closed-loop?action=${encodeURIComponent(action)}`, { method: 'POST' });
       await refreshState();
     }
 
