@@ -2,7 +2,7 @@
 
 这是一个车云协同实验仓库，车端闭环由摄像头、长尾检测、云端 LLM 决策、车辆控制和网页控制台组成。
 
-![整体架构图](arch.svg)
+![整体架构图](readme.assets/arch.svg)
 
 ## 目录结构
 
@@ -49,6 +49,14 @@ python run_closed_loop.py --no-stop-for-detection
 
 当前默认变道参数参考见 `car/control/vehicle_control/lane_change_reference.yaml`。
 
+## 演示视频
+
+<video src="readme.assets/video.mp4" controls width="100%"></video>
+
+[查看演示视频](readme.assets/video.mp4)
+
+## 网页控制台
+
 网页控制台默认地址：
 
 ```text
@@ -56,6 +64,8 @@ http://<车辆IP>:8080
 ```
 
 网页控制台会实时展示摄像头流、最新分析帧、闭环日志、检测器分数、阶段时延和云端决策。
+
+![网页控制台](readme.assets/webUI.png)
 
 ## 车端模块
 
@@ -70,13 +80,13 @@ http://<车辆IP>:8080
 - `inference_time`
 - `fps`
 
-模块说明见 [car/longtail/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/longtail/README.md)。
+模块说明见 [car/longtail/README.md](car/longtail/README.md)。
 
 ### car/cloud_client
 
 车端云服务客户端模块。`CloudClient` 调用云端 OpenAI-compatible `/v1/chat/completions` 服务，发送文本检测信息和当前图片，解析车辆动作决策。
 
-模块说明见 [car/cloud_client/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/cloud_client/README.md)。
+模块说明见 [car/cloud_client/README.md](car/cloud_client/README.md)。
 
 ### car/control
 
@@ -89,7 +99,7 @@ http://<车辆IP>:8080
 - `lane-left`
 - `lane-right`
 
-模块说明见 [car/control/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/control/README.md)。
+模块说明见 [car/control/README.md](car/control/README.md)。
 
 ## 云端配置
 
@@ -128,7 +138,7 @@ cd /home/pi/Desktop/VehicleCloudCollaboration
 python car/test/closed_loop_test.py
 ```
 
-测试说明见 [car/test/README.md](/home/pi/Desktop/VehicleCloudCollaboration/car/test/README.md)。
+测试说明见 [car/test/README.md](car/test/README.md)。
 
 ## 许可证
 
