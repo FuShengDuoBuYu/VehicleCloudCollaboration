@@ -22,8 +22,11 @@ CLOUD_TIMEOUT_ENV = "CAR_CLOUD_TIMEOUT"
 CLOUD_NUM_CTX_ENV = "CAR_CLOUD_NUM_CTX"
 CLOUD_MAX_TOKENS_ENV = "CAR_CLOUD_MAX_COMPLETION_TOKENS"
 CLOUD_TEMPERATURE_ENV = "CAR_CLOUD_TEMPERATURE"
+CLOUD_TOP_P_ENV = "CAR_CLOUD_TOP_P"
+CLOUD_SEED_ENV = "CAR_CLOUD_SEED"
 CLOUD_THINK_ENV = "CAR_CLOUD_THINK"
 CLOUD_IMAGE_LIMIT_MB_ENV = "CAR_CLOUD_IMAGE_LIMIT_MB"
+CLOUD_USER_AGENT_ENV = "CAR_CLOUD_USER_AGENT"
 
 
 def _load_env_file() -> None:
@@ -69,14 +72,15 @@ DEFAULT_CLOUD_TIMEOUT = float(os.environ.get(CLOUD_TIMEOUT_ENV, "30") or 30)
 DEFAULT_CLOUD_NUM_CTX = int(os.environ.get(CLOUD_NUM_CTX_ENV, "93696") or 93696)
 DEFAULT_CLOUD_MAX_COMPLETION_TOKENS = int(os.environ.get(CLOUD_MAX_TOKENS_ENV, "256") or 256)
 DEFAULT_CLOUD_TEMPERATURE = float(os.environ.get(CLOUD_TEMPERATURE_ENV, "0") or 0)
+DEFAULT_CLOUD_TOP_P = float(os.environ.get(CLOUD_TOP_P_ENV, "0.95") or 0.95)
+DEFAULT_CLOUD_SEED = int(os.environ.get(CLOUD_SEED_ENV, "42") or 42)
 DEFAULT_CLOUD_THINK = os.environ.get(CLOUD_THINK_ENV, "false").strip().lower() in {"1", "true", "yes", "on"}
 DEFAULT_CLOUD_IMAGE_LIMIT_BYTES = int(float(os.environ.get(CLOUD_IMAGE_LIMIT_MB_ENV, "20") or 20) * 1024 * 1024)
+DEFAULT_CLOUD_USER_AGENT = os.environ.get(CLOUD_USER_AGENT_ENV, "VehicleCloudCollaboration/1.0").strip() or "VehicleCloudCollaboration/1.0"
 
 COMMAND_TO_ACTION = {
     "left": "lane-left",
     "right": "lane-right",
-    "straight": "forward",
-    "stop": "stop",
 }
 
 DECISION_SYSTEM_PROMPT = """
@@ -84,15 +88,15 @@ DECISION_SYSTEM_PROMPT = """
 你会收到车端长尾检测结果和当前摄像头画面。
 请基于画面中的道路、障碍物、车道和交通风险，选择一个安全的车辆动作。
 必须只返回 JSON，不要输出 Markdown、解释或多余文本。
-command 只能是 left、right、straight、stop 之一。
-action 必须分别对应 lane-left、lane-right、forward、stop。
+command 只能是 left 或 right。
+action 必须分别对应 lane-left 或 lane-right。
 """.strip()
 
 DECISION_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "command": {"type": "string", "enum": ["left", "right", "straight", "stop"]},
-        "action": {"type": "string", "enum": ["lane-left", "lane-right", "forward", "stop"]},
+        "command": {"type": "string", "enum": ["left", "right"]},
+        "action": {"type": "string", "enum": ["lane-left", "lane-right"]},
         "reason": {"type": "string"},
     },
     "required": ["command", "action", "reason"],
@@ -120,8 +124,11 @@ class CloudClient:
         num_ctx: int = DEFAULT_CLOUD_NUM_CTX,
         max_completion_tokens: int = DEFAULT_CLOUD_MAX_COMPLETION_TOKENS,
         temperature: float = DEFAULT_CLOUD_TEMPERATURE,
+        top_p: float = DEFAULT_CLOUD_TOP_P,
+        seed: int = DEFAULT_CLOUD_SEED,
         think: bool = DEFAULT_CLOUD_THINK,
         image_limit_bytes: int = DEFAULT_CLOUD_IMAGE_LIMIT_BYTES,
+        user_agent: Optional[str] = None,
     ):
         _load_env_file()
         self.base_url = (url or os.environ.get(CLOUD_API_BASE_URL_ENV) or DEFAULT_CLOUD_API_BASE_URL).strip()
@@ -132,8 +139,11 @@ class CloudClient:
         self.num_ctx = num_ctx
         self.max_completion_tokens = max_completion_tokens
         self.temperature = temperature
+        self.top_p = top_p
+        self.seed = seed
         self.think = think
         self.image_limit_bytes = image_limit_bytes
+        self.user_agent = (user_agent or os.environ.get(CLOUD_USER_AGENT_ENV) or DEFAULT_CLOUD_USER_AGENT).strip()
         self.last_request_payload = None
 
         if not self.base_url:
@@ -153,8 +163,6 @@ class CloudClient:
 可选 command：
 - left：左变道避让
 - right：右变道避让
-- straight：继续直行
-- stop：停车等待
 
 检测信息：
 - image_path: {image_path}
@@ -164,7 +172,7 @@ class CloudClient:
 - individual_scores: {json.dumps(individual_scores, ensure_ascii=False)}
 
 请严格只返回如下 JSON 结构：
-{{"command":"left|right|straight|stop","action":"lane-left|lane-right|forward|stop","reason":"简短中文原因"}}
+{{"command":"left|right","action":"lane-left|lane-right","reason":"简短中文原因"}}
 """.strip()
 
     def build_payload(self, image_path: str, detection_result: Dict[str, Any]) -> Dict[str, Any]:
@@ -181,10 +189,15 @@ class CloudClient:
                 },
             ],
             "stream": False,
+            "stream_options": {"include_usage": False},
             "temperature": self.temperature,
+            "top_p": self.top_p,
+            "seed": self.seed,
+            "stop": ["END"],
             "max_completion_tokens": self.max_completion_tokens,
             "max_tokens": self.max_completion_tokens,
-            "response_format": {"type": "json_object"},
+            "n": 1,
+            "response_format": {"type": "text"},
             "num_ctx": self.num_ctx,
             "think": self.think,
         }
@@ -202,6 +215,7 @@ class CloudClient:
             headers={
                 "Accept": "application/json",
                 "Content-Type": "application/json",
+                "User-Agent": self.user_agent,
                 "ngrok-skip-browser-warning": "true",
             },
             method="POST",
@@ -246,9 +260,10 @@ class CloudClient:
             action = "lane-left"
 
         if command not in COMMAND_TO_ACTION:
-            command = "stop"
-        if action not in set(COMMAND_TO_ACTION.values()):
-            action = COMMAND_TO_ACTION[command]
+            raise ValueError(f"cloud response did not contain a supported lane-change command: {parsed}")
+        expected_action = COMMAND_TO_ACTION[command]
+        if action != expected_action:
+            action = expected_action
 
         return CloudDecision(
             command=command,
@@ -298,7 +313,7 @@ class CloudClient:
             if parsed_text:
                 return parsed_text
 
-        return {"command": "stop", "action": "stop", "reason": "云端响应中没有可解析的车辆动作"}
+        return {"raw_text": "云端响应中没有可解析的左/右变道动作"}
 
     def _extract_text(self, value: Any) -> Optional[str]:
         if isinstance(value, str):
@@ -362,10 +377,8 @@ class CloudClient:
         if text in COMMAND_TO_ACTION:
             return text
         aliases = {
-            "left": ("left", "lane-left", "左", "左变道", "向左"),
-            "right": ("right", "lane-right", "右", "右变道", "向右"),
-            "straight": ("straight", "forward", "直行", "前进", "继续"),
-            "stop": ("stop", "停车", "停止", "等待"),
+            "left": ("left", "lane-left", "左", "左变道", "左边道", "向左"),
+            "right": ("right", "lane-right", "右", "右变道", "右边道", "向右"),
         }
         for command, words in aliases.items():
             if any(word in text for word in words):

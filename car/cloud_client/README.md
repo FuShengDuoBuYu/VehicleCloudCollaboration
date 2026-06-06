@@ -15,11 +15,14 @@
 CAR_CLOUD_API_BASE_URL="https://your-ngrok-or-cloud-base-url"
 CAR_CLOUD_MODEL="qwen3.5:9b"
 CAR_CLOUD_TIMEOUT=30
-CAR_CLOUD_NUM_CTX=93696
+CAR_CLOUD_NUM_CTX=32768
 CAR_CLOUD_MAX_COMPLETION_TOKENS=256
 CAR_CLOUD_TEMPERATURE=0
+CAR_CLOUD_TOP_P=0.95
+CAR_CLOUD_SEED=42
 CAR_CLOUD_THINK=false
 CAR_CLOUD_IMAGE_LIMIT_MB=20
+CAR_CLOUD_USER_AGENT="VehicleCloudCollaboration/1.0"
 ```
 
 `CAR_CLOUD_API_BASE_URL` 是 base URL，客户端会自动拼接 `/v1/chat/completions`。也可以直接传完整 `/v1/chat/completions` URL。
@@ -28,8 +31,8 @@ CAR_CLOUD_IMAGE_LIMIT_MB=20
 
 `CloudClient.request_decision(image_path, detection_result)` 返回 `CloudDecision`：
 
-- `command`：云端命令，取值为 `left`、`right`、`straight`、`stop`
-- `action`：车端动作，取值为 `lane-left`、`lane-right`、`forward`、`stop`
+- `command`：云端命令，取值为 `left`、`right`
+- `action`：车端动作，取值为 `lane-left`、`lane-right`
 - `reason`：决策说明
 - `latency_ms`：请求耗时
 - `raw_response`：原始 OpenAI-compatible 响应 JSON
@@ -39,8 +42,6 @@ CAR_CLOUD_IMAGE_LIMIT_MB=20
 ```text
 left     -> lane-left
 right    -> lane-right
-straight -> forward
-stop     -> stop
 ```
 
 ## Python 调用

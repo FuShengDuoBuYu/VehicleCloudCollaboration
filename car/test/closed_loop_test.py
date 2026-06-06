@@ -27,8 +27,8 @@ from vehicle_control.controller import VehicleController
 
 
 LOGGER = logging.getLogger("vehicle_cloud.closed_loop_test")
-ALLOWED_COMMANDS = {"left", "right", "straight", "stop"}
-ALLOWED_ACTIONS = {"lane-left", "lane-right", "forward", "stop"}
+ALLOWED_COMMANDS = {"left", "right"}
+ALLOWED_ACTIONS = {"lane-left", "lane-right"}
 
 
 def setup_logging():
@@ -537,7 +537,7 @@ def main():
 
         decision = run_stage(
             "cloud_decision",
-            {"detection": _compact_detection(detection), "expected": "valid cloud command and vehicle action"},
+            {"detection": _compact_detection(detection), "expected": "valid left/right lane-change command and vehicle action"},
             lambda: request_cloud_decision(
                 args.image,
                 detection,

@@ -31,8 +31,8 @@ python run_closed_loop.py
 3. 点击网页里的“开始闭环”后，车辆才会进入自动行驶。
 4. `LongTailClassifier` 输出长尾分数。
 5. 分数达到阈值时调用 `cloud_client` 的 OpenAI-compatible `/v1/chat/completions` 接口。
-6. 云端 LLM 返回决策。
-7. 车端将 `left` 映射为 `lane-left` 并通过 `VehicleController` 执行。
+6. 云端 LLM 只在 `left` 和 `right` 中返回一个变道决策。
+7. 车端将 `left`/`right` 映射为 `lane-left`/`lane-right` 并通过 `VehicleController` 执行。
 
 常用参数：
 
