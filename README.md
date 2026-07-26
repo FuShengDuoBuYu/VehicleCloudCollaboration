@@ -10,6 +10,7 @@
 VehicleCloudCollaboration/
 └── car/
     ├── run_closed_loop.py
+    ├── autodrive/
     ├── cloud_client/
     ├── longtail/
     └── control/
@@ -101,6 +102,16 @@ http://<车辆IP>:8080
 
 模块说明见 [car/control/README.md](car/control/README.md)。
 
+### car/autodrive
+
+实验性 YOLOPv2-LCC 自动驾驶模块，包含外部视频感知回放、车载透视标定、道路中心线、
+连续差速控制、安全看门狗和默认禁用电机的树莓派运行入口。
+
+- [模块说明](car/autodrive/README.md)
+- [树莓派无缝衔接手册](car/autodrive/RASPBERRY_PI_HANDOFF.md)
+- [上车实验检查清单](car/autodrive/ON_CAR_CHECKLIST.md)
+- [当前机器可读交接状态](car/autodrive/HANDOFF_STATE.yaml)
+
 ## 云端配置
 
 云端服务地址通过根目录 `.env` 配置：
@@ -135,7 +146,7 @@ python car/run_closed_loop.py --help
 
 ```bash
 cd /home/pi/Desktop/VehicleCloudCollaboration
-python car/test/closed_loop_test.py
+python car/test/closed_loop_test.py --cloud-backend inprocess
 ```
 
 测试说明见 [car/test/README.md](car/test/README.md)。

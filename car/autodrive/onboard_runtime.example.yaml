@@ -1,0 +1,63 @@
+version: 1
+
+camera:
+  index: 0
+  width: 640
+  height: 480
+  fps: 20
+  startup_timeout: 10.0
+  stale_timeout: 1.0
+
+model:
+  weights: car/longtail/models/yolopv2.pt
+  device: cpu
+  img_size: 320
+
+temporal:
+  # Keep disabled until propagated masks are checked on real onboard video.
+  enabled: false
+  keyframe_interval: 4
+  max_steps: 3
+  confidence_decay: 0.90
+
+perspective:
+  # Replace with car/autodrive/onboard_calibration.yaml after calibration.
+  calibration: null
+
+centerline:
+  top_ratio: 0.48
+  bottom_ratio: 0.94
+  lookahead_ratio: 0.64
+  sample_count: 24
+  minimum_width_ratio: 0.06
+
+lcc:
+  base_speed: 0.30
+  min_confidence: 0.35
+  lateral_gain: 0.72
+  heading_gain: 0.92
+  derivative_gain: 0.08
+  steering_limit: 0.70
+  steering_speed_gain: 0.72
+  turn_slowdown: 0.42
+
+wheels:
+  # Conservative initial values. Measure these with the wheels lifted.
+  pwm_limit: 30
+  minimum_moving_pwm: 10
+  left_scale: 1.0
+  right_scale: 1.0
+  left_sign: 1
+  right_sign: 1
+  transition_time: 0.15
+
+safety:
+  watchdog_timeout: 3.0
+  watchdog_check_interval: 0.05
+  maximum_inference_time: 2.5
+
+runtime:
+  route_hint: center
+  video_sample_every: 6
+  output_dir: outputs/onboard_runtime
+  save_latest_frame: true

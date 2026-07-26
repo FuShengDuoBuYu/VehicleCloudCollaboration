@@ -1,0 +1,7 @@
+# Minimal packages for car/autodrive/run_onboard.py.
+# Use a 64-bit Raspberry Pi OS and Python 3.10-3.11.
+# Install OpenCV from Raspberry Pi OS first: sudo apt install python3-opencv
+numpy>=1.24,<2
+PyYAML>=6.0
+torch>=2.1
+smbus2>=0.4.3

@@ -1,0 +1,50 @@
+version: 1
+status: waiting_for_raspberry_pi
+resume_document: car/autodrive/RASPBERRY_PI_HANDOFF.md
+next_required_milestone: fixed_onboard_camera_capture_and_perspective_calibration
+
+offline_completed:
+  - yolopv2_opencv_frame_api
+  - external_video_perception_results
+  - road_centerline_and_lcc
+  - safe_pwm_mapping_and_motor_opt_in
+  - perception_watchdog
+  - perspective_calibration_tool
+  - onboard_dry_run_entrypoint
+  - optional_optical_flow_mask_propagation
+  - raspberry_pi_readiness_check
+  - synthetic_and_fake_chassis_tests
+  - legacy_vehicle_cloud_closed_loop_regression
+
+must_validate_on_pi:
+  - arm64_python_and_torch_environment
+  - camera_index_resolution_and_frame_age
+  - yolopv2_latency_and_memory
+  - real_perspective_points
+  - left_and_right_wheel_signs
+  - minimum_moving_pwm_and_safe_pwm_limit
+  - straight_curve_and_lost-road_behavior
+  - watchdog_under_real_inference_load
+  - optical_flow_drift_on_onboard_video
+
+files_to_return_after_pi_dry_run:
+  - car/autodrive/onboard_runtime.yaml
+  - car/autodrive/onboard_calibration.yaml
+  - outputs/onboard_capture/onboard_calibration.mp4
+  - outputs/onboard_runtime/pi_self_check.json
+  - outputs/onboard_runtime/onboard_log.csv
+  - outputs/onboard_runtime/latest.jpg
+  - outputs/onboard_runtime/wheel_check.json
+
+do_not_start_with:
+  - full_speed_driving
+  - intersections
+  - traffic_cone_avoidance
+  - cloud_actions
+
+resume_after_return:
+  - tune_lcc_and_wheel_mapping_from_logs
+  - validate_or_disable_optical_flow
+  - collect_and_label_onboard_perception_dataset
+  - integrate_longtail_cloud_as_supervisory_layer
+  - run_thesis_metrics_and_ablation

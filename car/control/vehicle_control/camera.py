@@ -14,6 +14,7 @@ class CameraStream:
         self._lock = threading.Lock()
         self._latest_frame = None
         self._latest_frame_time = None
+        self._latest_frame_sequence = 0
         self._running = False
         self._thread = None
 
@@ -39,6 +40,7 @@ class CameraStream:
                 with self._lock:
                     self._latest_frame = frame
                     self._latest_frame_time = time.monotonic()
+                    self._latest_frame_sequence += 1
                 break
 
             capture.release()
@@ -69,6 +71,7 @@ class CameraStream:
                 with self._lock:
                     self._latest_frame = frame
                     self._latest_frame_time = time.monotonic()
+                    self._latest_frame_sequence += 1
             else:
                 time.sleep(0.1)
             time.sleep(interval)
@@ -98,6 +101,12 @@ class CameraStream:
             if self._latest_frame_time is None:
                 return None
             return time.monotonic() - self._latest_frame_time
+
+    def get_frame_packet(self):
+        """Return a copied frame, capture time, and monotonically increasing sequence."""
+        with self._lock:
+            frame = None if self._latest_frame is None else self._latest_frame.copy()
+            return frame, self._latest_frame_time, self._latest_frame_sequence
 
     def _placeholder_frame(self):
         frame = 255 * self._blank_image()

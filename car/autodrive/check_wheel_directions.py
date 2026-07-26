@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""Interactive, guarded wheel-direction check for a lifted Raspbot chassis."""
+
+import argparse
+import json
+from pathlib import Path
+import sys
+import time
+
+
+AUTODRIVE_DIR = Path(__file__).resolve().parent
+CAR_DIR = AUTODRIVE_DIR.parent
+CONTROL_DIR = CAR_DIR / "control"
+REPO_ROOT = CAR_DIR.parent
+if str(CONTROL_DIR) not in sys.path:
+    sys.path.insert(0, str(CONTROL_DIR))
+
+CONFIRMATION = "WHEELS_ARE_LIFTED"
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Check left/right positive PWM with wheels physically lifted"
+    )
+    parser.add_argument(
+        "--confirm-wheels-lifted",
+        default="",
+        help=f"Required exact value: {CONFIRMATION}",
+    )
+    parser.add_argument("--pwm", type=int, default=12)
+    parser.add_argument("--duration", type=float, default=0.4)
+    parser.add_argument(
+        "--output",
+        default=str(REPO_ROOT / "outputs" / "onboard_runtime" / "wheel_check.json"),
+    )
+    return parser
+
+
+def yes_no(prompt):
+    while True:
+        answer = input(f"{prompt} [y/n]: ").strip().lower()
+        if answer in {"y", "yes"}:
+            return True
+        if answer in {"n", "no"}:
+            return False
+
+
+def main():
+    args = build_parser().parse_args()
+    if args.confirm_wheels_lifted != CONFIRMATION:
+        raise ValueError(
+            f"refusing motor access; pass --confirm-wheels-lifted {CONFIRMATION}"
+        )
+    if not 1 <= args.pwm <= 30:
+        raise ValueError("--pwm must be in [1, 30]")
+    if not 0.1 <= args.duration <= 1.0:
+        raise ValueError("--duration must be in [0.1, 1.0]")
+
+    from vehicle_control.hardware import RospbotChassis
+
+    chassis = RospbotChassis()
+    observations = {}
+    try:
+        input("Confirm the vehicle is supported and all four wheels are clear. Press Enter.")
+        for side, command in (
+            ("left", (args.pwm, 0)),
+            ("right", (0, args.pwm)),
+        ):
+            input(f"Ready to pulse the {side} wheels. Press Enter.")
+            chassis.set_wheels(*command)
+            time.sleep(args.duration)
+            chassis.stop()
+            observations[f"{side}_positive_moves_forward"] = yes_no(
+                f"Did positive PWM move the {side} wheels in the vehicle-forward direction?"
+            )
+    finally:
+        chassis.stop()
+
+    payload = {
+        "pwm": args.pwm,
+        "duration": args.duration,
+        "observations": observations,
+        "suggested_left_sign": (
+            1 if observations.get("left_positive_moves_forward") else -1
+        ),
+        "suggested_right_sign": (
+            1 if observations.get("right_positive_moves_forward") else -1
+        ),
+    }
+    output = Path(args.output).expanduser().resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    print(f"Saved: {output}")
+    print("Copy the suggested signs into onboard_runtime.yaml, then repeat dry-run.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

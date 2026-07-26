@@ -1,6 +1,7 @@
 # YOLOPv2 detector for road scene analysis
 
-from typing import Dict, Any
+from pathlib import Path
+from typing import Dict, Any, Union
 import numpy as np
 import cv2
 import torch
@@ -73,10 +74,13 @@ class YOLOPv2Detector(BaseDetector):
         image = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
         return image, (top, bottom, left, right)
 
-    def _preprocess_for_model(self, image_path: str) -> tuple:
-        img = cv2.imread(image_path)
+    def _preprocess_image(self, img: np.ndarray) -> tuple:
         if img is None:
-            raise ValueError(f"failed to read image: {image_path}")
+            raise ValueError("image must not be None")
+        if not isinstance(img, np.ndarray) or img.ndim not in (2, 3):
+            raise ValueError("image must be an OpenCV numpy array")
+        if img.ndim == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         img = cv2.resize(img, (1280, 720), interpolation=cv2.INTER_LINEAR)
         img, padding = self._letterbox(img)
         img = img[:, :, ::-1].transpose(2, 0, 1)
@@ -85,8 +89,22 @@ class YOLOPv2Detector(BaseDetector):
         tensor /= 255.0
         return tensor.unsqueeze(0), padding
 
-    def _predict_masks(self, image_path: str) -> tuple:
-        tensor, padding = self._preprocess_for_model(image_path)
+    def _preprocess_for_model(self, image_path: str) -> tuple:
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"failed to read image: {image_path}")
+        return self._preprocess_image(img)
+
+    def predict_masks(self, image: Union[str, Path, np.ndarray]) -> tuple:
+        """Return drivable-area and lane masks for an image path or BGR frame."""
+        if self.model is None:
+            raise RuntimeError("YOLOPv2 full model is disabled; set use_full_model=True")
+
+        if isinstance(image, (str, Path)):
+            tensor, padding = self._preprocess_for_model(str(image))
+        else:
+            tensor, padding = self._preprocess_image(image)
+
         with torch.no_grad():
             _, seg, lane = self.model(tensor)
 
@@ -108,6 +126,10 @@ class YOLOPv2Detector(BaseDetector):
             da_mask.int().squeeze().cpu().numpy().astype(np.uint8),
             lane_mask.int().squeeze().cpu().numpy().astype(np.uint8),
         )
+
+    def _predict_masks(self, image_path: str) -> tuple:
+        """Backward-compatible private wrapper used by existing code."""
+        return self.predict_masks(image_path)
 
     def _geometry_features(self, drivable_mask: np.ndarray, lane_mask: np.ndarray) -> Dict[str, float]:
         h, w = drivable_mask.shape
