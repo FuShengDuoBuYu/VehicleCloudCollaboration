@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Interactive, guarded wheel-direction check for a lifted Raspbot chassis."""
+"""Guarded side or individual-wheel checks for a lifted Raspbot chassis."""
 
 import argparse
 import json
@@ -16,11 +16,25 @@ if str(CONTROL_DIR) not in sys.path:
     sys.path.insert(0, str(CONTROL_DIR))
 
 CONFIRMATION = "WHEELS_ARE_LIFTED"
+WHEEL_LABELS = {
+    0: "front-left",
+    1: "rear-left",
+    2: "front-right",
+    3: "rear-right",
+}
+MOTOR_ID_TO_LOGICAL_INDEX = {
+    0: 0,  # front-left
+    1: 1,  # rear-left
+    2: 2,  # front-right
+    3: 3,  # rear-right
+}
 
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description="Check left/right positive PWM with wheels physically lifted"
+        description=(
+            "Check wheel direction and relative speed with all wheels physically lifted"
+        )
     )
     parser.add_argument(
         "--confirm-wheels-lifted",
@@ -29,6 +43,27 @@ def build_parser():
     )
     parser.add_argument("--pwm", type=int, default=12)
     parser.add_argument("--duration", type=float, default=0.4)
+    target = parser.add_mutually_exclusive_group()
+    target.add_argument(
+        "--wheel",
+        type=int,
+        choices=tuple(WHEEL_LABELS),
+        help=(
+            "Pulse only this motor: 0=front-left, 1=rear-left, "
+            "2=front-right, 3=rear-right"
+        ),
+    )
+    target.add_argument(
+        "--all-wheels",
+        action="store_true",
+        help="Pulse all four wheels together at the same PWM",
+    )
+    parser.add_argument(
+        "--direction",
+        choices=("forward", "reverse"),
+        default="forward",
+        help="PWM direction for --wheel or --all-wheels mode",
+    )
     parser.add_argument(
         "--output",
         default=str(REPO_ROOT / "outputs" / "onboard_runtime" / "wheel_check.json"),
@@ -45,6 +80,46 @@ def yes_no(prompt):
             return False
 
 
+def individual_targets(wheel, pwm, direction):
+    """Return logical wheel targets for exactly one physical motor ID."""
+    target = int(pwm) if direction == "forward" else -int(pwm)
+    targets = [0, 0, 0, 0]
+    targets[MOTOR_ID_TO_LOGICAL_INDEX[int(wheel)]] = target
+    return tuple(targets)
+
+
+def run_individual_check(chassis, wheel, pwm, direction, duration):
+    label = WHEEL_LABELS[wheel]
+    targets = individual_targets(wheel, pwm, direction)
+    print(
+        f"Pulsing motor {wheel} ({label}) {direction} at PWM {pwm} "
+        f"for {duration:.2f}s; targets={targets}",
+        flush=True,
+    )
+    try:
+        chassis.set_four_wheels(*targets)
+        time.sleep(duration)
+    finally:
+        chassis.stop()
+    print("Stopped all four wheels.", flush=True)
+
+
+def run_all_wheels_check(chassis, pwm, direction, duration):
+    target = int(pwm) if direction == "forward" else -int(pwm)
+    targets = (target, target, target, target)
+    print(
+        f"Pulsing all four wheels {direction} at PWM {pwm} "
+        f"for {duration:.2f}s; targets={targets}",
+        flush=True,
+    )
+    try:
+        chassis.set_four_wheels(*targets)
+        time.sleep(duration)
+    finally:
+        chassis.stop()
+    print("Stopped all four wheels.", flush=True)
+
+
 def main():
     args = build_parser().parse_args()
     if args.confirm_wheels_lifted != CONFIRMATION:
@@ -59,6 +134,24 @@ def main():
     from vehicle_control.hardware import RospbotChassis
 
     chassis = RospbotChassis()
+    if args.wheel is not None:
+        run_individual_check(
+            chassis,
+            args.wheel,
+            args.pwm,
+            args.direction,
+            args.duration,
+        )
+        return 0
+    if args.all_wheels:
+        run_all_wheels_check(
+            chassis,
+            args.pwm,
+            args.direction,
+            args.duration,
+        )
+        return 0
+
     observations = {}
     try:
         input("Confirm the vehicle is supported and all four wheels are clear. Press Enter.")

@@ -5,24 +5,43 @@ camera:
   width: 640
   height: 480
   fps: 20
+  # Pixel-orientation correction only; physical pan/yaw must face forward.
+  rotation_degrees: 0
+  flip_horizontal: false
+  flip_vertical: false
+  # Enable only after verifying the target chassis PTZ linkage and center angle.
+  gimbal:
+    initialize_on_startup: false
+    pan_angle: 90
+    tilt_angle: null
+    settle_time: 0.8
   startup_timeout: 10.0
   stale_timeout: 1.0
 
-model:
-  weights: car/longtail/models/yolopv2.pt
-  device: cpu
-  img_size: 320
-
-temporal:
-  # Keep disabled until propagated masks are checked on real onboard video.
-  enabled: false
-  keyframe_interval: 4
-  max_steps: 3
-  confidence_decay: 0.90
+perception:
+  mask_width: 320
+  mask_height: 180
 
 perspective:
   # Replace with car/autodrive/onboard_calibration.yaml after calibration.
   calibration: null
+
+outer_loop:
+  # Current runtime follows the fixed clockwise outer loop.
+  enabled: true
+  navigation_mode: boundary
+  direction: clockwise
+  outer_boundary_side: left
+  include_lane_mask: false
+  ego_boundary_top_ratio: 0.84
+  ego_boundary_half_width_ratio: 0.14
+  maximum_ego_yellow_ratio: 0.020
+  green_hsv_lower: [45, 55, 35]
+  green_hsv_upper: [105, 255, 255]
+  green_lab_a_max: 118
+  green_lab_b_min: 123
+  green_close_kernel: 5
+  green_dilate_kernel: 3
 
 centerline:
   top_ratio: 0.48
@@ -30,34 +49,42 @@ centerline:
   lookahead_ratio: 0.64
   sample_count: 24
   minimum_width_ratio: 0.06
+  route_hint_bias: 0.15
 
 lcc:
-  base_speed: 0.30
+  base_speed: 0.12
   min_confidence: 0.35
   lateral_gain: 0.72
   heading_gain: 0.92
-  derivative_gain: 0.08
+  derivative_gain: 0.0
   steering_limit: 0.70
-  steering_speed_gain: 0.72
+  steering_speed_gain: 0.55
   turn_slowdown: 0.42
+  maximum_lateral_error: 0.35
+  maximum_heading_error: 0.80
+  steering_smoothing: 0.65
 
 wheels:
-  # Conservative initial values. Measure these with the wheels lifted.
-  pwm_limit: 30
+  # Values below match the current chassis; recalibrate after hardware changes.
+  drive_mode: four-wheel-trim
+  pwm_limit: 35
   minimum_moving_pwm: 10
-  left_scale: 1.0
-  right_scale: 1.0
-  left_sign: 1
-  right_sign: 1
-  transition_time: 0.15
+  front_left_base_pwm: 16
+  rear_left_base_pwm: 16
+  front_right_base_pwm: 20
+  rear_right_base_pwm: 20
+  front_steering_delta_pwm: 20
+  maximum_steering_delta_pwm: 10
+  transition_time: 0.25
 
 safety:
   watchdog_timeout: 3.0
   watchdog_check_interval: 0.05
   maximum_inference_time: 2.5
+  resume_valid_frames: 4
 
 runtime:
-  route_hint: center
+  route_hint: left
   video_sample_every: 6
   output_dir: outputs/onboard_runtime
   save_latest_frame: true

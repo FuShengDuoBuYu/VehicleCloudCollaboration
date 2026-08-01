@@ -1,0 +1,132 @@
+version: 1
+
+camera:
+  index: 0
+  width: 640
+  height: 480
+  fps: 20
+  # These only correct sensor roll/mirroring. They cannot recover a road that
+  # is outside the field of view because the PTZ is facing left or right.
+  rotation_degrees: 0
+  flip_horizontal: false
+  flip_vertical: false
+  # The camera is mounted on the original PTZ. Re-center horizontal S1 before
+  # opening the camera. This chassis was physically verified forward-facing at
+  # 25 degrees; leave vertical S2 unchanged until its angle is measured.
+  gimbal:
+    initialize_on_startup: true
+    pan_angle: 25
+    tilt_angle: null
+    settle_time: 0.8
+  startup_timeout: 10.0
+  stale_timeout: 1.0
+
+perception:
+  # Geometry resolution used by the yellow-boundary and road-surface tracker.
+  mask_width: 320
+  mask_height: 180
+
+perspective:
+  calibration: car/autodrive/onboard_calibration.yaml
+
+outer_loop:
+  enabled: true
+  # Track and bridge the two yellow boundaries so intersection openings do not
+  # become candidate routes into the field interior.
+  navigation_mode: boundary
+  direction: clockwise
+  outer_boundary_side: left
+  top_ratio: 0.24
+  bottom_ratio: 0.98
+  scan_step: 3
+  band_half_height: 2
+  minimum_run_width: 2
+  center_exclusion_ratio: 0.06
+  expected_lane_width_ratio: 0.50
+  minimum_lane_width_ratio: 0.24
+  maximum_lane_width_ratio: 0.60
+  maximum_boundary_jump_ratio: 0.24
+  minimum_observations: 10
+  polynomial_degree: 2
+  history_blend: 0.20
+  maximum_missing_frames: 4
+  missing_confidence_decay: 0.78
+  boundary_margin_ratio: 0.01
+  include_lane_mask: false
+  yellow_hsv_lower: [18, 20, 150]
+  yellow_hsv_upper: [42, 255, 255]
+  yellow_open_kernel: 3
+  # Raw-camera vehicle footprint. Normal corner boundaries stay outside this
+  # narrow lower-centre zone; a line crossing beneath the chassis still stops.
+  ego_boundary_top_ratio: 0.84
+  ego_boundary_half_width_ratio: 0.14
+  maximum_ego_yellow_ratio: 0.020
+  green_hsv_lower: [45, 55, 35]
+  green_hsv_upper: [105, 255, 255]
+  green_lab_a_max: 118
+  green_lab_b_min: 123
+  green_close_kernel: 5
+  green_dilate_kernel: 3
+
+centerline:
+  top_ratio: 0.48
+  bottom_ratio: 0.94
+  lookahead_ratio: 0.58
+  sample_count: 24
+  minimum_width_ratio: 0.06
+  # Direction is a branch tie-breaker; row-to-row route continuity dominates.
+  route_hint_bias: 0.15
+
+lcc:
+  # First grounded motion starts at the minimum useful wheel command.
+  base_speed: 0.12
+  min_confidence: 0.35
+  lateral_gain: 0.72
+  heading_gain: 0.92
+  derivative_gain: 0.0
+  steering_limit: 0.70
+  steering_speed_gain: 0.55
+  turn_slowdown: 0.42
+  # A real run was already physically close to the left boundary at 0.378.
+  # Stop before that state instead of allowing the old 0.50 recovery limit.
+  maximum_lateral_error: 0.35
+  maximum_heading_error: 0.80
+  steering_smoothing: 0.65
+
+wheels:
+  # Straight-line trim experiment after equal PWM produced sustained right yaw.
+  drive_mode: four-wheel-trim
+  pwm_limit: 35
+  minimum_moving_pwm: 10
+  # Physical motor mapping verified on this chassis: 0=front-left,
+  # 1=rear-left, 2=front-right, 3=rear-right.
+  # LCC adds steering to both outside wheels and removes it from both inside
+  # wheels while preserving the calibrated straight trim.
+  front_left_base_pwm: 16
+  rear_left_base_pwm: 16
+  front_right_base_pwm: 20
+  rear_right_base_pwm: 20
+  # Delta=6 (22/22/14/14) was too weak. Delta=10 is the strongest forward-only
+  # right arc that keeps every wheel at or above the effective PWM floor.
+  # A grounded 1.47 s probe confirmed 26/26/10/10 advances along a clear right
+  # arc while retaining valid boundary perception.
+  front_steering_delta_pwm: 20
+  maximum_steering_delta_pwm: 10
+  # Applied only when leaving a stopped state. Live steering updates are sent
+  # directly so the camera/control loop remains near its native 20 Hz rate.
+  transition_time: 0.25
+
+safety:
+  watchdog_timeout: 3.0
+  watchdog_check_interval: 0.05
+  maximum_inference_time: 2.5
+  # A bad frame stops immediately. Four consecutive valid frames are required
+  # before starting again, instead of latching the stop for the whole process.
+  resume_valid_frames: 4
+
+runtime:
+  # Clockwise outer loop: keep the continuous outer branch on the left.
+  route_hint: left
+  video_sample_every: 6
+  output_dir: outputs/onboard_runtime
+  save_latest_frame: true

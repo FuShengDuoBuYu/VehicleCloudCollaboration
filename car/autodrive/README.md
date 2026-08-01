@@ -1,80 +1,116 @@
-# YOLOPv2-LCC 离线自动驾驶
+# 外圈 LCC
 
-这一模块把 YOLOPv2 的可行驶区域分割结果转换为可测试的连续控制量，不依赖摄像头、
-电机或 Raspbot 驱动。
+此目录只维护当前树莓派实车使用的外圈车道居中控制。感知直接处理车载相机画面中的
+黄色道路边界和绿色岛区，不加载 DonkeyCar 或 YOLO 模型，也不调用云端变道接口。
 
-处理链路：
+## 运行链路
 
 ```text
-图片/视频 -> YOLOPv2 masks -> 道路连通域 -> 左右边界与中心线
-          -> 横向误差/航向误差 -> LCC -> 左右轮归一化速度
+车载相机
+  -> 云台回到 S1=25°、统一图像方向
+  -> 透视映射与外圈边界跟踪
+  -> 道路中心线、横向误差和航向误差
+  -> LCC 转向量
+  -> 感知恢复门与看门狗
+  -> 四轮 trim PWM
 ```
 
-## 离线回放
+主要运行文件：
 
-在仓库根目录运行：
+- `run_lcc_web.py`、`lcc_web.py`、`lcc_web.html`：唯一的实时网页入口
+- `run_onboard.py`：实时 LCC 主循环；默认不启用电机
+- `outer_loop.py`、`lane_centering.py`、`perspective.py`：感知与控制
+- `drive_runtime.py`：四轮 PWM 映射、恢复门和看门狗
+- `onboard_runtime.yaml`、`onboard_calibration.yaml`：当前实车配置与标定
+
+标定和排障工具：
+
+- `align_camera_gimbal.py`：安全确认后调整水平/垂直云台
+- `capture_onboard.py`：按运行配置采集标定图和视频
+- `calibrate_perspective.py`：四点透视标定
+- `pi_self_check.py`：只读检查依赖、配置、相机和 I2C
+- `check_wheel_directions.py`：车轮架空后的单轮方向检查
+
+## 启动网页
 
 ```bash
-.conda/bin/python car/autodrive/offline_replay.py \
-  954c623c0ad6774905270ecca99aecbc.mp4 \
-  d95a49f05b4fa169a864f74de6693665.mp4 \
-  --sample-every 6 \
-  --camera-view external \
-  --save-samples
+cd /home/pi/Desktop/VehicleCloudCollaboration
+
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/run_lcc_web.py \
+  --config car/autodrive/onboard_runtime.yaml \
+  --host 0.0.0.0 --port 8080 \
+  --default-max-runtime-seconds 60 \
+  --enable-motors \
+  --confirm-motor-motion I_UNDERSTAND_MOTORS_WILL_MOVE
 ```
 
-仓库根目录的两段 MP4 是场地外部视角，必须使用 `--camera-view external`。外部视角下
-画面中心不等于车体中心，不能从中产生有物理意义的 LCC 指令。将来采集的车载视角录像
-使用 `--camera-view onboard`，即可离线回放中心线和控制量。
+访问 `http://<车辆IP>:8080`。页面启动 LCC 后才打开摄像头。停止/急停、服务退出、
+运行时间到期或子进程异常都会执行四轮归零。
 
-不同的车载相机高度、俯仰角和视场角不能共用同一组图像坐标控制增益。复制
-`onboard_calibration.example.yaml`，在真实车载帧上填写道路梯形的四个归一化点并把
-`calibrated` 改为 `true`，然后增加：
+## 命令行运行
+
+先进行不驱动车轮的检查：
 
 ```bash
---camera-view onboard --calibration car/autodrive/onboard_calibration.yaml
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/pi_self_check.py \
+  --config car/autodrive/onboard_runtime.yaml
+
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/run_onboard.py \
+  --config car/autodrive/onboard_runtime.yaml \
+  --max-samples 100
 ```
 
-程序会先把 YOLOPv2 mask 转为鸟瞰坐标计算误差，再把中心线投回原图用于检查。
-
-## 树莓派车载入口
-
-车载入口默认是干运行，只保存控制建议，不实例化 I2C 底盘：
+确认画面、鸟瞰中心线和停车逻辑正确后才允许真车运行：
 
 ```bash
-python car/autodrive/run_onboard.py \
-  --config car/autodrive/onboard_runtime.example.yaml \
-  --max-samples 20
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/run_onboard.py \
+  --config car/autodrive/onboard_runtime.yaml \
+  --enable-motors \
+  --confirm-motor-motion I_UNDERSTAND_MOTORS_WILL_MOVE \
+  --max-runtime-seconds 60
 ```
 
-主要辅助工具：
+输出写入 `outputs/onboard_runtime/`：
 
-- `pi_self_check.py`：只读检查 Python、依赖、模型、相机、标定和 I2C
-- `capture_onboard.py`：采集固定车载相机的标定图和视频
-- `calibrate_perspective.py`：点击四点生成鸟瞰标定和预览
-- `check_wheel_directions.py`：架空车轮后的低 PWM 方向检查
-- `run_onboard.py`：干运行或显式确认后的真实底盘闭环
+- `latest.jpg`：相机叠加结果
+- `latest_birdeye.jpg`：鸟瞰边界与中心线
+- `status.json`：网页使用的最新状态
+- `onboard_log.csv`：逐帧误差、置信度和四轮 PWM
 
-`run_onboard.py --temporal` 会在 YOLOPv2 关键帧之间用稠密光流传播两个 Mask，提高
-控制更新频率。该功能已经通过合成平移测试，但默认关闭，必须先在真实车载视频上检查
-漂移和置信度衰减。
+## 相机与透视重新标定
 
-完整操作顺序见 [RASPBERRY_PI_HANDOFF.md](RASPBERRY_PI_HANDOFF.md)。
+当前实车的水平 S1=25°。云台周围确认无障碍后可单独回正：
 
-默认结果写入 `outputs/autodrive_offline/`：
+```bash
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/align_camera_gimbal.py \
+  --confirm-camera-gimbal-clear CAMERA_GIMBAL_IS_CLEAR \
+  --pan-angle 25
+```
 
-- `*_lcc.mp4`：分割、道路中心线、预瞄点和控制量叠加视频
-- `*_lcc.csv`：逐帧误差、置信度、转向量和左右轮建议速度
-- `*_perception_frames/`：外部视角视频中实际送入模型的逐帧识别图
-- `*_perception_contact_sheet.jpg`：前、中、后时刻抽帧识别结果汇总图
-- `summary.json`：每段视频的有效率、耗时和动作分布
+相机机械位置、S1 角度、分辨率或图像旋转变化后，重新执行：
 
-控制输出是 `[-1, 1]` 的归一化建议量；CSV 中的 PWM 只是按 100 为上限换算的
-待标定建议值，离线运行不会访问车辆硬件。
+```bash
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/capture_onboard.py \
+  --config car/autodrive/onboard_runtime.yaml \
+  --confirm-camera-gimbal-clear CAMERA_GIMBAL_IS_CLEAR \
+  --seconds 10
 
-## 当前边界
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/calibrate_perspective.py \
+  outputs/onboard_capture/onboard_calibration_frame.jpg \
+  --runtime-config car/autodrive/onboard_runtime.yaml \
+  --output car/autodrive/onboard_calibration.yaml \
+  --force
+```
 
-- 分叉路口可以用 `--route-hint left|center|right` 指定优先分支，但正式上车前仍需
-  结合路线状态机验证。
-- PWM 正负方向、相机单应性、车体左右轮差异和控制增益必须在实车上标定。
-- YOLOPv2 的可行驶区域不等同于障碍物自由空间；锥桶等障碍仍由长尾检测与安全监督层处理。
+依次点击左上、右上、右下、左下四点并保存。真实电机模式会拒绝使用相机姿态不匹配的
+标定文件。
+
+## 当前底盘映射
+
+- `0=左前、1=左后、2=右前、3=右后`
+- 直行：`16/16/20/20`
+- 最强正向右弧：`26/26/10/10`
+- `drive_mode: four-wheel-trim`
+
+相机断流、边界丢失、黄线进入车体安全区、误差超限或看门狗超时会立即停车；停车后
+必须连续获得配置数量的有效帧才会恢复行驶。

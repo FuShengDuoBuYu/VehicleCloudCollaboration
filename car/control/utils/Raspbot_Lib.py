@@ -18,6 +18,11 @@ class Raspbot():
         # Create I2C device.
         self._device = self.get_i2c_device(PI5Car_I2CADDR, 1)
 
+    def close(self):
+        close = getattr(self._device, "close", None)
+        if close is not None:
+            close()
+
     #写数据
     def write_u8(self, reg, data):
         try:
@@ -91,12 +96,13 @@ class Raspbot():
     def Ctrl_Servo(self, id, angle):
         try:
             reg = 0x02
-            data = [id, angle]
+            angle = int(angle)
             if angle < 0:
                 angle = 0
             elif angle > 180:
                 angle = 180
             if(id==2 and angle > 100):angle = 100
+            data = [id, angle]
             self.write_array(reg, data)
         except:
             print ('Ctrl_Servo I2C error')

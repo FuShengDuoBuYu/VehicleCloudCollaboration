@@ -42,6 +42,9 @@ class LCCConfig:
     steering_limit: float = 0.75
     steering_speed_gain: float = 0.72
     turn_slowdown: float = 0.38
+    maximum_lateral_error: float = 1.0
+    maximum_heading_error: float = 1.0
+    steering_smoothing: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -71,14 +74,18 @@ class RoadCenterlineEstimator:
         lookahead_ratio: float = 0.64,
         sample_count: int = 24,
         minimum_width_ratio: float = 0.06,
+        route_hint_bias: float = 0.15,
     ):
         if not 0.0 < top_ratio < lookahead_ratio < bottom_ratio <= 1.0:
             raise ValueError("expected top_ratio < lookahead_ratio < bottom_ratio")
+        if not 0.0 <= route_hint_bias < 0.5:
+            raise ValueError("route_hint_bias must be in [0, 0.5)")
         self.top_ratio = float(top_ratio)
         self.bottom_ratio = float(bottom_ratio)
         self.lookahead_ratio = float(lookahead_ratio)
         self.sample_count = max(8, int(sample_count))
         self.minimum_width_ratio = float(minimum_width_ratio)
+        self.route_hint_bias = float(route_hint_bias)
 
     @staticmethod
     def _segments(row: np.ndarray, minimum_width: int) -> list[tuple[int, int]]:
@@ -122,8 +129,8 @@ class RoadCenterlineEstimator:
                 best_anchor = anchor_ratio
         return (labels == best_label).astype(np.uint8), best_anchor
 
-    @staticmethod
     def _choose_segment(
+        self,
         segments: list[tuple[int, int]],
         previous_center: float,
         width: int,
@@ -131,10 +138,14 @@ class RoadCenterlineEstimator:
     ) -> tuple[int, int]:
         centers = np.array([(left + right) * 0.5 for left, right in segments])
         distance = np.abs(centers - previous_center)
+        continuity_weight = 1.0 - self.route_hint_bias
         if route_hint == "left":
-            score = 0.45 * distance + 0.55 * centers
+            score = continuity_weight * distance + self.route_hint_bias * centers
         elif route_hint == "right":
-            score = 0.45 * distance + 0.55 * (width - centers)
+            score = (
+                continuity_weight * distance
+                + self.route_hint_bias * (width - centers)
+            )
         else:
             score = distance
         return segments[int(np.argmin(score))]
@@ -264,9 +275,11 @@ class LaneCenteringController:
     def __init__(self, config: LCCConfig = LCCConfig()):
         self.config = config
         self._previous_lateral_error: Optional[float] = None
+        self._previous_steering: Optional[float] = None
 
     def reset(self) -> None:
         self._previous_lateral_error = None
+        self._previous_steering = None
 
     def update(self, estimate: LaneEstimate, dt: Optional[float] = None) -> DifferentialDriveCommand:
         if not estimate.valid:
@@ -283,6 +296,26 @@ class LaneCenteringController:
                 0.0,
                 estimate.confidence,
                 "road confidence below safety threshold",
+            )
+        if abs(estimate.lateral_error) > self.config.maximum_lateral_error:
+            self.reset()
+            return DifferentialDriveCommand(
+                "stop",
+                0.0,
+                0.0,
+                0.0,
+                estimate.confidence,
+                "lateral error exceeds recovery limit",
+            )
+        if abs(estimate.heading_error) > self.config.maximum_heading_error:
+            self.reset()
+            return DifferentialDriveCommand(
+                "stop",
+                0.0,
+                0.0,
+                0.0,
+                estimate.confidence,
+                "heading error exceeds recovery limit",
             )
 
         derivative = 0.0
@@ -304,6 +337,15 @@ class LaneCenteringController:
                 self.config.steering_limit,
             )
         )
+        if self._previous_steering is not None:
+            previous_weight = float(
+                np.clip(self.config.steering_smoothing, 0.0, 0.95)
+            )
+            steering = float(
+                previous_weight * self._previous_steering
+                + (1.0 - previous_weight) * steering
+            )
+        self._previous_steering = steering
         base_speed = self.config.base_speed * (
             1.0 - self.config.turn_slowdown * abs(steering)
         )

@@ -12,23 +12,34 @@ from .lane_centering import DifferentialDriveCommand
 
 @dataclass(frozen=True)
 class WheelMappingConfig:
-    pwm_limit: int = 30
+    drive_mode: str = "four-wheel-trim"
+    pwm_limit: int = 35
     minimum_moving_pwm: int = 10
-    left_scale: float = 1.0
-    right_scale: float = 1.0
-    left_sign: int = 1
-    right_sign: int = 1
-    transition_time: float = 0.15
+    front_left_base_pwm: int = 16
+    rear_left_base_pwm: int = 16
+    front_right_base_pwm: int = 20
+    rear_right_base_pwm: int = 20
+    front_steering_delta_pwm: int = 20
+    maximum_steering_delta_pwm: int = 10
+    transition_time: float = 0.25
 
     def __post_init__(self):
+        if self.drive_mode != "four-wheel-trim":
+            raise ValueError("drive_mode must be four-wheel-trim")
         if not 1 <= self.pwm_limit <= 255:
             raise ValueError("pwm_limit must be in [1, 255]")
         if not 0 <= self.minimum_moving_pwm <= self.pwm_limit:
             raise ValueError("minimum_moving_pwm must be in [0, pwm_limit]")
-        if self.left_scale <= 0 or self.right_scale <= 0:
-            raise ValueError("wheel scales must be positive")
-        if self.left_sign not in (-1, 1) or self.right_sign not in (-1, 1):
-            raise ValueError("wheel signs must be -1 or 1")
+        direct_values = (
+            self.front_left_base_pwm,
+            self.rear_left_base_pwm,
+            self.front_right_base_pwm,
+            self.rear_right_base_pwm,
+            self.front_steering_delta_pwm,
+            self.maximum_steering_delta_pwm,
+        )
+        if any(value < 0 or value > self.pwm_limit for value in direct_values):
+            raise ValueError("per-wheel PWM values must be inside pwm_limit")
         if self.transition_time < 0:
             raise ValueError("transition_time must not be negative")
 
@@ -48,79 +59,162 @@ class SafeWheelDriver:
         self.motors_enabled = bool(motors_enabled)
         self.config = config
         self._lock = threading.Lock()
+        self._moving = False
+        # Force the first explicit stop through to the motor controller. Later
+        # stop frames are de-duplicated so a lost-boundary condition does not
+        # spend 150 ms per frame repeating the same physical stop sequence.
+        self._stop_written = False
         self._last_state = {
             "mode": "hardware" if self.motors_enabled else "dry-run",
             "action": "stopped",
             "left_pwm": 0,
             "right_pwm": 0,
+            "front_left_pwm": 0,
+            "rear_left_pwm": 0,
+            "front_right_pwm": 0,
+            "rear_right_pwm": 0,
             "reason": "initialized",
             "updated_at": time.monotonic(),
         }
 
-    def _map_speed(self, speed: float, scale: float, sign: int) -> int:
-        speed = float(np.clip(speed, -1.0, 1.0))
-        magnitude = abs(speed)
-        if magnitude < 1e-4:
-            return 0
-        usable_range = self.config.pwm_limit - self.config.minimum_moving_pwm
-        pwm = self.config.minimum_moving_pwm + magnitude * usable_range
-        pwm = min(self.config.pwm_limit, int(round(pwm * scale)))
-        direction = 1 if speed >= 0 else -1
-        return int(pwm * direction * sign)
-
-    def command_to_pwm(
+    def command_to_four_pwm(
         self, command: DifferentialDriveCommand
-    ) -> tuple[int, int]:
+    ) -> tuple[int, int, int, int]:
         if command.action == "stop":
-            return 0, 0
+            return 0, 0, 0, 0
+
+        steering = float(np.clip(command.steering, -1.0, 1.0))
+        delta = int(round(steering * self.config.front_steering_delta_pwm))
+        if self.config.maximum_steering_delta_pwm > 0:
+            delta = int(
+                np.clip(
+                    delta,
+                    -self.config.maximum_steering_delta_pwm,
+                    self.config.maximum_steering_delta_pwm,
+                )
+            )
+        # Respect the calibrated moving floor in either turn direction. With
+        # asymmetric straight trims, safe positive/negative limits differ.
+        moving_floor = self.config.minimum_moving_pwm
+        positive_limit = max(
+            0,
+            min(
+                self.config.pwm_limit - self.config.front_left_base_pwm,
+                self.config.pwm_limit - self.config.rear_left_base_pwm,
+                self.config.front_right_base_pwm - moving_floor,
+                self.config.rear_right_base_pwm - moving_floor,
+            ),
+        )
+        negative_limit = max(
+            0,
+            min(
+                self.config.front_left_base_pwm - moving_floor,
+                self.config.rear_left_base_pwm - moving_floor,
+                self.config.pwm_limit - self.config.front_right_base_pwm,
+                self.config.pwm_limit - self.config.rear_right_base_pwm,
+            ),
+        )
+        delta = int(np.clip(delta, -negative_limit, positive_limit))
+        front_left = int(
+            np.clip(
+                self.config.front_left_base_pwm + delta,
+                0,
+                self.config.pwm_limit,
+            )
+        )
+        front_right = int(
+            np.clip(
+                self.config.front_right_base_pwm - delta,
+                0,
+                self.config.pwm_limit,
+            )
+        )
+        rear_left = int(
+            np.clip(
+                self.config.rear_left_base_pwm + delta,
+                0,
+                self.config.pwm_limit,
+            )
+        )
+        rear_right = int(
+            np.clip(
+                self.config.rear_right_base_pwm - delta,
+                0,
+                self.config.pwm_limit,
+            )
+        )
         return (
-            self._map_speed(
-                command.left_speed,
-                self.config.left_scale,
-                self.config.left_sign,
-            ),
-            self._map_speed(
-                command.right_speed,
-                self.config.right_scale,
-                self.config.right_sign,
-            ),
+            front_left,
+            rear_left,
+            front_right,
+            rear_right,
         )
 
     def apply(self, command: DifferentialDriveCommand) -> dict:
         if command.action == "stop":
             return self.stop(command.reason or "controller requested stop")
 
-        left_pwm, right_pwm = self.command_to_pwm(command)
-        if self.motors_enabled:
-            self.chassis.ramp_to(
-                left_pwm,
-                right_pwm,
-                self.config.transition_time,
-            )
+        front_left, rear_left, front_right, rear_right = (
+            self.command_to_four_pwm(command)
+        )
         state = {
             "mode": "hardware" if self.motors_enabled else "dry-run",
             "action": command.action,
-            "left_pwm": left_pwm,
-            "right_pwm": right_pwm,
+            "left_pwm": front_left,
+            "right_pwm": front_right,
+            "front_left_pwm": front_left,
+            "rear_left_pwm": rear_left,
+            "front_right_pwm": front_right,
+            "rear_right_pwm": rear_right,
             "reason": command.reason,
             "updated_at": time.monotonic(),
         }
         with self._lock:
+            if self.motors_enabled:
+                if not self._moving and self.config.transition_time > 0:
+                    # Ramp only when leaving a stopped state. Ramping every
+                    # camera frame blocks the control loop for the full
+                    # transition time and turns a 20 Hz camera into ~4 Hz LCC.
+                    self.chassis.ramp_four_to(
+                        front_left,
+                        rear_left,
+                        front_right,
+                        rear_right,
+                        self.config.transition_time,
+                    )
+                else:
+                    previous = (
+                        self._last_state["front_left_pwm"],
+                        self._last_state["rear_left_pwm"],
+                        self._last_state["front_right_pwm"],
+                        self._last_state["rear_right_pwm"],
+                    )
+                    target = (front_left, rear_left, front_right, rear_right)
+                    if target != previous:
+                        self.chassis.set_four_wheels(*target)
+            self._moving = True
+            self._stop_written = False
             self._last_state = state
         return dict(state)
 
     def stop(self, reason: str = "stop requested") -> dict:
-        if self.motors_enabled:
-            self.chassis.stop()
         state = {
             "mode": "hardware" if self.motors_enabled else "dry-run",
             "action": "stopped",
             "left_pwm": 0,
             "right_pwm": 0,
+            "front_left_pwm": 0,
+            "rear_left_pwm": 0,
+            "front_right_pwm": 0,
+            "rear_right_pwm": 0,
             "reason": str(reason),
             "updated_at": time.monotonic(),
         }
         with self._lock:
+            if self.motors_enabled and not self._stop_written:
+                self.chassis.stop()
+            self._moving = False
+            self._stop_written = True
             self._last_state = state
         return dict(state)
 
@@ -129,6 +223,62 @@ class SafeWheelDriver:
             state = dict(self._last_state)
         state["mapping"] = asdict(self.config)
         return state
+
+
+class PerceptionMotionGate:
+    """Require stable valid perception before starting or resuming motion.
+
+    A stop command is still applied immediately. Unlike a process-lifetime
+    latch, a transient bad frame can recover after several consecutive valid
+    commands, which is necessary for a long outer-loop run while preserving a
+    stopped validation window before the wheels move again.
+    """
+
+    def __init__(self, resume_valid_frames: int = 4):
+        self.resume_valid_frames = int(resume_valid_frames)
+        if self.resume_valid_frames < 1:
+            raise ValueError("resume_valid_frames must be at least 1")
+        self._ready = False
+        self._consecutive_valid = 0
+        self._last_stop_reason = "waiting for initial perception"
+
+    def reset(self, reason: str = "motion gate reset") -> None:
+        self._ready = False
+        self._consecutive_valid = 0
+        self._last_stop_reason = str(reason)
+
+    def filter(
+        self, command: DifferentialDriveCommand
+    ) -> DifferentialDriveCommand:
+        if command.action == "stop":
+            self.reset(command.reason or "perception requested stop")
+            return command
+        if self._ready:
+            return command
+
+        self._consecutive_valid += 1
+        if self._consecutive_valid >= self.resume_valid_frames:
+            self._ready = True
+            return command
+        return DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            command.confidence,
+            (
+                "validating perception before motion "
+                f"({self._consecutive_valid}/{self.resume_valid_frames})"
+            ),
+        )
+
+    def get_state(self) -> dict:
+        return {
+            "ready": self._ready,
+            "consecutive_valid": self._consecutive_valid,
+            "resume_valid_frames": self.resume_valid_frames,
+            "last_stop_reason": self._last_stop_reason,
+        }
 
 
 class CommandWatchdog:

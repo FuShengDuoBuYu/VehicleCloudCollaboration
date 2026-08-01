@@ -1,4 +1,4 @@
-"""Visualization helpers for offline autonomous-driving replay."""
+"""Visualization helpers for the onboard outer-loop LCC."""
 
 import cv2
 import numpy as np
@@ -24,8 +24,7 @@ def render_debug_frame(
     estimate: LaneEstimate,
     command: DifferentialDriveCommand,
     inference_ms: float,
-    show_control: bool = True,
-    latency_label: str = "YOLOPv2",
+    latency_label: str = "boundary",
 ) -> np.ndarray:
     output = frame.copy()
     frame_h, frame_w = output.shape[:2]
@@ -52,56 +51,43 @@ def render_debug_frame(
         )
         output[visible] = np.clip(blended, 0, 255).astype(np.uint8)
 
-    if show_control:
-        left = _scale_points(estimate.left_boundary, (mask_h, mask_w), frame.shape)
-        right = _scale_points(estimate.right_boundary, (mask_h, mask_w), frame.shape)
-        center = _scale_points(estimate.centerline, (mask_h, mask_w), frame.shape)
-        if left.size:
-            cv2.polylines(output, [left], False, (255, 160, 0), 2)
-        if right.size:
-            cv2.polylines(output, [right], False, (255, 160, 0), 2)
-        if center.size:
-            cv2.polylines(output, [center], False, (0, 255, 255), 4)
+    left = _scale_points(estimate.left_boundary, (mask_h, mask_w), frame.shape)
+    right = _scale_points(estimate.right_boundary, (mask_h, mask_w), frame.shape)
+    center = _scale_points(estimate.centerline, (mask_h, mask_w), frame.shape)
+    if left.size:
+        cv2.polylines(output, [left], False, (255, 160, 0), 2)
+    if right.size:
+        cv2.polylines(output, [right], False, (255, 160, 0), 2)
+    if center.size:
+        cv2.polylines(output, [center], False, (0, 255, 255), 4)
 
-        ego = (frame_w // 2, int(frame_h * 0.92))
-        cv2.circle(output, ego, 8, (255, 255, 255), -1)
-        if estimate.lookahead_point is not None:
-            lookahead = np.asarray([estimate.lookahead_point], dtype=np.int32)
-            lookahead = _scale_points(lookahead, (mask_h, mask_w), frame.shape)[0]
-            lookahead_tuple = (int(lookahead[0]), int(lookahead[1]))
-            cv2.circle(output, lookahead_tuple, 10, (0, 255, 255), -1)
-            cv2.arrowedLine(output, ego, lookahead_tuple, (255, 255, 255), 3)
+    ego = (frame_w // 2, int(frame_h * 0.92))
+    cv2.circle(output, ego, 8, (255, 255, 255), -1)
+    if estimate.lookahead_point is not None:
+        lookahead = np.asarray([estimate.lookahead_point], dtype=np.int32)
+        lookahead = _scale_points(lookahead, (mask_h, mask_w), frame.shape)[0]
+        lookahead_tuple = (int(lookahead[0]), int(lookahead[1]))
+        cv2.circle(output, lookahead_tuple, 10, (0, 255, 255), -1)
+        cv2.arrowedLine(output, ego, lookahead_tuple, (255, 255, 255), 3)
 
     panel_height = 112
     panel = output[:panel_height].copy()
     output[:panel_height] = cv2.addWeighted(
         panel, 0.30, np.zeros_like(panel), 0.70, 0
     )
-    if show_control:
-        left_pwm, right_pwm = command.as_pwm()
-        lines = [
-            f"LCC: {command.action}  steer={command.steering:+.3f}",
-            (
-                f"error: lateral={estimate.lateral_error:+.3f}  "
-                f"heading={estimate.heading_error:+.3f}  conf={estimate.confidence:.2f}"
-            ),
-            (
-                f"wheel proposal: L={command.left_speed:+.2f} ({left_pwm:+d})  "
-                f"R={command.right_speed:+.2f} ({right_pwm:+d})  "
-                f"{latency_label}={inference_ms:.0f}ms"
-            ),
-        ]
-    else:
-        drivable_ratio = float(np.mean(drivable_mask > 0))
-        lane_ratio = float(np.mean(lane_mask > 0))
-        lines = [
-            "YOLOPv2 PERCEPTION ONLY (external camera)",
-            "green=drivable area  red=lane marking",
-            (
-                f"mask coverage: drivable={drivable_ratio:.1%} lane={lane_ratio:.1%}  "
-                f"inference={inference_ms:.0f}ms"
-            ),
-        ]
+    left_pwm, right_pwm = command.as_pwm()
+    lines = [
+        f"LCC: {command.action}  steer={command.steering:+.3f}",
+        (
+            f"error: lateral={estimate.lateral_error:+.3f}  "
+            f"heading={estimate.heading_error:+.3f}  conf={estimate.confidence:.2f}"
+        ),
+        (
+            f"wheel proposal: L={command.left_speed:+.2f} ({left_pwm:+d})  "
+            f"R={command.right_speed:+.2f} ({right_pwm:+d})  "
+            f"{latency_label}={inference_ms:.0f}ms"
+        ),
+    ]
     for index, line in enumerate(lines):
         cv2.putText(
             output,

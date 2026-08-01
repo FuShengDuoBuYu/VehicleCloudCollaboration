@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LCC 外圈控制台</title>
+  <style>
+    :root {
+      --bg: #eef2f3;
+      --panel: #fff;
+      --ink: #152126;
+      --muted: #64747b;
+      --line: #d7e0e3;
+      --green: #087b55;
+      --green-soft: #e3f3ed;
+      --red: #bf3b2f;
+      --amber: #a96709;
+      --dark: #10191d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .shell { width: min(1440px, calc(100vw - 24px)); margin: 12px auto 28px; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 20px; margin: 0; }
+    .subtitle { color: var(--muted); font-size: 13px; margin-top: 3px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: #edf1f2;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #88969c; }
+    .badge.running { color: var(--green); background: var(--green-soft); }
+    .badge.running::before { background: var(--green); box-shadow: 0 0 0 4px rgba(8,123,85,.12); }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(360px, .85fr); gap: 12px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .panel-title {
+      min-height: 44px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      font-weight: 750;
+      font-size: 14px;
+      background: #fbfcfc;
+    }
+    .frames { padding: 12px; display: grid; grid-template-columns: 1.75fr 1fr; gap: 12px; }
+    .frame-card { min-width: 0; }
+    .frame-label { color: var(--muted); font-size: 12px; margin: 0 0 6px; display: flex; justify-content: space-between; }
+    .frame {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      display: block;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #dfe7e9;
+    }
+    .metrics { padding: 12px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; border-top: 1px solid var(--line); }
+    .metric { min-width: 0; padding: 9px 10px; border-radius: 7px; background: #f0f4f5; border: 1px solid #e1e8ea; }
+    .metric .key { color: var(--muted); font-size: 11px; }
+    .metric .value { font-weight: 750; font-size: 15px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .controls { padding: 14px; display: grid; gap: 12px; }
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: 13px; font-weight: 700; }
+    input[type="number"] { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 10px; font-size: 15px; }
+    .confirm { display: flex; gap: 9px; align-items: flex-start; padding: 10px; border: 1px solid #ead5ad; border-radius: 7px; background: #fff8e9; color: #694a12; font-size: 13px; line-height: 1.45; }
+    .confirm input { margin-top: 3px; }
+    .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    button { border: 0; border-radius: 7px; padding: 12px 10px; min-height: 46px; color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .start { background: var(--green); }
+    .stop { background: var(--red); }
+    .message { min-height: 42px; padding: 10px 12px; border-radius: 7px; background: #f0f4f5; font-size: 13px; line-height: 1.5; }
+    .message.error { color: var(--red); background: #fff0ee; }
+    .details { padding: 0 14px 14px; }
+    .kv { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 7px 10px; font-size: 13px; line-height: 1.45; }
+    .kv .key { color: var(--muted); }
+    .kv .value { overflow-wrap: anywhere; }
+    .logs { height: 280px; overflow: auto; padding: 10px; background: var(--dark); color: #d7e3e7; font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .log { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.05); white-space: pre-wrap; overflow-wrap: anywhere; }
+    .hint { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    @media (max-width: 1000px) { .grid, .frames { grid-template-columns: 1fr; } }
+    @media (max-width: 620px) { .shell { width: calc(100vw - 12px); } .metrics { grid-template-columns: repeat(2, 1fr); } .buttons { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <h1>LCC 外圈控制台</h1>
+        <div class="subtitle">外圈车道居中控制、实时画面与安全状态</div>
+      </div>
+      <div class="badge" id="runBadge">等待状态</div>
+    </header>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-title"><span>实时 LCC 画面</span><span class="hint" id="frameAge">--</span></div>
+        <div class="frames">
+          <div class="frame-card">
+            <div class="frame-label"><span>相机与控制叠加</span><span id="actionLabel">--</span></div>
+            <img class="frame" id="annotatedFrame" alt="等待 LCC 标注画面">
+          </div>
+          <div class="frame-card">
+            <div class="frame-label"><span>鸟瞰走廊</span><span id="boundaryLabel">--</span></div>
+            <img class="frame" id="birdeyeFrame" alt="等待鸟瞰画面">
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="key">置信度</div><div class="value" id="confidence">--</div></div>
+          <div class="metric"><div class="key">横向误差</div><div class="value" id="lateral">--</div></div>
+          <div class="metric"><div class="key">航向误差</div><div class="value" id="heading">--</div></div>
+          <div class="metric"><div class="key">转向量</div><div class="value" id="steering">--</div></div>
+          <div class="metric"><div class="key">四轮 PWM</div><div class="value" id="pwm">--</div></div>
+          <div class="metric"><div class="key">边界来源</div><div class="value" id="boundary">--</div></div>
+          <div class="metric"><div class="key">感知耗时</div><div class="value" id="latency">--</div></div>
+          <div class="metric"><div class="key">黄线车底风险</div><div class="value" id="hazard">--</div></div>
+        </div>
+      </section>
+
+      <aside style="display:grid; gap:12px; align-content:start;">
+        <section class="panel">
+          <div class="panel-title">LCC 控制</div>
+          <div class="controls">
+            <div class="field">
+              <label for="runtimeInput">最长运行时间（秒）</label>
+              <input id="runtimeInput" type="number" min="1" max="300" step="1" value="60">
+              <div class="hint">到时自动停车；也可以随时按下红色急停。</div>
+            </div>
+            <label class="confirm">
+              <input id="safetyConfirm" type="checkbox">
+              <span>我已确认赛道和云台周围无障碍物，车辆有人现场看护并可随时断电。</span>
+            </label>
+            <div class="buttons">
+              <button class="start" id="startButton">启动 LCC</button>
+              <button class="stop" id="stopButton">停止 / 急停</button>
+            </div>
+            <div class="message" id="message">正在连接车辆状态……</div>
+          </div>
+          <div class="details">
+            <div class="kv" id="details"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">运行日志</div>
+          <div class="logs" id="logs"><div class="log">--</div></div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const MOTOR_CONFIRMATION = 'I_UNDERSTAND_MOTORS_WILL_MOVE';
+    const nodes = Object.fromEntries([
+      'runBadge','frameAge','actionLabel','boundaryLabel','annotatedFrame','birdeyeFrame',
+      'confidence','lateral','heading','steering','pwm','boundary','latency','hazard',
+      'runtimeInput','safetyConfirm','startButton','stopButton','message','details','logs'
+    ].map(id => [id, document.getElementById(id)]));
+
+    const text = (value, fallback = '--') => value === null || value === undefined || value === '' ? fallback : String(value);
+    const number = (value, digits = 3) => value === null || value === undefined || value === '' ? '--' : Number(value).toFixed(digits);
+    const escapeHtml = value => text(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+
+    function setDetails(rows) {
+      nodes.details.innerHTML = rows.map(([key, value]) => `<div class="key">${escapeHtml(key)}</div><div class="value">${escapeHtml(value)}</div>`).join('');
+    }
+
+    function render(state) {
+      const process = state.process || {};
+      const runtime = state.runtime || {};
+      const last = runtime.last_result || {};
+      const termination = runtime.termination || {};
+      const running = Boolean(process.running);
+      nodes.runBadge.textContent = running ? 'LCC 运行中' : text(process.state, '待机');
+      nodes.runBadge.classList.toggle('running', running);
+      nodes.startButton.disabled = running;
+      nodes.stopButton.disabled = !running;
+      nodes.runtimeInput.disabled = running;
+      nodes.safetyConfirm.disabled = running;
+      nodes.message.classList.remove('error');
+      nodes.message.textContent = text(process.message);
+      nodes.actionLabel.textContent = `${text(last.action)} / ${text(last.reason)}`;
+      nodes.boundaryLabel.textContent = text(last.boundary_source);
+      nodes.confidence.textContent = number(last.confidence);
+      nodes.lateral.textContent = number(last.lateral_error);
+      nodes.heading.textContent = number(last.heading_error);
+      nodes.steering.textContent = number(last.steering);
+      nodes.pwm.textContent = [last.front_left_pwm,last.rear_left_pwm,last.front_right_pwm,last.rear_right_pwm].map(v => text(v)).join('/');
+      nodes.boundary.textContent = text(last.boundary_source);
+      nodes.latency.textContent = last.boundary_ms === undefined ? '--' : `${number(last.boundary_ms, 1)} ms`;
+      nodes.hazard.textContent = last.yellow_hazard === undefined ? '--' : (last.yellow_hazard ? '危险 / 已停车' : '正常');
+      const age = state.frames && state.frames.annotated && state.frames.annotated.age_seconds;
+      nodes.frameAge.textContent = age === null || age === undefined ? '等待画面' : `画面 ${number(age, 1)}s 前更新`;
+      setDetails([
+        ['进程状态', process.state],
+        ['运行时间', process.elapsed_seconds === null ? '--' : `${number(process.elapsed_seconds, 1)} / ${text(process.max_runtime_seconds)} s`],
+        ['电机输出', process.motors_enabled ? '已启用' : '仅干运行'],
+        ['PID', process.pid],
+        ['停车原因', termination.reason],
+        ['运动门控', runtime.motion_gate && runtime.motion_gate.ready ? '已放行' : '等待/已停止']
+      ]);
+      const logs = process.logs || [];
+      nodes.logs.innerHTML = logs.length ? logs.slice(-100).map(log => `<div class="log">[${escapeHtml(log.time)}] ${escapeHtml(log.level)} ${escapeHtml(log.message)}</div>`).join('') : '<div class="log">--</div>';
+      nodes.logs.scrollTop = nodes.logs.scrollHeight;
+    }
+
+    function refreshFrames() {
+      const stamp = Date.now();
+      nodes.annotatedFrame.src = `/api/latest-frame.jpg?ts=${stamp}`;
+      nodes.birdeyeFrame.src = `/api/latest-birdeye.jpg?ts=${stamp}`;
+    }
+
+    async function refreshState() {
+      try {
+        const response = await fetch('/api/state', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        render(await response.json());
+      } catch (error) {
+        nodes.message.classList.add('error');
+        nodes.message.textContent = `状态连接失败：${error.message}`;
+      }
+    }
+
+    async function send(action) {
+      let url = `/api/lcc?action=${encodeURIComponent(action)}`;
+      if (action === 'start') {
+        if (!nodes.safetyConfirm.checked) {
+          nodes.message.classList.add('error');
+          nodes.message.textContent = '请先完成现场安全确认。';
+          return;
+        }
+        url += `&max_runtime_seconds=${encodeURIComponent(nodes.runtimeInput.value)}`;
+        url += `&confirm=${encodeURIComponent(MOTOR_CONFIRMATION)}`;
+      }
+      try {
+        nodes.startButton.disabled = true;
+        const response = await fetch(url, { method: 'POST' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+        await refreshState();
+      } catch (error) {
+        nodes.message.classList.add('error');
+        nodes.message.textContent = error.message;
+      }
+    }
+
+    nodes.startButton.addEventListener('click', () => send('start'));
+    nodes.stopButton.addEventListener('click', () => send('emergency-stop'));
+    refreshState();
+    refreshFrames();
+    setInterval(refreshState, 500);
+    setInterval(refreshFrames, 300);
+  </script>
+</body>
+</html>

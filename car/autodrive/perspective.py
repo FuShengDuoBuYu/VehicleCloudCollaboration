@@ -10,6 +10,66 @@ import yaml
 from .lane_centering import LaneEstimate
 
 
+def camera_pose_from_mapping(camera_config):
+    """Return the image geometry and PTZ pose that define a calibration."""
+    camera = camera_config or {}
+    rotation = int(camera.get("rotation_degrees", 0))
+    if rotation not in (0, 90, 180, 270):
+        raise ValueError("camera.rotation_degrees must be 0, 90, 180, or 270")
+    capture_width = int(camera.get("width", 640))
+    capture_height = int(camera.get("height", 480))
+    if capture_width < 1 or capture_height < 1:
+        raise ValueError("camera width and height must be positive")
+    if rotation in (90, 270):
+        image_width, image_height = capture_height, capture_width
+    else:
+        image_width, image_height = capture_width, capture_height
+    gimbal = camera.get("gimbal") or {}
+    return {
+        "image_width": image_width,
+        "image_height": image_height,
+        "rotation_degrees": rotation,
+        "flip_horizontal": bool(camera.get("flip_horizontal", False)),
+        "flip_vertical": bool(camera.get("flip_vertical", False)),
+        "gimbal_initialize_on_startup": bool(
+            gimbal.get("initialize_on_startup", False)
+        ),
+        "pan_angle": (
+            None if gimbal.get("pan_angle") is None else int(gimbal["pan_angle"])
+        ),
+        "tilt_angle": (
+            None if gimbal.get("tilt_angle") is None else int(gimbal["tilt_angle"])
+        ),
+    }
+
+
+def validate_calibration_camera_pose(calibration_path, camera_config):
+    """Reject a calibration captured with different image/PTZ geometry."""
+    path = Path(calibration_path)
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not data.get("calibrated", False):
+        raise ValueError(f"perspective calibration is not marked calibrated: {path}")
+    actual = data.get("camera_pose")
+    if not isinstance(actual, dict):
+        raise ValueError(
+            "perspective calibration has no camera_pose metadata; recapture "
+            "and recalibrate after fixing the camera gimbal"
+        )
+    expected = camera_pose_from_mapping(camera_config)
+    mismatches = []
+    for key, expected_value in expected.items():
+        if key not in actual or actual[key] != expected_value:
+            mismatches.append(
+                f"{key}: calibration={actual.get(key)!r}, runtime={expected_value!r}"
+            )
+    if mismatches:
+        raise ValueError(
+            "perspective calibration does not match the runtime camera pose: "
+            + "; ".join(mismatches)
+        )
+    return data
+
+
 class PerspectiveMapper:
     """Warp masks into bird's-eye view and map debug geometry back to camera view."""
 
@@ -54,6 +114,20 @@ class PerspectiveMapper:
         return cv2.warpPerspective(
             array,
             matrix,
+            (width, height),
+            flags=cv2.INTER_NEAREST,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=0,
+        )
+
+    def camera_mask(self, mask):
+        """Map a bird's-eye binary mask back into the camera image plane."""
+        array = np.asarray(mask)
+        _, inverse = self._matrices(array.shape)
+        height, width = array.shape[:2]
+        return cv2.warpPerspective(
+            array,
+            inverse,
             (width, height),
             flags=cv2.INTER_NEAREST,
             borderMode=cv2.BORDER_CONSTANT,

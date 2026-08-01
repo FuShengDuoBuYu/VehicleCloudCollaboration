@@ -3,6 +3,7 @@
 
 import argparse
 from pathlib import Path
+import sys
 
 import cv2
 import numpy as np
@@ -10,7 +11,15 @@ import yaml
 
 
 AUTODRIVE_DIR = Path(__file__).resolve().parent
+CAR_DIR = AUTODRIVE_DIR.parent
+if str(CAR_DIR) not in sys.path:
+    sys.path.insert(0, str(CAR_DIR))
+
+from autodrive.perspective import camera_pose_from_mapping
+
+
 DEFAULT_OUTPUT = AUTODRIVE_DIR / "onboard_calibration.yaml"
+LOCAL_RUNTIME_CONFIG = AUTODRIVE_DIR / "onboard_runtime.yaml"
 
 
 def build_parser():
@@ -21,6 +30,13 @@ def build_parser():
         help="Pixel points: x1,y1;x2,y2;x3,y3;x4,y4 in TL,TR,BR,BL order",
     )
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
+    parser.add_argument(
+        "--runtime-config",
+        default=(
+            str(LOCAL_RUNTIME_CONFIG) if LOCAL_RUNTIME_CONFIG.exists() else None
+        ),
+        help="Runtime YAML whose camera pose is embedded into the calibration",
+    )
     parser.add_argument("--preview", help="Optional bird's-eye preview path")
     parser.add_argument(
         "--destination-margin",
@@ -93,6 +109,27 @@ def main():
         raise ValueError(f"unable to read image: {image_path}")
     height, width = image.shape[:2]
 
+    if not args.runtime_config:
+        raise ValueError(
+            "--runtime-config is required so calibration is bound to a camera pose"
+        )
+    runtime_config_path = Path(args.runtime_config).expanduser().resolve()
+    runtime_config = (
+        yaml.safe_load(runtime_config_path.read_text(encoding="utf-8")) or {}
+    )
+    if runtime_config.get("version") != 1:
+        raise ValueError("runtime config version must be 1")
+    camera_pose = camera_pose_from_mapping(runtime_config.get("camera", {}))
+    if (camera_pose["image_width"], camera_pose["image_height"]) != (
+        width,
+        height,
+    ):
+        raise ValueError(
+            "calibration image size does not match runtime camera geometry: "
+            f"image={width}x{height}, runtime="
+            f"{camera_pose['image_width']}x{camera_pose['image_height']}"
+        )
+
     points = parse_points(args.points)
     if points is None:
         points = collect_points(image)
@@ -121,6 +158,8 @@ def main():
     payload = {
         "calibrated": True,
         "source_image": str(image_path),
+        "runtime_config": str(runtime_config_path),
+        "camera_pose": camera_pose,
         "source_points": source_normalized.round(7).tolist(),
         "destination_points": destination_normalized.round(7).tolist(),
     }

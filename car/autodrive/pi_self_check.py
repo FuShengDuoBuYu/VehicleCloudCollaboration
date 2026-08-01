@@ -16,7 +16,16 @@ import yaml
 AUTODRIVE_DIR = Path(__file__).resolve().parent
 CAR_DIR = AUTODRIVE_DIR.parent
 REPO_ROOT = CAR_DIR.parent
-DEFAULT_CONFIG = AUTODRIVE_DIR / "onboard_runtime.example.yaml"
+if str(CAR_DIR) not in sys.path:
+    sys.path.insert(0, str(CAR_DIR))
+
+from autodrive.perspective import validate_calibration_camera_pose
+
+
+LOCAL_CONFIG = AUTODRIVE_DIR / "onboard_runtime.yaml"
+DEFAULT_CONFIG = LOCAL_CONFIG
+MINIMUM_PYTHON = (3, 9)
+MAXIMUM_PYTHON = (3, 12)
 
 
 def build_parser():
@@ -26,11 +35,6 @@ def build_parser():
         "--camera",
         action="store_true",
         help="Open the configured camera and read one frame",
-    )
-    parser.add_argument(
-        "--load-model",
-        action="store_true",
-        help="Load YOLOPv2 TorchScript weights into CPU memory",
     )
     parser.add_argument("--json-output", help="Optional report path")
     parser.add_argument(
@@ -53,7 +57,7 @@ def add(checks, name, status, detail):
 
 
 def check_imports(checks):
-    modules = ["numpy", "cv2", "torch", "yaml", "smbus2"]
+    modules = ["numpy", "cv2", "yaml", "smbus2"]
     for name in modules:
         try:
             module = importlib.import_module(name)
@@ -99,12 +103,12 @@ def main():
         config = {}
         add(checks, "runtime_config", "fail", exc)
 
-    python_ok = (3, 10) <= sys.version_info[:2] < (3, 12)
+    python_ok = MINIMUM_PYTHON <= sys.version_info[:2] < MAXIMUM_PYTHON
     add(
         checks,
         "python_version",
         "pass" if python_ok else "fail",
-        platform.python_version(),
+        f"{platform.python_version()}; supported: >=3.9,<3.12",
     )
     machine = platform.machine().lower()
     pi_arch = machine in {"aarch64", "arm64", "armv7l"}
@@ -116,26 +120,12 @@ def main():
     )
     check_imports(checks)
 
-    weights = repo_path(config.get("model", {}).get("weights"))
-    if weights is not None and weights.is_file():
-        add(
-            checks,
-            "yolopv2_weights",
-            "pass",
-            f"{weights} ({weights.stat().st_size / 1024 / 1024:.1f} MiB)",
-        )
-        if args.load_model:
-            try:
-                import torch
-
-                model = torch.jit.load(str(weights), map_location="cpu")
-                model.eval()
-                del model
-                add(checks, "yolopv2_model_load", "pass", "TorchScript loaded")
-            except Exception as exc:
-                add(checks, "yolopv2_model_load", "fail", exc)
-    else:
-        add(checks, "yolopv2_weights", "fail", weights or "not configured")
+    add(
+        checks,
+        "perception_mode",
+        "pass",
+        "yellow boundaries plus HSV/Lab road surface",
+    )
 
     calibration = repo_path(
         config.get("perspective", {}).get("calibration")
@@ -149,10 +139,16 @@ def main():
         )
     else:
         try:
-            data = yaml.safe_load(calibration.read_text(encoding="utf-8")) or {}
-            if not data.get("calibrated", False):
-                raise ValueError("file is not marked calibrated")
-            add(checks, "perspective_calibration", "pass", calibration)
+            validate_calibration_camera_pose(
+                calibration,
+                config.get("camera", {}),
+            )
+            add(
+                checks,
+                "perspective_calibration",
+                "pass",
+                f"{calibration}; camera pose matches runtime",
+            )
         except Exception as exc:
             add(checks, "perspective_calibration", "fail", exc)
 

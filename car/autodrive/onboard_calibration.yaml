@@ -1,0 +1,22 @@
+calibrated: true
+source_image: outputs/onboard_capture/onboard_calibration_frame.jpg
+runtime_config: car/autodrive/onboard_runtime.yaml
+camera_pose:
+  image_width: 640
+  image_height: 480
+  rotation_degrees: 0
+  flip_horizontal: false
+  flip_vertical: false
+  gimbal_initialize_on_startup: true
+  pan_angle: 25
+  tilt_angle: null
+source_points:
+  - [0.3630673, 0.3131524]
+  - [0.5618153, 0.3131524]
+  - [0.9937402, 0.6283924]
+  - [0.0062598, 0.5511482]
+destination_points:
+  - [0.22, 0.0]
+  - [0.78, 0.0]
+  - [0.78, 1.0]
+  - [0.22, 1.0]

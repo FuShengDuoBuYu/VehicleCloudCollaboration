@@ -1,156 +1,80 @@
 # VehicleCloudCollaboration
 
-这是一个车云协同实验仓库，车端闭环由摄像头、长尾检测、云端 LLM 决策、车辆控制和网页控制台组成。
+当前车端自动驾驶只使用外圈 LCC（Lane Centering Control）。系统从车载相机提取黄色
+道路边界和绿色岛区，在鸟瞰坐标中估计道路中心线，再将横向/航向误差映射为四轮 PWM。
+DonkeyCar、云端变道控制和旧网页均不参与当前运行。
 
-![整体架构图](readme.assets/arch.svg)
-
-## 目录结构
-
-```text
-VehicleCloudCollaboration/
-└── car/
-    ├── run_closed_loop.py
-    ├── autodrive/
-    ├── cloud_client/
-    ├── longtail/
-    └── control/
-```
-
-## 车端闭环
-
-中期演示入口：
-
-```bash
-cd /home/pi/Desktop/VehicleCloudCollaboration/car
-python run_closed_loop.py
-```
-
-默认流程：
-
-1. `CameraStream` 读取本地摄像头画面。
-2. `vehicle_control` 网页控制台展示摄像头画面、车辆状态和闭环开始按钮。
-3. 点击网页里的“开始闭环”后，车辆才会进入自动行驶。
-4. `LongTailClassifier` 输出长尾分数。
-5. 分数达到阈值时调用 `cloud_client` 的 OpenAI-compatible `/v1/chat/completions` 接口。
-6. 云端 LLM 只在 `left` 和 `right` 中返回一个变道决策。
-7. 车端将 `left`/`right` 映射为 `lane-left`/`lane-right` 并通过 `VehicleController` 执行。
-
-常用参数：
-
-```bash
-python run_closed_loop.py
-CAR_LONGTAIL_THRESHOLD=0.6 python run_closed_loop.py
-python run_closed_loop.py --cloud-mode none
-python run_closed_loop.py --cloud-url https://your-ngrok-or-cloud-base-url
-python run_closed_loop.py --web-port 8081
-python run_closed_loop.py --no-web
-python run_closed_loop.py --start-immediately
-python run_closed_loop.py --no-stop-for-detection
-```
-
-当前默认变道参数参考见 `car/control/vehicle_control/lane_change_reference.yaml`。
-
-## 演示视频
-
-<video src="readme.assets/video.mp4" controls width="100%"></video>
-
-[查看演示视频](readme.assets/video.mp4)
-
-## 网页控制台
-
-网页控制台默认地址：
+运行链路：
 
 ```text
-http://<车辆IP>:8080
+LCC 网页 -> run_onboard.py -> 外圈边界/中心线 -> LCC -> 安全门 -> Raspbot 四轮底盘
 ```
 
-网页控制台会实时展示摄像头流、最新分析帧、闭环日志、检测器分数、阶段时延和云端决策。
+## 启动 LCC 网页
 
-![网页控制台](readme.assets/webUI.png)
-
-## 车端模块
-
-### car/longtail
-
-长尾检测模块，核心类是 `LongTailClassifier`。检测器配置由 `.env` 环境变量文件生成，示例见根目录 `.env_example`。它组合多个检测器，对单张图片输出：
-
-- `is_long_tail`
-- `score`
-- `threshold`
-- `individual_scores`
-- `inference_time`
-- `fps`
-
-模块说明见 [car/longtail/README.md](car/longtail/README.md)。
-
-### car/cloud_client
-
-车端云服务客户端模块。`CloudClient` 调用云端 OpenAI-compatible `/v1/chat/completions` 服务，发送文本检测信息和当前图片，解析车辆动作决策。
-
-模块说明见 [car/cloud_client/README.md](car/cloud_client/README.md)。
-
-### car/control
-
-车辆控制模块，包含底层底盘封装、动作控制、摄像头流和网页控制服务。
-
-支持动作：
-
-- `forward`
-- `stop`
-- `lane-left`
-- `lane-right`
-
-模块说明见 [car/control/README.md](car/control/README.md)。
-
-### car/autodrive
-
-实验性 YOLOPv2-LCC 自动驾驶模块，包含外部视频感知回放、车载透视标定、道路中心线、
-连续差速控制、安全看门狗和默认禁用电机的树莓派运行入口。
-
-- [模块说明](car/autodrive/README.md)
-- [树莓派无缝衔接手册](car/autodrive/RASPBERRY_PI_HANDOFF.md)
-- [上车实验检查清单](car/autodrive/ON_CAR_CHECKLIST.md)
-- [当前机器可读交接状态](car/autodrive/HANDOFF_STATE.yaml)
-
-## 云端配置
-
-云端服务地址通过根目录 `.env` 配置：
-
-```text
-CAR_CLOUD_API_BASE_URL="https://your-ngrok-or-cloud-base-url"
-CAR_CLOUD_MODEL="qwen3.5:9b"
-```
-
-`.env_example` 只保留占位配置，避免把个人公网 API 地址提交到代码里。
-
-## 运行检查
-
-安装依赖：
-
-```bash
-conda activate car
-pip install -r requirements.txt
-```
-
-只检查入口参数和语法，不启动电机：
+车辆放到安全起点、确认摄像头云台和车轮周围无障碍后运行：
 
 ```bash
 cd /home/pi/Desktop/VehicleCloudCollaboration
-python -m py_compile car/run_closed_loop.py car/cloud_client/mock_client.py
-python car/run_closed_loop.py --help
+
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/run_lcc_web.py \
+  --config car/autodrive/onboard_runtime.yaml \
+  --host 0.0.0.0 \
+  --port 8080 \
+  --default-max-runtime-seconds 60 \
+  --enable-motors \
+  --confirm-motor-motion I_UNDERSTAND_MOTORS_WILL_MOVE
 ```
 
-## 闭环数据测试
+浏览器访问 `http://<车辆IP>:8080`。页面只提供 LCC 启动、停止/急停、实时相机图、
+鸟瞰图和运行状态。服务待机时不占用摄像头；关闭服务或按下急停会停止四轮输出。
 
-不启动车辆硬件的完整数据闭环测试：
+## 直接运行
+
+不使用网页时可直接启动闭环：
 
 ```bash
-cd /home/pi/Desktop/VehicleCloudCollaboration
-python car/test/closed_loop_test.py --cloud-backend inprocess
+/home/pi/miniconda3/envs/car/bin/python car/autodrive/run_onboard.py \
+  --config car/autodrive/onboard_runtime.yaml \
+  --enable-motors \
+  --confirm-motor-motion I_UNDERSTAND_MOTORS_WILL_MOVE \
+  --max-runtime-seconds 60
 ```
 
-测试说明见 [car/test/README.md](car/test/README.md)。
+去掉 `--enable-motors` 和确认参数即为电机干运行。`Ctrl+C`、运行时间到期、相机断流、
+道路丢失或误差超限都会触发停车。
 
-## 许可证
+## 当前实车标定
 
-本项目仅供研究使用。
+- 相机水平舵机 S1 正前方角度：`25°`
+- 电机编号：`0=左前、1=左后、2=右前、3=右后`
+- 直行基准 PWM：`16/16/20/20`
+- 最大正向右弧 PWM：`26/26/10/10`
+- 运行配置：`car/autodrive/onboard_runtime.yaml`
+- 透视标定：`car/autodrive/onboard_calibration.yaml`
+
+相机位置、角度、分辨率或画面旋转发生变化后，必须重新采集图片并完成透视标定。
+
+## 目录
+
+- `car/autodrive/`：LCC、网页、安全控制及标定工具
+- `car/control/vehicle_control/`：相机和 Raspbot 底盘适配
+- `car/control/utils/Raspbot_Lib.py`：I2C 底层接口
+- `car/test/`：当前 LCC、相机和硬件映射测试
+
+详细操作见 [car/autodrive/README.md](car/autodrive/README.md)。
+
+## 软件验证
+
+以下命令不驱动车轮：
+
+```bash
+/home/pi/miniconda3/envs/car/bin/python -m unittest \
+  car.test.test_lane_centering \
+  car.test.test_camera_gimbal \
+  car.test.test_camera_transform \
+  car.test.test_hardware_mapping \
+  car.test.test_lcc_web
+```
+
+本项目仅供受控场地研究使用。真车运行时必须有人在车辆旁准备急停或切断电机电源。
