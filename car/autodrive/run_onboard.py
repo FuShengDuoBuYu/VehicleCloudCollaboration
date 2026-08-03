@@ -3,9 +3,11 @@
 
 import argparse
 import csv
+from datetime import datetime
 import json
 import os
 from pathlib import Path
+import shutil
 import sys
 import time
 
@@ -24,6 +26,8 @@ for path in (CAR_DIR, CONTROL_DIR):
 
 from autodrive.drive_runtime import (
     CommandWatchdog,
+    CornerContinuationConfig,
+    CornerContinuationGate,
     PerceptionMotionGate,
     SafeWheelDriver,
     WheelMappingConfig,
@@ -62,6 +66,10 @@ def build_parser():
     source.add_argument("--video", help="Use a recorded onboard video instead of a camera")
     source.add_argument("--camera-index", type=int, help="Override configured camera index")
     parser.add_argument("--sample-every", type=int, help="Video frame sampling interval")
+    parser.add_argument(
+        "--output-dir",
+        help="Override output directory (useful for isolated offline replay)",
+    )
     parser.add_argument("--max-samples", type=int, default=0, help="0 runs until EOF/interrupt")
     parser.add_argument(
         "--max-runtime-seconds",
@@ -73,6 +81,11 @@ def build_parser():
         "--save-debug-frames",
         action="store_true",
         help="Save every raw, annotated, and bird's-eye frame for diagnosis",
+    )
+    parser.add_argument(
+        "--no-run-archive",
+        action="store_true",
+        help="Disable per-run videos and snapshots (intended for local replay only)",
     )
     parser.add_argument(
         "--enable-motors",
@@ -137,6 +150,30 @@ class VideoSource:
         self.fps = float(self.capture.get(cv2.CAP_PROP_FPS) or 30.0)
         self.sample_every = max(1, int(sample_every))
         self.frame_index = -1
+        self.timestamps = self._load_archive_timestamps()
+
+    def _load_archive_timestamps(self):
+        """Use the per-frame capture clock stored beside archived videos.
+
+        Hardware capture may run below the MP4 writer's nominal frame rate.
+        The CSV has one row per archived frame and preserves the real capture
+        timestamps, which are required to reproduce time-bounded control gates.
+        """
+        sidecar = self.path.with_name("onboard_log.csv")
+        if not sidecar.is_file():
+            return None
+        try:
+            with sidecar.open("r", encoding="utf-8", newline="") as handle:
+                timestamps = [
+                    float(row["timestamp_s"])
+                    for row in csv.DictReader(handle)
+                ]
+        except (KeyError, TypeError, ValueError, OSError):
+            return None
+        frame_count = int(self.capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        if frame_count <= 0 or len(timestamps) != frame_count:
+            return None
+        return timestamps
 
     def read(self):
         while True:
@@ -145,7 +182,11 @@ class VideoSource:
                 return None, None, None
             self.frame_index += 1
             if self.frame_index % self.sample_every == 0:
-                timestamp = self.frame_index / self.fps
+                timestamp = (
+                    self.timestamps[self.frame_index]
+                    if self.timestamps is not None
+                    else self.frame_index / self.fps
+                )
                 return frame, timestamp, 0.0
 
     def close(self):
@@ -199,6 +240,70 @@ class CameraSource:
 
     def close(self):
         self.camera.stop()
+
+
+class RunArchive:
+    """Persist one self-contained experiment for deterministic diagnosis."""
+
+    def __init__(self, output_dir, enabled, fps, mode):
+        self.enabled = bool(enabled)
+        self.fps = max(1.0, float(fps))
+        self.run_dir = None
+        self.status_path = None
+        self.log_path = None
+        self._writers = {}
+        if not self.enabled:
+            return
+        run_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f") + f"_{mode}"
+        self.run_dir = Path(output_dir) / "runs" / run_id
+        self.run_dir.mkdir(parents=True, exist_ok=False)
+        self.status_path = self.run_dir / "status.json"
+        self.log_path = self.run_dir / "onboard_log.csv"
+
+    def snapshot_file(self, source, target_name):
+        if not self.enabled or source is None:
+            return
+        source = Path(source)
+        if source.is_file():
+            shutil.copy2(source, self.run_dir / target_name)
+
+    def _writer(self, name, frame):
+        writer = self._writers.get(name)
+        if writer is not None:
+            return writer
+        height, width = frame.shape[:2]
+        path = self.run_dir / name
+        writer = cv2.VideoWriter(
+            str(path),
+            cv2.VideoWriter_fourcc(*"mp4v"),
+            self.fps,
+            (int(width), int(height)),
+        )
+        if not writer.isOpened():
+            raise RuntimeError(f"unable to create archived video: {path}")
+        self._writers[name] = writer
+        return writer
+
+    def write_frames(self, raw, annotated, birdeye):
+        if not self.enabled:
+            return
+        self._writer("raw.mp4", raw).write(raw)
+        self._writer("annotated.mp4", annotated).write(annotated)
+        if birdeye is not None:
+            self._writer("birdeye.mp4", birdeye).write(birdeye)
+
+    def write_status(self, payload):
+        if self.enabled:
+            write_status(self.status_path, payload)
+
+    def close(self):
+        for writer in self._writers.values():
+            writer.release()
+        self._writers.clear()
+
+    def copy_log(self, source):
+        if self.enabled and Path(source).is_file():
+            shutil.copy2(source, self.log_path)
 
 
 class SurfaceOnlyDetector:
@@ -267,6 +372,27 @@ def build_components(config, motors_enabled, calibration_path):
         check_interval=float(safety.get("watchdog_check_interval", 0.05)),
     )
     return detector, estimator, controller, mapper, boundary_tracker, driver, watchdog
+
+
+def fuse_tracking_confidence(
+    centerline_confidence: float,
+    boundary_confidence: float,
+) -> float:
+    """Combine two confidence stages without double-penalizing one corridor.
+
+    The centerline estimate is computed from the boundary tracker's corridor,
+    so multiplying both values treats the same weak observation as two
+    independent failures.  The weaker value is still a conservative joint
+    confidence: either stage can stop the car, while a valid single-boundary
+    corner does not lose confidence a second time.
+    """
+    return float(
+        np.clip(
+            min(float(centerline_confidence), float(boundary_confidence)),
+            0.0,
+            1.0,
+        )
+    )
 
 
 def analyze(
@@ -349,9 +475,35 @@ def analyze(
             reason=boundary_result.reason,
         )
     else:
-        estimate = estimator.estimate(control_drivable, control_lane, route_hint)
+        fresh_boundary_sources = {"both", "outer+width", "inner+width"}
+        if (
+            boundary_result is not None
+            and boundary_result.source in fresh_boundary_sources
+            and boundary_result.left_curve.size
+            and boundary_result.right_curve.size
+        ):
+            estimate = estimator.estimate_from_boundaries(
+                boundary_result.left_curve,
+                boundary_result.right_curve,
+                boundary_result.corridor_mask.shape[1],
+            )
+            # Retain the surface-mask estimator as a defensive fallback for a
+            # malformed fitted curve. Fresh valid curves are the primary LCC
+            # geometry; history/dropout sources still use the corridor path so
+            # the bounded corner-continuation safety gate remains in control.
+            if not estimate.valid:
+                estimate = estimator.estimate(
+                    control_drivable, control_lane, route_hint
+                )
+        else:
+            estimate = estimator.estimate(
+                control_drivable, control_lane, route_hint
+            )
         if boundary_result is not None:
-            estimate.confidence *= boundary_result.confidence
+            estimate.confidence = fuse_tracking_confidence(
+                estimate.confidence,
+                boundary_result.confidence,
+            )
     estimate.confidence = float(np.clip(estimate.confidence, 0.0, 1.0))
     command = controller.update(estimate, dt)
     if inference_time + boundary_time > maximum_inference_time:
@@ -476,19 +628,16 @@ def main():
     if sample_every < 1:
         raise ValueError("sample interval must be at least 1")
 
+    runtime_config = config.get("runtime", {})
     output_dir = repo_path(
-        config.get("runtime", {}).get("output_dir", "outputs/onboard_runtime")
+        args.output_dir
+        or runtime_config.get("output_dir", "outputs/onboard_runtime")
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     log_path = output_dir / "onboard_log.csv"
     status_path = output_dir / "status.json"
     latest_frame_path = output_dir / "latest.jpg"
     latest_birdeye_path = output_dir / "latest_birdeye.jpg"
-    debug_output_dir = None
-    if args.save_debug_frames:
-        debug_output_dir = output_dir / f"debug_{int(time.time())}"
-        debug_output_dir.mkdir(parents=True, exist_ok=False)
-
     source = (
         VideoSource(args.video, sample_every)
         if args.video
@@ -502,8 +651,33 @@ def main():
                 flush=True,
             )
         source = CameraSource(camera_config)
+    archive_fps = (
+        source.fps / source.sample_every
+        if isinstance(source, VideoSource)
+        else float(camera_config.get("fps", 20))
+    )
+    archive = RunArchive(
+        output_dir,
+        enabled=(
+            bool(runtime_config.get("archive_runs", True))
+            and not args.no_run_archive
+        ),
+        fps=float(runtime_config.get("archive_fps", archive_fps)),
+        mode="hardware" if args.enable_motors else "dryrun",
+    )
+    archive.snapshot_file(config_path, "runtime_config.yaml")
+    archive.snapshot_file(calibration_path, "perspective_calibration.yaml")
+    debug_output_dir = None
+    if args.save_debug_frames:
+        debug_output_dir = (
+            archive.run_dir / "frames"
+            if archive.enabled
+            else output_dir / f"debug_{int(time.time())}"
+        )
+        debug_output_dir.mkdir(parents=True, exist_ok=False)
     detector = estimator = controller = mapper = boundary_tracker = driver = watchdog = None
     motion_gate = None
+    corner_gate = None
     log_handle = None
     last_row = None
     termination_reason = "runtime shutdown"
@@ -566,14 +740,18 @@ def main():
             "boundary_source",
             "boundary_confidence",
             "lane_width_ratio",
+            "boundary_visible_ratio",
             "ego_yellow_ratio",
             "yellow_hazard",
             "valid",
             "confidence",
+            "estimate_reason",
             "lateral_error",
             "heading_error",
+            "near_heading_error",
             "action",
             "steering",
+            "tight_turn_factor",
             "left_speed",
             "right_speed",
             "left_pwm",
@@ -583,6 +761,14 @@ def main():
             "front_right_pwm",
             "rear_right_pwm",
             "reason",
+            "corner_continuation_active",
+            "corner_continuation_holding",
+            "corner_continuation_hold_age_s",
+            "corner_continuation_progress_age_s",
+            "corner_continuation_best_heading",
+            "corner_apex_active",
+            "corner_apex_age_s",
+            "corner_apex_exit_valid_count",
             "motion_gate_ready",
             "motion_gate_valid_frames",
         ]
@@ -595,6 +781,14 @@ def main():
         motion_gate = PerceptionMotionGate(
             resume_valid_frames=int(
                 safety_config.get("resume_valid_frames", 4)
+            ),
+            resume_min_confidence=float(
+                safety_config.get("resume_min_confidence", 0.0)
+            ),
+        )
+        corner_gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                **safety_config.get("corner_continuation", {})
             )
         )
         route_hint = str(config.get("runtime", {}).get("route_hint", "center"))
@@ -608,6 +802,8 @@ def main():
             f"source={args.video or 'camera'}, calibration={calibration_path or 'none'}",
             flush=True,
         )
+        if archive.enabled:
+            print(f"Run archive: {archive.run_dir}", flush=True)
 
         while True:
             if (
@@ -650,6 +846,17 @@ def main():
                 boundary_tracker,
             )
             displayed_command = command
+            command = corner_gate.filter(
+                command,
+                estimate,
+                boundary_result,
+                # Use the capture timeline for both live control and replay.
+                # Wall-clock time makes an offline video run much faster than
+                # the recorded vehicle and previously skipped the bounded
+                # corner-continuation timeout entirely.
+                now=timestamp,
+            )
+            corner_state = corner_gate.get_state(now=timestamp)
             command = motion_gate.filter(command)
             if command != displayed_command:
                 cv2.rectangle(
@@ -674,23 +881,26 @@ def main():
                 )
             watchdog.heartbeat()
             wheel_state = driver.apply(command)
+            birdeye = (
+                None
+                if boundary_result is None
+                else render_birdeye_debug(boundary_result, estimate)
+            )
             if save_latest:
                 cv2.imwrite(str(latest_frame_path), annotated)
-                if boundary_result is not None:
-                    cv2.imwrite(
-                        str(latest_birdeye_path),
-                        render_birdeye_debug(boundary_result, estimate),
-                    )
+                if birdeye is not None:
+                    cv2.imwrite(str(latest_birdeye_path), birdeye)
+            archive.write_frames(frame, annotated, birdeye)
             if debug_output_dir is not None:
                 stem = f"{sample:04d}"
                 cv2.imwrite(str(debug_output_dir / f"{stem}_raw.jpg"), frame)
                 cv2.imwrite(
                     str(debug_output_dir / f"{stem}_annotated.jpg"), annotated
                 )
-                if boundary_result is not None:
+                if birdeye is not None:
                     cv2.imwrite(
                         str(debug_output_dir / f"{stem}_birdeye.png"),
-                        render_birdeye_debug(boundary_result, estimate),
+                        birdeye,
                     )
 
             row = {
@@ -714,6 +924,11 @@ def main():
                     if boundary_result is None
                     else round(boundary_result.lane_width_ratio, 5)
                 ),
+                "boundary_visible_ratio": (
+                    None
+                    if boundary_result is None
+                    else round(boundary_result.boundary_visible_ratio, 5)
+                ),
                 "ego_yellow_ratio": (
                     None
                     if boundary_result is None
@@ -726,10 +941,19 @@ def main():
                 ),
                 "valid": estimate.valid,
                 "confidence": round(estimate.confidence, 5),
+                "estimate_reason": estimate.reason,
                 "lateral_error": round(estimate.lateral_error, 5),
                 "heading_error": round(estimate.heading_error, 5),
+                "near_heading_error": round(
+                    estimate.near_heading_error, 5
+                ),
                 "action": command.action,
                 "steering": round(command.steering, 5),
+                "tight_turn_factor": (
+                    None
+                    if command.tight_turn_factor is None
+                    else round(command.tight_turn_factor, 5)
+                ),
                 "left_speed": round(command.left_speed, 5),
                 "right_speed": round(command.right_speed, 5),
                 "left_pwm": wheel_state["left_pwm"],
@@ -739,6 +963,32 @@ def main():
                 "front_right_pwm": wheel_state["front_right_pwm"],
                 "rear_right_pwm": wheel_state["rear_right_pwm"],
                 "reason": command.reason,
+                "corner_continuation_active": corner_state["active"],
+                "corner_continuation_holding": corner_state["holding"],
+                "corner_continuation_hold_age_s": (
+                    None
+                    if corner_state["hold_age_seconds"] is None
+                    else round(corner_state["hold_age_seconds"], 5)
+                ),
+                "corner_continuation_progress_age_s": (
+                    None
+                    if corner_state["progress_age_seconds"] is None
+                    else round(corner_state["progress_age_seconds"], 5)
+                ),
+                "corner_continuation_best_heading": (
+                    None
+                    if corner_state["best_heading_magnitude"] is None
+                    else round(corner_state["best_heading_magnitude"], 5)
+                ),
+                "corner_apex_active": corner_state["apex_active"],
+                "corner_apex_age_s": (
+                    None
+                    if corner_state["apex_age_seconds"] is None
+                    else round(corner_state["apex_age_seconds"], 5)
+                ),
+                "corner_apex_exit_valid_count": corner_state[
+                    "apex_exit_valid_count"
+                ],
                 "motion_gate_ready": motion_gate.get_state()["ready"],
                 "motion_gate_valid_frames": motion_gate.get_state()[
                     "consecutive_valid"
@@ -747,25 +997,31 @@ def main():
             last_row = row
             writer.writerow(row)
             log_handle.flush()
-            write_status(
-                status_path,
-                {
-                    "mode": wheel_state["mode"],
-                    "source": str(args.video or f"camera:{camera_config.get('index', 0)}"),
-                    "config": str(config_path),
-                    "calibration": (
-                        str(calibration_path) if calibration_path else None
-                    ),
-                    "last_result": row,
-                    "wheel_driver": driver.get_state(),
-                    "watchdog": watchdog.get_state(),
-                    "motion_gate": motion_gate.get_state(),
-                },
-            )
+            live_status = {
+                "mode": wheel_state["mode"],
+                "source": str(
+                    args.video or f"camera:{camera_config.get('index', 0)}"
+                ),
+                "config": str(config_path),
+                "calibration": (
+                    str(calibration_path) if calibration_path else None
+                ),
+                "last_result": row,
+                "wheel_driver": driver.get_state(),
+                "watchdog": watchdog.get_state(),
+                "corner_continuation": corner_state,
+                "motion_gate": motion_gate.get_state(),
+                "run_archive": (
+                    None if not archive.enabled else str(archive.run_dir)
+                ),
+            }
+            write_status(status_path, live_status)
+            archive.write_status(live_status)
             print(
                 f"sample={sample} action={command.action} "
                 f"boundary={boundary_result.source if boundary_result else 'off'} "
                 f"conf={estimate.confidence:.2f} steer={command.steering:+.3f} "
+                f"tight={float(command.tight_turn_factor or 0.0):.2f} "
                 f"pwm=({wheel_state['front_left_pwm']:+d},"
                 f"{wheel_state['rear_left_pwm']:+d},"
                 f"{wheel_state['front_right_pwm']:+d},"
@@ -790,35 +1046,44 @@ def main():
         if driver is not None:
             driver.stop(termination_reason)
             final_wheel_state = driver.get_state()
-            write_status(
-                status_path,
-                {
-                    "mode": final_wheel_state["mode"],
-                    "source": str(
-                        args.video or f"camera:{camera_config.get('index', 0)}"
-                    ),
-                    "config": str(config_path),
-                    "calibration": (
-                        str(calibration_path) if calibration_path else None
-                    ),
-                    "termination": {
-                        "reason": termination_reason,
-                        "stopped": True,
-                        "completed_at": time.time(),
-                    },
-                    "last_result": last_row,
-                    "wheel_driver": final_wheel_state,
-                    "watchdog": (
-                        None if watchdog is None else watchdog.get_state()
-                    ),
-                    "motion_gate": (
-                        None if motion_gate is None else motion_gate.get_state()
-                    ),
+            final_status = {
+                "mode": final_wheel_state["mode"],
+                "source": str(
+                    args.video or f"camera:{camera_config.get('index', 0)}"
+                ),
+                "config": str(config_path),
+                "calibration": (
+                    str(calibration_path) if calibration_path else None
+                ),
+                "termination": {
+                    "reason": termination_reason,
+                    "stopped": True,
+                    "completed_at": time.time(),
                 },
-            )
+                "last_result": last_row,
+                "wheel_driver": final_wheel_state,
+                "watchdog": (
+                    None if watchdog is None else watchdog.get_state()
+                ),
+                "corner_continuation": (
+                    None
+                    if corner_gate is None
+                    else corner_gate.get_state(now=previous_timestamp)
+                ),
+                "motion_gate": (
+                    None if motion_gate is None else motion_gate.get_state()
+                ),
+                "run_archive": (
+                    None if not archive.enabled else str(archive.run_dir)
+                ),
+            }
+            write_status(status_path, final_status)
+            archive.write_status(final_status)
         source.close()
+        archive.close()
         if log_handle is not None:
             log_handle.close()
+        archive.copy_log(log_path)
     return 0
 
 

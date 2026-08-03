@@ -53,8 +53,7 @@ files_to_return_after_pi_dry_run:
   - car/autodrive/onboard_calibration.yaml
   - outputs/onboard_capture/onboard_calibration.mp4
   - outputs/onboard_runtime/pi_self_check.json
-  - outputs/onboard_runtime/onboard_log.csv
-  - outputs/onboard_runtime/latest.jpg
+  - outputs/onboard_runtime/runs/<problem_run_directory>
   - outputs/onboard_runtime/wheel_check.json
 
 do_not_start_with:

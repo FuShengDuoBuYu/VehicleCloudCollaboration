@@ -28,6 +28,7 @@ class OuterLoopBoundaryConfig:
     history_blend: float = 0.20
     maximum_missing_frames: int = 4
     missing_confidence_decay: float = 0.78
+    minimum_visible_boundary_ratio: float = 0.01
     boundary_margin_ratio: float = 0.01
     include_lane_mask: bool = True
     yellow_hsv_lower: tuple[int, int, int] = (18, 20, 150)
@@ -72,6 +73,8 @@ class OuterLoopBoundaryConfig:
             raise ValueError("history_blend must be in [0, 1)")
         if self.maximum_missing_frames < 0:
             raise ValueError("maximum_missing_frames must not be negative")
+        if not 0.0 <= self.minimum_visible_boundary_ratio <= 1.0:
+            raise ValueError("minimum_visible_boundary_ratio must be in [0, 1]")
         if not 0.0 <= self.ego_boundary_top_ratio < 1.0:
             raise ValueError("ego_boundary_top_ratio must be in [0, 1)")
         if not 0.0 < self.ego_boundary_half_width_ratio < 0.5:
@@ -98,6 +101,7 @@ class BoundaryTrackResult:
     )
     ego_yellow_ratio: float = 0.0
     yellow_hazard: bool = False
+    boundary_visible_ratio: float = 0.0
 
 
 class OuterLoopBoundaryTracker:
@@ -328,11 +332,23 @@ class OuterLoopBoundaryTracker:
                 corridor[y, left : right + 1] = 1
         return corridor & (np.asarray(drivable_mask) > 0).astype(np.uint8)
 
-    def _history_result(self, drivable_mask: np.ndarray, reason: str):
+    def _history_result(
+        self,
+        drivable_mask: np.ndarray,
+        reason: str,
+        boundary_visible_ratio: float = 0.0,
+    ):
+        boundary_still_visible = bool(
+            boundary_visible_ratio
+            >= self.config.minimum_visible_boundary_ratio
+        )
         if (
             self._left_curve is None
             or self._right_curve is None
-            or self._missing_frames >= self.config.maximum_missing_frames
+            or (
+                not boundary_still_visible
+                and self._missing_frames >= self.config.maximum_missing_frames
+            )
         ):
             self._missing_frames += 1
             return BoundaryTrackResult(
@@ -341,6 +357,7 @@ class OuterLoopBoundaryTracker:
                 np.zeros_like(drivable_mask, dtype=np.uint8),
                 "missing",
                 reason=reason,
+                boundary_visible_ratio=boundary_visible_ratio,
             )
         self._missing_frames += 1
         self._confidence *= self.config.missing_confidence_decay
@@ -352,11 +369,16 @@ class OuterLoopBoundaryTracker:
             bool(np.any(corridor)),
             self._confidence,
             corridor,
-            "history",
+            "visible-history" if boundary_still_visible else "history",
             lane_width / max(1.0, drivable_mask.shape[1]),
-            reason="using recent boundary history",
+            reason=(
+                "boundary remains visible outside x(y) fit"
+                if boundary_still_visible
+                else "using recent boundary history"
+            ),
             left_curve=self._left_curve.copy(),
             right_curve=self._right_curve.copy(),
+            boundary_visible_ratio=boundary_visible_ratio,
         )
 
     def update(
@@ -381,11 +403,16 @@ class OuterLoopBoundaryTracker:
             boundary |= yellow
 
         height, width = drivable.shape
+        boundary_visible_ratio = float(np.mean(boundary > 0))
         left_obs, right_obs = self._scan_boundaries(boundary)
         left_curve, left_confidence = self._fit_curve(left_obs, height, width)
         right_curve, right_confidence = self._fit_curve(right_obs, height, width)
         if left_curve is None and right_curve is None:
-            return self._history_result(drivable, "outer-loop boundaries are missing")
+            return self._history_result(
+                drivable,
+                "outer-loop boundaries are missing",
+                boundary_visible_ratio,
+            )
 
         source = "both"
         width_curve = self._width_curve
@@ -439,7 +466,11 @@ class OuterLoopBoundaryTracker:
         right_curve = np.clip(center_curve + lane_width * 0.5, 0.0, width - 1.0)
         corridor = self._make_corridor(drivable, left_curve, right_curve)
         if not np.any(corridor):
-            return self._history_result(drivable, "outer-loop corridor is empty")
+            return self._history_result(
+                drivable,
+                "outer-loop corridor is empty",
+                boundary_visible_ratio,
+            )
 
         self._left_curve = left_curve.astype(np.float32)
         self._right_curve = right_curve.astype(np.float32)
@@ -462,4 +493,5 @@ class OuterLoopBoundaryTracker:
             reason="outer-loop corridor tracked",
             left_curve=self._left_curve.copy(),
             right_curve=self._right_curve.copy(),
+            boundary_visible_ratio=boundary_visible_ratio,
         )

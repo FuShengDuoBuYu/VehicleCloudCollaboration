@@ -32,6 +32,10 @@ outer_loop:
   navigation_mode: boundary
   direction: clockwise
   outer_boundary_side: left
+  expected_lane_width_ratio: 0.85
+  minimum_lane_width_ratio: 0.55
+  maximum_lane_width_ratio: 0.95
+  minimum_visible_boundary_ratio: 0.01
   include_lane_mask: false
   ego_boundary_top_ratio: 0.84
   ego_boundary_half_width_ratio: 0.14
@@ -46,14 +50,15 @@ outer_loop:
 centerline:
   top_ratio: 0.48
   bottom_ratio: 0.94
-  lookahead_ratio: 0.64
+  lookahead_ratio: 0.50
+  tight_turn_lookahead_ratio: 0.72
   sample_count: 24
   minimum_width_ratio: 0.06
   route_hint_bias: 0.15
 
 lcc:
   base_speed: 0.12
-  min_confidence: 0.35
+  min_confidence: 0.25
   lateral_gain: 0.72
   heading_gain: 0.92
   derivative_gain: 0.0
@@ -61,8 +66,10 @@ lcc:
   steering_speed_gain: 0.55
   turn_slowdown: 0.42
   maximum_lateral_error: 0.35
-  maximum_heading_error: 0.80
-  steering_smoothing: 0.65
+  maximum_heading_error: 1.0
+  steering_smoothing: 0.35
+  tight_turn_near_heading_start: 0.40
+  tight_turn_near_heading_full: 0.65
 
 wheels:
   # Values below match the current chassis; recalibrate after hardware changes.
@@ -75,6 +82,10 @@ wheels:
   rear_right_base_pwm: 20
   front_steering_delta_pwm: 20
   maximum_steering_delta_pwm: 10
+  tight_turn_start_steering: 0.50
+  tight_turn_full_steering: 0.70
+  tight_turn_outside_pwm: 30
+  tight_turn_inside_pwm: 0
   transition_time: 0.25
 
 safety:
@@ -82,9 +93,28 @@ safety:
   watchdog_check_interval: 0.05
   maximum_inference_time: 2.5
   resume_valid_frames: 4
+  resume_min_confidence: 0.35
+  corner_continuation:
+    enabled: true
+    enter_steering_threshold: 0.50
+    exit_steering_threshold: 0.18
+    exit_min_confidence: 0.35
+    exit_valid_frames: 3
+    maximum_hold_seconds: 2.80
+    progress_timeout_seconds: 1.00
+    minimum_heading_progress: 0.015
+    apex_trigger_factor: 0.50
+    apex_near_heading_trigger: 0.43
+    minimum_apex_seconds: 0.40
+    maximum_apex_seconds: 0.70
+    apex_exit_near_heading: 0.30
+    apex_exit_valid_frames: 2
+    tight_turn_factor_cap: 0.0
 
 runtime:
   route_hint: left
   video_sample_every: 6
   output_dir: outputs/onboard_runtime
   save_latest_frame: true
+  archive_runs: true
+  archive_fps: 20

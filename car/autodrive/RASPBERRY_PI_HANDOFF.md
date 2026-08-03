@@ -182,6 +182,7 @@ python car/autodrive/run_onboard.py \
 outputs/onboard_runtime/latest.jpg
 outputs/onboard_runtime/status.json
 outputs/onboard_runtime/onboard_log.csv
+outputs/onboard_runtime/runs/<本次运行>/
 ```
 
 通过条件：
@@ -197,8 +198,8 @@ outputs/onboard_runtime/onboard_log.csv
 如果推理超时，应先降低 `model.img_size`、调整 Torch 线程或降低车速；不能简单增大
 超时后直接开车。
 
-需要保存逐帧诊断时增加 `--save-debug-frames`。当前 `surface-only` 模式不需要光流；
-只有把 `model.control_mode` 切回 `yolopv2` 做对照实验时才使用 `--temporal`。
+每次运行都会自动归档三路 MP4、逐帧 CSV、最终状态和配置/标定快照。需要无视频压缩的
+逐张诊断图时再增加 `--save-debug-frames`；图片写入当次归档的 `frames/`。
 
 ## F. 轮子映射与当前标定
 
@@ -211,13 +212,17 @@ python car/autodrive/check_wheel_directions.py \
 
 当前已经结合旧代码和落地运动确认电机顺序为 `0=前左、1=后左、2=前右、3=后右`。
 配置使用 `drive_mode: four-wheel-trim`，直行四轮基准为 `16/16/20/20`。
-固定右转实验证明，仅调整前轮或让四轮保持同向、只制造左右 PWM 差时，转弯半径仍大于
-赛道。仓库原始 `McLumk_Wheel_Sports.rotate_right()` 则明确使用 `[+,+,-,-]`。
+固定右转实验表明，仅调整前轮的转向太弱。仓库原始
+`McLumk_Wheel_Sports.rotate_right()` 则明确使用 `[+,+,-,-]`。
 落地验证 `16/16/-10/-10` 能明显右旋，但约 0.67 秒内车头转约 30 度而几乎不前进，
 不适合作为 LCC 常规输出。因此常规模式保持四轮正转，并用
 `front_steering_delta_pwm: 20`、`maximum_steering_delta_pwm: 10` 输出最强正向右弧
-`26/26/10/10`。落地测试中该输出连续行驶约 1.47 秒，能够一边前进一边形成清晰右弧；
-原生偏航模式只保留作诊断。
+`26/26/10/10`。落地测试中该输出连续行驶约 1.47 秒，能够一边前进一边形成清晰右弧，
+但完整外圈急弯测试仍会跑宽并触碰外侧黄线。当前配置因此只在转向控制量从 `0.50`
+上升到 `0.70` 时，把外侧轮从 `26` 渐进增强到 `30`，同时把内侧轮从 `10` 渐进降到
+`0`。饱和右转为 `30/30/0/0`，左转镜像为 `0/0/30/30`。任何轮都不反转；原生正反轮
+偏航模式只保留作诊断。远端预瞄负责普通弧线，近端预瞄才允许停内轮；近端弯曲下降或
+进入拟合盲区时会恢复 `26/26/10/10`，避免车头已经对准出弯方向后继续切向内侧岛区。
 
 ## G. 首次低速落地
 
@@ -246,9 +251,9 @@ python car/autodrive/run_onboard.py \
   --max-runtime-seconds 3
 ```
 
-先跑 3 秒，再改成 10 秒；两段日志正常后，回到外圈起点并用足以覆盖一圈的时间上限
-（例如 `--max-runtime-seconds 60`，现场人员仍随时准备 `Ctrl+C`）。每段结束检查
-`onboard_log.csv`、`latest.jpg` 和 `latest_birdeye.jpg`。黄线进入原图底部车体足迹、估计
+先跑 3 秒，再改成 10 秒；两段归档回放正常后，回到外圈起点并用足以覆盖一圈的时间上限
+（例如 `--max-runtime-seconds 60`，现场人员仍随时准备 `Ctrl+C`）。每段结束检查当次
+`runs/<时间>_hardware/` 中的 CSV 和三路视频。黄线进入原图底部车体足迹、估计
 超限或丢路会立即停车；只有随后连续 4 个有效帧才会重新起步，持续故障会一直保持停车。
 
 完成命令行短测后，可以启动 LCC 专用实时网页：
@@ -274,8 +279,7 @@ car/autodrive/onboard_runtime.yaml
 car/autodrive/onboard_calibration.yaml
 outputs/onboard_capture/onboard_calibration.mp4
 outputs/onboard_runtime/pi_self_check.json
-outputs/onboard_runtime/onboard_log.csv
-outputs/onboard_runtime/latest.jpg
+outputs/onboard_runtime/runs/<发生问题的完整运行目录>/
 outputs/onboard_runtime/wheel_check.json
 ```
 

@@ -13,6 +13,7 @@ class LaneEstimate:
     confidence: float
     lateral_error: float = 0.0
     heading_error: float = 0.0
+    near_heading_error: float = 0.0
     lookahead_point: Optional[tuple[int, int]] = None
     centerline: np.ndarray = field(
         default_factory=lambda: np.empty((0, 2), dtype=np.int32)
@@ -45,6 +46,19 @@ class LCCConfig:
     maximum_lateral_error: float = 1.0
     maximum_heading_error: float = 1.0
     steering_smoothing: float = 0.0
+    tight_turn_near_heading_start: float = 0.40
+    tight_turn_near_heading_full: float = 0.65
+
+    def __post_init__(self):
+        if not (
+            0.0
+            <= self.tight_turn_near_heading_start
+            < self.tight_turn_near_heading_full
+            <= 1.0
+        ):
+            raise ValueError(
+                "tight-turn near-heading thresholds must be ordered in [0, 1]"
+            )
 
 
 @dataclass(frozen=True)
@@ -55,6 +69,7 @@ class DifferentialDriveCommand:
     right_speed: float
     confidence: float
     reason: str = ""
+    tight_turn_factor: Optional[float] = None
 
     def as_pwm(self, maximum: int = 100) -> tuple[int, int]:
         """Scale the normalized proposal; ``maximum`` must be calibrated on-car."""
@@ -72,17 +87,29 @@ class RoadCenterlineEstimator:
         top_ratio: float = 0.48,
         bottom_ratio: float = 0.94,
         lookahead_ratio: float = 0.64,
+        tight_turn_lookahead_ratio: float = 0.72,
         sample_count: int = 24,
         minimum_width_ratio: float = 0.06,
         route_hint_bias: float = 0.15,
     ):
-        if not 0.0 < top_ratio < lookahead_ratio < bottom_ratio <= 1.0:
-            raise ValueError("expected top_ratio < lookahead_ratio < bottom_ratio")
+        if not (
+            0.0
+            < top_ratio
+            < lookahead_ratio
+            < tight_turn_lookahead_ratio
+            < bottom_ratio
+            <= 1.0
+        ):
+            raise ValueError(
+                "expected top_ratio < lookahead_ratio < "
+                "tight_turn_lookahead_ratio < bottom_ratio"
+            )
         if not 0.0 <= route_hint_bias < 0.5:
             raise ValueError("route_hint_bias must be in [0, 0.5)")
         self.top_ratio = float(top_ratio)
         self.bottom_ratio = float(bottom_ratio)
         self.lookahead_ratio = float(lookahead_ratio)
+        self.tight_turn_lookahead_ratio = float(tight_turn_lookahead_ratio)
         self.sample_count = max(8, int(sample_count))
         self.minimum_width_ratio = float(minimum_width_ratio)
         self.route_hint_bias = float(route_hint_bias)
@@ -149,6 +176,113 @@ class RoadCenterlineEstimator:
         else:
             score = distance
         return segments[int(np.argmin(score))]
+
+    def estimate_from_boundaries(
+        self,
+        left_curve: np.ndarray,
+        right_curve: np.ndarray,
+        image_width: int,
+    ) -> LaneEstimate:
+        """Build the centerline directly from a freshly tracked lane pair.
+
+        ``OuterLoopBoundaryTracker`` has already fitted and continuity-checked
+        these curves. Requiring their surface-clipped corridor to form one
+        bottom-centred connected component repeats the same geometry test and
+        can falsely stop on dark seams or lighting changes in the road mat.
+        This path retains the fitted yellow-boundary geometry while the
+        tracker remains responsible for rejecting an empty/unsafe corridor.
+        """
+        left = np.asarray(left_curve, dtype=np.float32).reshape(-1)
+        right = np.asarray(right_curve, dtype=np.float32).reshape(-1)
+        height = int(left.size)
+        width = int(image_width)
+        if (
+            height < 16
+            or width < 16
+            or right.size != height
+            or not np.all(np.isfinite(left))
+            or not np.all(np.isfinite(right))
+        ):
+            return LaneEstimate(False, 0.0, reason="invalid boundary curves")
+
+        y_values = np.linspace(
+            int(height * self.bottom_ratio),
+            int(height * self.top_ratio),
+            self.sample_count,
+        ).astype(np.int32)
+        y_values = np.clip(y_values, 0, height - 1)
+        lefts = left[y_values]
+        rights = right[y_values]
+        widths = rights - lefts
+        minimum_width = max(3.0, width * self.minimum_width_ratio)
+        valid_rows = (
+            np.isfinite(lefts)
+            & np.isfinite(rights)
+            & (widths >= minimum_width)
+        )
+        minimum_samples = max(5, self.sample_count // 3)
+        if np.count_nonzero(valid_rows) < minimum_samples:
+            return LaneEstimate(
+                False,
+                min(0.2, np.count_nonzero(valid_rows) / self.sample_count),
+                reason="too few valid boundary rows",
+            )
+
+        ys = y_values[valid_rows].astype(np.float32)
+        lefts = lefts[valid_rows]
+        rights = rights[valid_rows]
+        widths = widths[valid_rows]
+        centers = (lefts + rights) * 0.5
+        near_y = int(height * 0.88)
+        lookahead_y = int(height * self.lookahead_ratio)
+        tight_turn_y = int(height * self.tight_turn_lookahead_ratio)
+        center_curve = (left + right) * 0.5
+        near_x = float(center_curve[np.clip(near_y, 0, height - 1)])
+        lookahead_x = float(
+            center_curve[np.clip(lookahead_y, 0, height - 1)]
+        )
+        tight_turn_x = float(
+            center_curve[np.clip(tight_turn_y, 0, height - 1)]
+        )
+        lateral_error = (near_x - width * 0.5) / max(1.0, width * 0.5)
+        heading_error = (lookahead_x - near_x) / max(1.0, width * 0.5)
+        near_heading_error = (
+            (tight_turn_x - near_x) / max(1.0, width * 0.5)
+        )
+
+        coverage = float(np.count_nonzero(valid_rows) / self.sample_count)
+        width_stability = float(
+            np.exp(-np.std(widths) / max(2.0, float(np.mean(widths))))
+        )
+        confidence = float(
+            np.clip(0.75 * coverage + 0.25 * width_stability, 0.0, 1.0)
+        )
+        center_points = np.column_stack(
+            [np.clip(centers, 0, width - 1), ys]
+        ).astype(np.int32)
+        left_points = np.column_stack(
+            [np.clip(lefts, 0, width - 1), ys]
+        ).astype(np.int32)
+        right_points = np.column_stack(
+            [np.clip(rights, 0, width - 1), ys]
+        ).astype(np.int32)
+        return LaneEstimate(
+            valid=True,
+            confidence=confidence,
+            lateral_error=float(np.clip(lateral_error, -1.0, 1.0)),
+            heading_error=float(np.clip(heading_error, -1.0, 1.0)),
+            near_heading_error=float(
+                np.clip(near_heading_error, -1.0, 1.0)
+            ),
+            lookahead_point=(
+                int(np.clip(lookahead_x, 0, width - 1)),
+                lookahead_y,
+            ),
+            centerline=center_points,
+            left_boundary=left_points,
+            right_boundary=right_points,
+            reason="ok (tracked boundary curves)",
+        )
 
     def estimate(
         self,
@@ -220,14 +354,19 @@ class RoadCenterlineEstimator:
 
         near_y = int(h * 0.88)
         lookahead_y = int(h * self.lookahead_ratio)
+        tight_turn_y = int(h * self.tight_turn_lookahead_ratio)
 
         def fitted_x(y: int) -> float:
             return float(np.polyval(coefficients, (h - y) / max(1.0, float(h))))
 
         near_x = fitted_x(near_y)
         lookahead_x = fitted_x(lookahead_y)
+        tight_turn_x = fitted_x(tight_turn_y)
         lateral_error = (near_x - w * 0.5) / max(1.0, w * 0.5)
         heading_error = (lookahead_x - near_x) / max(1.0, w * 0.5)
+        near_heading_error = (
+            (tight_turn_x - near_x) / max(1.0, w * 0.5)
+        )
 
         coverage = len(samples) / self.sample_count
         fit_quality = float(
@@ -258,6 +397,9 @@ class RoadCenterlineEstimator:
             confidence=confidence,
             lateral_error=float(np.clip(lateral_error, -1.0, 1.0)),
             heading_error=float(np.clip(heading_error, -1.0, 1.0)),
+            near_heading_error=float(
+                np.clip(near_heading_error, -1.0, 1.0)
+            ),
             lookahead_point=(
                 int(np.clip(lookahead_x, 0, w - 1)),
                 lookahead_y,
@@ -346,6 +488,14 @@ class LaneCenteringController:
                 + (1.0 - previous_weight) * steering
             )
         self._previous_steering = steering
+        tight_turn_factor = 0.0
+        near_heading = float(estimate.near_heading_error)
+        if steering * near_heading > 0.0:
+            start = float(self.config.tight_turn_near_heading_start)
+            full = float(self.config.tight_turn_near_heading_full)
+            tight_turn_factor = float(
+                np.clip((abs(near_heading) - start) / (full - start), 0.0, 1.0)
+            )
         base_speed = self.config.base_speed * (
             1.0 - self.config.turn_slowdown * abs(steering)
         )
@@ -366,4 +516,5 @@ class LaneCenteringController:
             right_speed,
             estimate.confidence,
             "ok",
+            tight_turn_factor,
         )

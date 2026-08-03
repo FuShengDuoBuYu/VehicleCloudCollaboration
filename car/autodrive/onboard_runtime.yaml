@@ -42,15 +42,23 @@ outer_loop:
   band_half_height: 2
   minimum_run_width: 2
   center_exclusion_ratio: 0.06
-  expected_lane_width_ratio: 0.50
-  minimum_lane_width_ratio: 0.24
-  maximum_lane_width_ratio: 0.60
+  # Latest startup frame contained 45 usable outer-edge rows and 18 inner-edge
+  # rows. Their bird's-eye separation measured 0.868, but the old 0.60 ceiling
+  # rejected the real inner edge and replaced it with a 0.50-width corridor,
+  # putting the virtual centre well left of the physical road centre.
+  expected_lane_width_ratio: 0.85
+  minimum_lane_width_ratio: 0.55
+  maximum_lane_width_ratio: 0.95
   maximum_boundary_jump_ratio: 0.24
   minimum_observations: 10
   polynomial_degree: 2
   history_blend: 0.20
   maximum_missing_frames: 4
   missing_confidence_decay: 0.78
+  # A 90-degree edge can remain clearly visible while becoming transverse to
+  # the x(y) fitter. Its pixels keep the bounded corner continuation alive;
+  # a genuinely absent boundary still expires after maximum_missing_frames.
+  minimum_visible_boundary_ratio: 0.01
   boundary_margin_ratio: 0.01
   include_lane_mask: false
   yellow_hsv_lower: [18, 20, 150]
@@ -71,7 +79,13 @@ outer_loop:
 centerline:
   top_ratio: 0.48
   bottom_ratio: 0.94
-  lookahead_ratio: 0.58
+  # The latest hardware archive showed that 0.60 did not reach the maximum
+  # right arc until about 0.47 s too late. Exact-video replay at 0.50 raises
+  # corner steering by 47% while keeping straight steering RMS nearly equal.
+  lookahead_ratio: 0.50
+  # A second, nearer point controls only the stopped-inside-wheel mode. This
+  # prevents far preview from applying 30/0 before the chassis reaches the apex.
+  tight_turn_lookahead_ratio: 0.72
   sample_count: 24
   minimum_width_ratio: 0.06
   # Direction is a branch tie-breaker; row-to-row route continuity dominates.
@@ -80,7 +94,9 @@ centerline:
 lcc:
   # First grounded motion starts at the minimum useful wheel command.
   base_speed: 0.12
-  min_confidence: 0.35
+  # A valid single-boundary corner briefly reached 0.2505. This is the hard
+  # in-motion floor; starting/resuming still requires 0.35 in the safety gate.
+  min_confidence: 0.25
   lateral_gain: 0.72
   heading_gain: 0.92
   derivative_gain: 0.0
@@ -90,8 +106,17 @@ lcc:
   # A real run was already physically close to the left boundary at 0.378.
   # Stop before that state instead of allowing the old 0.50 recovery limit.
   maximum_lateral_error: 0.35
-  maximum_heading_error: 0.80
-  steering_smoothing: 0.65
+  # The estimate is clipped to [-1, 1]. A sharp but valid corner reached 0.888
+  # while the boundary remained tracked, so 1.0 lets steering saturation
+  # recover the turn; boundary, lateral, yellow-line and watchdog stops remain.
+  maximum_heading_error: 1.0
+  # At 0.65 the strongest right command arrived for only one frame before the
+  # old heading stop. Keep some jitter filtering but react within a few frames.
+  steering_smoothing: 0.35
+  # Far heading starts an ordinary arc; stopped-inside-wheel blending depends
+  # on this near-field heading so it both enters later and exits sooner.
+  tight_turn_near_heading_start: 0.40
+  tight_turn_near_heading_full: 0.65
 
 wheels:
   # Straight-line trim experiment after equal PWM produced sustained right yaw.
@@ -112,6 +137,13 @@ wheels:
   # arc while retaining valid boundary perception.
   front_steering_delta_pwm: 20
   maximum_steering_delta_pwm: 10
+  # Keep the grounded 26/10 mapping at steering=0.50, then progress to 30/0 at
+  # steering=0.70. The outside pair keeps advancing and the inside pair stops;
+  # no wheel reverses. Latest hardware video proved 30/10 was still too wide.
+  tight_turn_start_steering: 0.50
+  tight_turn_full_steering: 0.70
+  tight_turn_outside_pwm: 30
+  tight_turn_inside_pwm: 0
   # Applied only when leaving a stopped state. Live steering updates are sent
   # directly so the camera/control loop remains near its native 20 Hz rate.
   transition_time: 0.25
@@ -123,6 +155,39 @@ safety:
   # A bad frame stops immediately. Four consecutive valid frames are required
   # before starting again, instead of latching the stop for the whole process.
   resume_valid_frames: 4
+  # A stopped car needs stronger evidence than a moving car needs to continue.
+  resume_min_confidence: 0.35
+  # A 90-degree bend can temporarily leave only a near-horizontal outer edge
+  # in view. If a strong one-boundary turn was already established, bridge
+  # only confidence/lateral-fit dropouts for this bounded interval. Yellow
+  # under the chassis, a missing boundary, timeout, or watchdog still stops.
+  corner_continuation:
+    enabled: true
+    enter_steering_threshold: 0.50
+    exit_steering_threshold: 0.18
+    exit_min_confidence: 0.35
+    exit_valid_frames: 3
+    # A successful corner recovered after about 1.3 s, while otherwise similar
+    # runs were still visibly improving when the old fixed 1.6 s limit stopped
+    # them. Permit bounded extra time only while heading error keeps decreasing.
+    maximum_hold_seconds: 2.80
+    progress_timeout_seconds: 1.00
+    minimum_heading_progress: 0.015
+    # Near-field fitting exceeded the tight threshold for only one frame in an
+    # earlier physical corner. Hold the grounded 30/0 apex until the new
+    # straight is geometrically aligned (two real boundaries, or a settled
+    # near-edge heading), rather than leaving after a fixed five frames.
+    apex_trigger_factor: 0.50
+    apex_near_heading_trigger: 0.43
+    minimum_apex_seconds: 0.40
+    maximum_apex_seconds: 0.70
+    apex_exit_near_heading: 0.30
+    apex_exit_valid_frames: 2
+    # Latest run reached roughly 2/3 of the bend, then the lateral safety stop
+    # handed control to continuation and discarded the apex turn strength.
+    # Once the bounded apex interval completes, continuation must move forward
+    # at the grounded 26/10 arc instead of preserving a stopped inside pair.
+    tight_turn_factor_cap: 0.0
 
 runtime:
   # Clockwise outer loop: keep the continuous outer branch on the left.
@@ -130,3 +195,8 @@ runtime:
   video_sample_every: 6
   output_dir: outputs/onboard_runtime
   save_latest_frame: true
+  # Every hardware/web experiment gets its own immutable replay bundle under
+  # outputs/onboard_runtime/runs/: raw/annotated/bird's-eye MP4, CSV, final
+  # status, and exact configuration/calibration snapshots.
+  archive_runs: true
+  archive_fps: 20

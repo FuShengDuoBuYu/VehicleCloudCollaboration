@@ -80,7 +80,8 @@ def render_debug_frame(
         f"LCC: {command.action}  steer={command.steering:+.3f}",
         (
             f"error: lateral={estimate.lateral_error:+.3f}  "
-            f"heading={estimate.heading_error:+.3f}  conf={estimate.confidence:.2f}"
+            f"heading={estimate.heading_error:+.3f}  "
+            f"near={estimate.near_heading_error:+.3f}  conf={estimate.confidence:.2f}"
         ),
         (
             f"wheel proposal: L={command.left_speed:+.2f} ({left_pwm:+d})  "

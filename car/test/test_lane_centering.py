@@ -3,6 +3,7 @@
 import sys
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from pathlib import Path
 
@@ -30,12 +31,16 @@ from autodrive.perspective import (
 )
 from autodrive.run_onboard import (
     SurfaceOnlyDetector,
+    VideoSource,
     analyze,
+    fuse_tracking_confidence,
 )
 from autodrive.visualization import render_debug_frame
 from autodrive.run_onboard import MOTOR_CONFIRMATION, validate_motor_request
 from autodrive.drive_runtime import (
     CommandWatchdog,
+    CornerContinuationConfig,
+    CornerContinuationGate,
     PerceptionMotionGate,
     SafeWheelDriver,
     WheelMappingConfig,
@@ -157,6 +162,22 @@ def make_outer_loop_masks(shift_at_top=0, right_gap=True, right_branch=True):
 
 
 class RoadCenterlineEstimatorTest(unittest.TestCase):
+    def test_video_source_uses_archived_per_frame_timestamps(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "onboard_log.csv").write_text(
+                "timestamp_s,action\n0.331,stop\n0.398,forward\n0.466,forward\n",
+                encoding="utf-8",
+            )
+            source = VideoSource.__new__(VideoSource)
+            source.path = root / "raw.mp4"
+            source.capture = SimpleNamespace(get=lambda _property: 3)
+
+            self.assertEqual(
+                source._load_archive_timestamps(),
+                [0.331, 0.398, 0.466],
+            )
+
     def setUp(self):
         self.estimator = RoadCenterlineEstimator()
 
@@ -204,6 +225,119 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         self.assertEqual(command.action, "turn-right")
         self.assertGreater(command.left_speed, command.right_speed)
 
+    def test_tracked_boundaries_survive_a_fragmented_surface_corridor(self):
+        height, width = 180, 320
+        ys = np.arange(height, dtype=np.float32)
+        left = 52.0 + 0.10 * (height - 1 - ys)
+        right = left + 160.0
+        fragmented = np.zeros((height, width), dtype=np.uint8)
+        fragmented[40:52, 70:230] = 1
+        fragmented[150:158, 55:95] = 1
+
+        surface_estimate = self.estimator.estimate(fragmented)
+        boundary_estimate = self.estimator.estimate_from_boundaries(
+            left, right, width
+        )
+
+        self.assertFalse(surface_estimate.valid)
+        self.assertTrue(boundary_estimate.valid)
+        self.assertGreater(boundary_estimate.confidence, 0.9)
+        self.assertEqual(
+            LaneCenteringController().update(boundary_estimate, dt=0.05).action,
+            "turn-left",
+        )
+
+    def test_runtime_lookahead_keeps_early_corner_anticipation(self):
+        road = make_road(shift_at_top=100)
+        runtime_heading = RoadCenterlineEstimator(
+            lookahead_ratio=0.50
+        ).estimate(road).heading_error
+        previous_heading = RoadCenterlineEstimator(
+            lookahead_ratio=0.60
+        ).estimate(road).heading_error
+        delayed_heading = RoadCenterlineEstimator(
+            lookahead_ratio=0.68
+        ).estimate(road).heading_error
+
+        self.assertGreater(runtime_heading, 0.15)
+        self.assertGreater(runtime_heading, previous_heading)
+        self.assertGreater(previous_heading, delayed_heading)
+
+        runtime_estimate = RoadCenterlineEstimator(
+            lookahead_ratio=0.50,
+            tight_turn_lookahead_ratio=0.72,
+        ).estimate(road)
+        self.assertGreater(
+            runtime_estimate.heading_error,
+            runtime_estimate.near_heading_error,
+        )
+
+    def test_near_heading_gates_stopped_inside_wheel_mode(self):
+        controller = LaneCenteringController(
+            LCCConfig(
+                lateral_gain=0.0,
+                heading_gain=1.0,
+                derivative_gain=0.0,
+                steering_limit=0.70,
+                steering_smoothing=0.0,
+                tight_turn_near_heading_start=0.40,
+                tight_turn_near_heading_full=0.65,
+            )
+        )
+        driver = SafeWheelDriver(
+            motors_enabled=False,
+            config=WheelMappingConfig(
+                pwm_limit=35,
+                minimum_moving_pwm=10,
+                front_left_base_pwm=16,
+                rear_left_base_pwm=16,
+                front_right_base_pwm=20,
+                rear_right_base_pwm=20,
+                front_steering_delta_pwm=20,
+                maximum_steering_delta_pwm=10,
+                tight_turn_outside_pwm=30,
+                tight_turn_inside_pwm=0,
+            ),
+        )
+
+        far_only = controller.update(
+            LaneEstimate(
+                True,
+                0.8,
+                heading_error=0.9,
+                near_heading_error=0.2,
+            ),
+            dt=0.05,
+        )
+        self.assertEqual(far_only.tight_turn_factor, 0.0)
+        self.assertEqual(driver.command_to_four_pwm(far_only), (26, 26, 10, 10))
+
+        controller.reset()
+        approaching = controller.update(
+            LaneEstimate(
+                True,
+                0.8,
+                heading_error=0.9,
+                near_heading_error=0.525,
+            ),
+            dt=0.05,
+        )
+        self.assertAlmostEqual(approaching.tight_turn_factor, 0.5)
+        self.assertEqual(driver.command_to_four_pwm(approaching), (28, 28, 10, 10))
+
+        controller.reset()
+        at_apex = controller.update(
+            LaneEstimate(
+                True,
+                0.8,
+                heading_error=0.9,
+                near_heading_error=0.7,
+            ),
+            dt=0.05,
+        )
+        self.assertEqual(at_apex.tight_turn_factor, 1.0)
+        self.assertEqual(driver.command_to_four_pwm(at_apex), (30, 30, 0, 0))
+
     def test_left_curve_produces_left_turn(self):
         estimate = self.estimator.estimate(make_road(shift_at_top=-65))
         command = LaneCenteringController().update(estimate, dt=0.2)
@@ -228,6 +362,108 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         command = controller.update(estimate, dt=0.2)
         self.assertEqual(command.action, "stop")
         self.assertIn("lateral error", command.reason)
+
+    def test_runtime_sharp_corner_keeps_turning_at_heading_limit(self):
+        controller = LaneCenteringController(
+            LCCConfig(
+                min_confidence=0.35,
+                lateral_gain=0.72,
+                heading_gain=0.92,
+                derivative_gain=0.0,
+                steering_limit=0.70,
+                maximum_lateral_error=0.35,
+                maximum_heading_error=1.0,
+                steering_smoothing=0.35,
+            )
+        )
+        command = controller.update(
+            LaneEstimate(
+                True,
+                0.44,
+                lateral_error=-0.12,
+                heading_error=1.0,
+            ),
+            dt=0.05,
+        )
+
+        self.assertEqual(command.action, "turn-right")
+        self.assertAlmostEqual(command.steering, 0.70)
+
+    def test_custom_heading_recovery_limit_still_stops(self):
+        controller = LaneCenteringController(
+            LCCConfig(maximum_heading_error=0.80)
+        )
+        command = controller.update(
+            LaneEstimate(True, 0.9, heading_error=0.89),
+            dt=0.05,
+        )
+
+        self.assertEqual(command.action, "stop")
+        self.assertIn("heading error", command.reason)
+
+    def test_corner_confidence_fusion_uses_weaker_stage_not_product(self):
+        confidence = fuse_tracking_confidence(0.63, 0.46)
+
+        self.assertAlmostEqual(confidence, 0.46)
+        command = LaneCenteringController(
+            LCCConfig(min_confidence=0.35, maximum_heading_error=1.0)
+        ).update(
+            LaneEstimate(True, confidence, heading_error=1.0),
+            dt=0.05,
+        )
+        self.assertEqual(command.action, "turn-right")
+
+    def test_low_boundary_confidence_still_stops_after_fusion(self):
+        confidence = fuse_tracking_confidence(0.90, 0.20)
+        command = LaneCenteringController(
+            LCCConfig(min_confidence=0.35, maximum_heading_error=1.0)
+        ).update(
+            LaneEstimate(True, confidence, heading_error=1.0),
+            dt=0.05,
+        )
+
+        self.assertEqual(command.action, "stop")
+        self.assertIn("confidence", command.reason)
+
+    def test_runtime_smoothing_reaches_grounded_corner_pwm_quickly(self):
+        controller = LaneCenteringController(
+            LCCConfig(
+                base_speed=0.12,
+                min_confidence=0.35,
+                lateral_gain=0.0,
+                heading_gain=0.92,
+                derivative_gain=0.0,
+                steering_limit=0.70,
+                maximum_heading_error=1.0,
+                steering_smoothing=0.35,
+            )
+        )
+        command = None
+        for heading in (0.16, 0.21, 0.38, 0.52, 0.73):
+            command = controller.update(
+                LaneEstimate(True, 0.50, heading_error=heading),
+                dt=0.05,
+            )
+        driver = SafeWheelDriver(
+            motors_enabled=False,
+            config=WheelMappingConfig(
+                pwm_limit=35,
+                minimum_moving_pwm=10,
+                front_left_base_pwm=16,
+                rear_left_base_pwm=16,
+                front_right_base_pwm=20,
+                rear_right_base_pwm=20,
+                front_steering_delta_pwm=20,
+                maximum_steering_delta_pwm=10,
+            ),
+        )
+
+        self.assertIsNotNone(command)
+        self.assertGreaterEqual(command.steering, 0.50)
+        self.assertEqual(
+            driver.command_to_four_pwm(command),
+            (26, 26, 10, 10),
+        )
 
     def test_steering_smoothing_prevents_one_frame_direction_flip(self):
         controller = LaneCenteringController(
@@ -440,6 +676,38 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         self.assertTrue(tracker.update(drivable, missing).valid)
         self.assertFalse(tracker.update(drivable, missing).valid)
 
+    def test_visible_transverse_boundary_keeps_bounded_history_available(self):
+        drivable, lane = make_outer_loop_masks(
+            right_gap=False,
+            right_branch=False,
+        )
+        tracker = OuterLoopBoundaryTracker(
+            OuterLoopBoundaryConfig(
+                enabled=True,
+                minimum_observations=8,
+                maximum_missing_frames=2,
+                minimum_visible_boundary_ratio=0.01,
+            )
+        )
+        self.assertTrue(tracker.update(drivable, lane).valid)
+
+        full_surface = np.ones_like(drivable)
+        transverse = np.zeros_like(lane)
+        cv2.line(transverse, (20, 90), (300, 90), 1, 5)
+        result = None
+        for _ in range(5):
+            result = tracker.update(full_surface, transverse)
+            self.assertTrue(result.valid)
+            self.assertEqual(result.source, "visible-history")
+        self.assertIsNotNone(result)
+        self.assertGreater(result.boundary_visible_ratio, 0.01)
+
+        # Pixel visibility is what extends the bounded turn. Once the yellow
+        # edge genuinely disappears, the already-expired normal history does
+        # not permit motion.
+        missing = np.zeros_like(lane)
+        self.assertFalse(tracker.update(full_surface, missing).valid)
+
     def test_outer_loop_tracker_preserves_curve_direction(self):
         drivable, lane = make_outer_loop_masks(
             shift_at_top=48,
@@ -465,7 +733,7 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
                 maximum_lane_width_ratio=0.60,
             )
         )
-        estimator = RoadCenterlineEstimator(lookahead_ratio=0.58)
+        estimator = RoadCenterlineEstimator(lookahead_ratio=0.50)
         controller = LaneCenteringController(
             LCCConfig(
                 min_confidence=0.35,
@@ -539,6 +807,10 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
                 rear_right_base_pwm=20,
                 front_steering_delta_pwm=20,
                 maximum_steering_delta_pwm=10,
+                tight_turn_start_steering=0.50,
+                tight_turn_full_steering=0.70,
+                tight_turn_outside_pwm=30,
+                tight_turn_inside_pwm=0,
             ),
         )
         self.assertEqual(
@@ -555,10 +827,115 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         )
         self.assertEqual(
             driver.command_to_four_pwm(
+                DifferentialDriveCommand("turn-right", 0.6, 0, 0, 1, "test")
+            ),
+            (28, 28, 10, 10),
+        )
+        self.assertEqual(
+            driver.command_to_four_pwm(
                 DifferentialDriveCommand("turn-left", -0.5, 0, 0, 1, "test")
             ),
             (10, 10, 26, 26),
         )
+
+    def test_saturated_right_turn_stops_inside_pair_without_reversing(self):
+        driver = SafeWheelDriver(
+            motors_enabled=False,
+            config=WheelMappingConfig(
+                pwm_limit=35,
+                minimum_moving_pwm=10,
+                front_left_base_pwm=16,
+                rear_left_base_pwm=16,
+                front_right_base_pwm=20,
+                rear_right_base_pwm=20,
+                front_steering_delta_pwm=20,
+                maximum_steering_delta_pwm=10,
+                tight_turn_start_steering=0.50,
+                tight_turn_full_steering=0.70,
+                tight_turn_outside_pwm=30,
+                tight_turn_inside_pwm=0,
+            ),
+        )
+
+        self.assertEqual(
+            driver.command_to_four_pwm(
+                DifferentialDriveCommand(
+                    "turn-right", 1.0, 0.0, 0.0, 0.5, "saturated corner"
+                )
+            ),
+            (30, 30, 0, 0),
+        )
+
+    def test_saturated_left_turn_stops_inside_pair_without_reversing(self):
+        driver = SafeWheelDriver(
+            motors_enabled=False,
+            config=WheelMappingConfig(
+                pwm_limit=35,
+                minimum_moving_pwm=10,
+                front_left_base_pwm=16,
+                rear_left_base_pwm=16,
+                front_right_base_pwm=20,
+                rear_right_base_pwm=20,
+                front_steering_delta_pwm=20,
+                maximum_steering_delta_pwm=10,
+                tight_turn_start_steering=0.50,
+                tight_turn_full_steering=0.70,
+                tight_turn_outside_pwm=30,
+                tight_turn_inside_pwm=0,
+            ),
+        )
+
+        self.assertEqual(
+            driver.command_to_four_pwm(
+                DifferentialDriveCommand(
+                    "turn-left", -1.0, 0.0, 0.0, 0.5, "saturated corner"
+                )
+            ),
+            (0, 0, 30, 30),
+        )
+
+    def test_tight_turn_inside_pwm_rejects_unreliable_subfloor_motion(self):
+        with self.assertRaisesRegex(ValueError, "tight_turn_inside_pwm"):
+            WheelMappingConfig(
+                minimum_moving_pwm=10,
+                tight_turn_inside_pwm=5,
+            )
+
+    def test_tight_turn_interpolation_never_emits_subfloor_pwm(self):
+        driver = SafeWheelDriver(
+            motors_enabled=False,
+            config=WheelMappingConfig(
+                pwm_limit=35,
+                minimum_moving_pwm=10,
+                front_left_base_pwm=16,
+                rear_left_base_pwm=16,
+                front_right_base_pwm=20,
+                rear_right_base_pwm=20,
+                front_steering_delta_pwm=20,
+                maximum_steering_delta_pwm=10,
+                tight_turn_outside_pwm=30,
+                tight_turn_inside_pwm=0,
+            ),
+        )
+
+        results = []
+        for factor in np.linspace(0.0, 1.0, 101):
+            pwm = driver.command_to_four_pwm(
+                DifferentialDriveCommand(
+                    "turn-right",
+                    0.70,
+                    0.0,
+                    0.0,
+                    0.8,
+                    "tight turn",
+                    float(factor),
+                )
+            )
+            results.extend(pwm)
+
+        self.assertFalse(any(0 < value < 10 for value in results))
+        self.assertIn(0, results)
+        self.assertIn(10, results)
 
     def test_running_updates_do_not_repeat_blocking_ramp(self):
         chassis = FakeChassis()
@@ -617,6 +994,482 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         self.assertEqual(gate.filter(forward).action, "stop")
         self.assertEqual(gate.filter(forward).action, "stop")
         self.assertEqual(gate.filter(forward).action, "forward")
+
+    def test_motion_gate_uses_higher_confidence_only_for_resume(self):
+        gate = PerceptionMotionGate(
+            resume_valid_frames=3,
+            resume_min_confidence=0.35,
+        )
+        strong = DifferentialDriveCommand(
+            "turn-right", 0.7, 0.0, 0.0, 0.40, "valid corner"
+        )
+        weak_but_trackable = DifferentialDriveCommand(
+            "turn-right", 0.7, 0.0, 0.0, 0.26, "valid single boundary"
+        )
+
+        self.assertEqual(gate.filter(strong).action, "stop")
+        self.assertEqual(gate.filter(weak_but_trackable).action, "stop")
+        self.assertEqual(gate.get_state()["consecutive_valid"], 0)
+        self.assertEqual(gate.filter(strong).action, "stop")
+        self.assertEqual(gate.filter(strong).action, "stop")
+        self.assertEqual(gate.filter(strong).action, "turn-right")
+        # Once moving, the LCC hard floor decides whether tracking may
+        # continue; the higher confidence threshold is only for re-starting.
+        self.assertEqual(
+            gate.filter(weak_but_trackable).action,
+            "turn-right",
+        )
+
+    def test_corner_continuation_bridges_bounded_one_boundary_fit_dropout(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                maximum_hold_seconds=1.60,
+                tight_turn_factor_cap=0.40,
+            )
+        )
+        boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        transverse_boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="visible-history",
+        )
+        estimate = LaneEstimate(
+            True,
+            0.40,
+            lateral_error=-0.25,
+            heading_error=0.85,
+        )
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.68, 0.46, -0.29, 0.40, "ok", 1.0
+        )
+        fit_dropout = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.20,
+            "road confidence below safety threshold",
+        )
+
+        self.assertEqual(gate.filter(sharp, estimate, boundary, now=0.0), sharp)
+        held = gate.filter(
+            fit_dropout,
+            estimate,
+            transverse_boundary,
+            now=1.0,
+        )
+        self.assertEqual(held.action, "turn-right")
+        self.assertAlmostEqual(held.steering, 0.68)
+        self.assertEqual(held.tight_turn_factor, 0.40)
+        self.assertTrue(gate.get_state(now=1.0)["holding"])
+
+        expired = gate.filter(
+            fit_dropout,
+            estimate,
+            transverse_boundary,
+            now=2.61,
+        )
+        self.assertEqual(expired.action, "stop")
+        self.assertFalse(gate.get_state(now=2.61)["active"])
+
+    def test_corner_continuation_never_overrides_yellow_hazard(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(enabled=True)
+        )
+        clear_boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        yellow_boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=True,
+            source="outer+width",
+        )
+        estimate = LaneEstimate(True, 0.40, heading_error=0.90)
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.68, 0.46, -0.29, 0.40, "ok"
+        )
+        yellow_stop = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            "yellow boundary entered the vehicle safety zone",
+        )
+
+        gate.filter(sharp, estimate, clear_boundary, now=0.0)
+        applied = gate.filter(yellow_stop, estimate, yellow_boundary, now=0.1)
+        self.assertEqual(applied.action, "stop")
+        self.assertFalse(gate.get_state(now=0.1)["active"])
+
+    def test_corner_continuation_extends_only_while_heading_improves(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                maximum_hold_seconds=2.80,
+                progress_timeout_seconds=0.50,
+                minimum_heading_progress=0.05,
+            )
+        )
+        boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 1.0
+        )
+        stopped = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.40,
+            "lateral error exceeds recovery limit",
+        )
+
+        gate.filter(
+            sharp,
+            LaneEstimate(True, 0.50, heading_error=0.90),
+            boundary,
+            now=0.0,
+        )
+        for now, heading in ((0.1, 0.80), (0.5, 0.70), (0.9, 0.60), (1.3, 0.50)):
+            held = gate.filter(
+                stopped,
+                LaneEstimate(True, 0.40, heading_error=heading),
+                boundary,
+                now=now,
+            )
+            self.assertEqual(held.action, "turn-right")
+
+        # Still below the 2.8 s hard cap, but no meaningful heading progress
+        # has occurred for longer than the configured 0.5 s window.
+        no_progress = gate.filter(
+            stopped,
+            LaneEstimate(True, 0.40, heading_error=0.49),
+            boundary,
+            now=1.81,
+        )
+        self.assertEqual(no_progress.action, "stop")
+        self.assertEqual(
+            gate.get_state(now=1.81)["last_reason"],
+            "corner continuation stopped making progress",
+        )
+
+    def test_corner_apex_is_latched_for_a_bounded_minimum_duration(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                maximum_hold_seconds=2.80,
+                progress_timeout_seconds=1.00,
+                apex_trigger_factor=0.50,
+                apex_near_heading_trigger=0.43,
+                minimum_apex_seconds=0.32,
+                tight_turn_factor_cap=0.0,
+            )
+        )
+        boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        estimate = LaneEstimate(True, 0.50, heading_error=0.80)
+        trigger = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 0.56
+        )
+        recoverable_stop = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.40,
+            "lateral error exceeds recovery limit",
+        )
+
+        armed = gate.filter(trigger, estimate, boundary, now=0.0)
+        self.assertEqual(armed.tight_turn_factor, 1.0)
+        self.assertEqual(
+            gate.filter(
+                recoverable_stop, estimate, boundary, now=0.31
+            ).tight_turn_factor,
+            1.0,
+        )
+        advancing = gate.filter(
+            recoverable_stop, estimate, boundary, now=0.33
+        )
+        self.assertEqual(advancing.action, "turn-right")
+        self.assertEqual(advancing.tight_turn_factor, 0.0)
+
+    def test_corner_apex_can_arm_on_recoverable_stop_geometry(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                apex_trigger_factor=0.50,
+                apex_near_heading_trigger=0.43,
+                minimum_apex_seconds=0.32,
+                tight_turn_factor_cap=0.0,
+            )
+        )
+        boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        approach = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 0.19
+        )
+        gate.filter(
+            approach,
+            LaneEstimate(
+                True, 0.50, heading_error=0.85, near_heading_error=0.40
+            ),
+            boundary,
+            now=0.0,
+        )
+        recoverable_stop = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.30,
+            "road confidence below safety threshold",
+        )
+
+        latched = gate.filter(
+            recoverable_stop,
+            LaneEstimate(
+                True, 0.30, heading_error=0.75, near_heading_error=0.50
+            ),
+            boundary,
+            now=0.1,
+        )
+        self.assertEqual(latched.action, "turn-right")
+        self.assertEqual(latched.tight_turn_factor, 1.0)
+
+    def test_corner_apex_waits_for_alignment_after_minimum_duration(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                apex_trigger_factor=0.50,
+                apex_near_heading_trigger=0.43,
+                minimum_apex_seconds=0.40,
+                maximum_apex_seconds=0.70,
+                apex_exit_near_heading=0.30,
+                apex_exit_valid_frames=2,
+                tight_turn_factor_cap=0.0,
+            )
+        )
+        boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        trigger = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 0.56
+        )
+        advancing = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 0.0
+        )
+
+        armed = gate.filter(
+            trigger,
+            LaneEstimate(
+                True, 0.50, heading_error=0.85, near_heading_error=0.52
+            ),
+            boundary,
+            now=0.0,
+        )
+        self.assertEqual(armed.tight_turn_factor, 1.0)
+        # Elapsed minimum alone is not enough while the visible edge remains
+        # transverse to the new straight.
+        still_turning = gate.filter(
+            advancing,
+            LaneEstimate(
+                True, 0.50, heading_error=0.65, near_heading_error=0.38
+            ),
+            boundary,
+            now=0.41,
+        )
+        self.assertEqual(still_turning.tight_turn_factor, 1.0)
+
+        first_aligned = gate.filter(
+            advancing,
+            LaneEstimate(
+                True, 0.50, heading_error=0.45, near_heading_error=0.29
+            ),
+            boundary,
+            now=0.50,
+        )
+        self.assertEqual(first_aligned.tight_turn_factor, 1.0)
+        exited = gate.filter(
+            advancing,
+            LaneEstimate(
+                True, 0.50, heading_error=0.40, near_heading_error=0.28
+            ),
+            boundary,
+            now=0.57,
+        )
+        self.assertEqual(exited.tight_turn_factor, 0.0)
+        self.assertFalse(gate.get_state(now=0.57)["apex_active"])
+
+    def test_corner_apex_has_a_hard_time_limit_without_alignment(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                minimum_apex_seconds=0.40,
+                maximum_apex_seconds=0.70,
+                apex_exit_near_heading=0.30,
+                apex_exit_valid_frames=2,
+                tight_turn_factor_cap=0.0,
+            )
+        )
+        boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        estimate = LaneEstimate(
+            True, 0.50, heading_error=0.80, near_heading_error=0.55
+        )
+        trigger = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 0.60
+        )
+        advancing = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 0.0
+        )
+
+        self.assertEqual(
+            gate.filter(trigger, estimate, boundary, now=0.0).tight_turn_factor,
+            1.0,
+        )
+        self.assertEqual(
+            gate.filter(advancing, estimate, boundary, now=0.69).tight_turn_factor,
+            1.0,
+        )
+        self.assertEqual(
+            gate.filter(advancing, estimate, boundary, now=0.71).tight_turn_factor,
+            0.0,
+        )
+
+    def test_two_visible_boundaries_release_apex_to_left_correction(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                minimum_apex_seconds=0.40,
+                maximum_apex_seconds=0.70,
+                apex_exit_near_heading=0.30,
+                apex_exit_valid_frames=2,
+            )
+        )
+        outer_only = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        both = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="both",
+        )
+        turning_estimate = LaneEstimate(
+            True, 0.50, heading_error=0.80, near_heading_error=0.55
+        )
+        trigger = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 0.60
+        )
+        left_correction = DifferentialDriveCommand(
+            "turn-left", -0.30, 0.0, 0.0, 0.70, "two-edge recenter", 0.0
+        )
+
+        gate.filter(trigger, turning_estimate, outer_only, now=0.0)
+        debounced = gate.filter(
+            left_correction,
+            LaneEstimate(
+                True, 0.70, heading_error=-0.20, near_heading_error=-0.15
+            ),
+            both,
+            now=0.41,
+        )
+        self.assertEqual(debounced.action, "turn-right")
+        self.assertEqual(debounced.tight_turn_factor, 1.0)
+
+        released = gate.filter(
+            left_correction,
+            LaneEstimate(
+                True, 0.72, heading_error=-0.18, near_heading_error=-0.12
+            ),
+            both,
+            now=0.48,
+        )
+        self.assertEqual(released.action, "turn-left")
+        self.assertEqual(released.tight_turn_factor, 0.0)
+
+    def test_corner_continuation_does_not_mask_two_boundary_lateral_stop(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(enabled=True)
+        )
+        both = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="both",
+        )
+        estimate = LaneEstimate(True, 0.60, lateral_error=0.40)
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.68, 0.46, -0.29, 0.60, "ok"
+        )
+        lateral_stop = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.60,
+            "lateral error exceeds recovery limit",
+        )
+
+        gate.filter(sharp, estimate, both, now=0.0)
+        applied = gate.filter(lateral_stop, estimate, both, now=0.1)
+        self.assertEqual(applied.action, "stop")
+        self.assertFalse(gate.get_state(now=0.1)["active"])
+
+    def test_runtime_corner_confidence_does_not_stop_controller(self):
+        controller = LaneCenteringController(
+            LCCConfig(
+                min_confidence=0.25,
+                maximum_lateral_error=0.35,
+                maximum_heading_error=1.0,
+            )
+        )
+
+        command = controller.update(
+            LaneEstimate(
+                True,
+                0.2505,
+                lateral_error=-0.28,
+                heading_error=1.0,
+            ),
+            dt=0.05,
+        )
+        self.assertEqual(command.action, "turn-right")
+
+        stopped = controller.update(
+            LaneEstimate(
+                True,
+                0.20,
+                lateral_error=-0.28,
+                heading_error=1.0,
+            ),
+            dt=0.05,
+        )
+        self.assertEqual(stopped.action, "stop")
+        self.assertIn("confidence", stopped.reason)
 
     def test_watchdog_stops_stale_command(self):
         chassis = FakeChassis()
