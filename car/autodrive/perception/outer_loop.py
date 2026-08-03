@@ -19,7 +19,7 @@ class OuterLoopBoundaryConfig:
     band_half_height: int = 2
     minimum_run_width: int = 2
     center_exclusion_ratio: float = 0.06
-    expected_lane_width_ratio: float = 0.50
+    expected_lane_width_ratio: float = 0.70
     minimum_lane_width_ratio: float = 0.24
     maximum_lane_width_ratio: float = 0.72
     adaptive_lane_width: bool = True
@@ -435,23 +435,15 @@ class OuterLoopBoundaryTracker:
                         width_curve,
                     )
                 else:
-                    # This field has a fixed, physically calibrated lane
-                    # width. Partial inner edges around successive corners
-                    # made the learned width shrink from 0.85 to 0.698 over
-                    # two laps, pulling every one-boundary virtual centre
-                    # toward the outer yellow line. Keep the calibrated prior
-                    # instead of learning from geometrically foreshortened
-                    # corner observations.
+                    # Preserve the calibrated prior for a later one-edge
+                    # dropout, but do not replace either freshly fitted edge.
+                    # The real pair and its midpoint are the authoritative
+                    # straight-road geometry for the current frame.
                     width_curve = self._default_width(height, width)
-                # Keep the continuous outer boundary as the geometric anchor.
-                # An intersection may provide a plausible-looking but incorrect
-                # inner branch; averaging both curves would drag the corridor
-                # centre into that branch even after its width was rejected.
-                if self.config.outer_boundary_side == "left":
-                    right_curve = left_curve + width_curve
-                else:
-                    left_curve = right_curve - width_curve
             else:
+                # A pair outside the calibrated physical width is not trusted:
+                # retain only the continuous outer boundary and infer the
+                # missing side below.
                 if self.config.outer_boundary_side == "left":
                     right_curve = None
                 else:
@@ -473,15 +465,13 @@ class OuterLoopBoundaryTracker:
             confidence = 0.5 * (left_confidence + right_confidence)
 
         if not self.config.adaptive_lane_width:
-            # Independent temporal smoothing and image-edge clipping can
-            # otherwise shrink the two stored curves even when width learning
-            # is disabled. Re-anchor every frame after smoothing so the next
-            # one-boundary estimate always starts from the physical 0.85-width
-            # calibration instead of the previous clipped image separation.
+            # Keep real two-boundary geometry untouched. Re-anchor only the
+            # inferred side of a one-boundary result so temporal smoothing and
+            # image-edge clipping cannot shrink the calibrated fallback width.
             width_curve = self._default_width(height, width)
-            if self.config.outer_boundary_side == "left":
+            if source == "outer+width":
                 right_curve = left_curve + width_curve
-            else:
+            elif source == "inner+width":
                 left_curve = right_curve - width_curve
 
         minimum_width = width * self.config.minimum_lane_width_ratio
@@ -500,7 +490,11 @@ class OuterLoopBoundaryTracker:
 
         self._left_curve = left_curve.astype(np.float32)
         self._right_curve = right_curve.astype(np.float32)
-        self._width_curve = lane_width.astype(np.float32)
+        self._width_curve = (
+            lane_width.astype(np.float32)
+            if self.config.adaptive_lane_width
+            else self._default_width(height, width)
+        )
         self._confidence = float(np.clip(confidence, 0.0, 1.0))
         self._missing_frames = 0
         middle_start = int(height * self.config.top_ratio)

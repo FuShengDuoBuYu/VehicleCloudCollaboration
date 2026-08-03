@@ -32,9 +32,11 @@ outer_loop:
   navigation_mode: boundary
   direction: clockwise
   outer_boundary_side: left
-  expected_lane_width_ratio: 0.85
-  minimum_lane_width_ratio: 0.55
-  maximum_lane_width_ratio: 0.95
+  # Measure this from fresh two-boundary fits after perspective calibration.
+  # It is used only while one physical boundary is unavailable.
+  expected_lane_width_ratio: 0.70
+  minimum_lane_width_ratio: 0.42
+  maximum_lane_width_ratio: 0.72
   adaptive_lane_width: false
   minimum_visible_boundary_ratio: 0.01
   include_lane_mask: false
@@ -100,7 +102,7 @@ safety:
   resume_require_consistent_source: true
   corner_continuation:
     enabled: true
-    enter_steering_threshold: 0.50
+    enter_steering_threshold: 0.40
     exit_steering_threshold: 0.18
     exit_min_confidence: 0.35
     exit_valid_frames: 3
@@ -114,6 +116,7 @@ safety:
     minimum_apex_seconds: 0.55
     maximum_apex_seconds: 0.70
     apex_exit_near_heading: 0.30
+    # Applied independently to near-heading and measured-pair confirmation.
     apex_exit_valid_frames: 2
     minimum_transverse_boundary_ratio: 0.01
     reacquire_steering_limit: 0.35

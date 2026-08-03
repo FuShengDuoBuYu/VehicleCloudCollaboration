@@ -919,6 +919,9 @@ def analyze(
             if boundary_result is None
             else f"boundary/{boundary_result.source}"
         ),
+        boundary_source=(
+            "missing" if boundary_result is None else boundary_result.source
+        ),
     )
     return (
         estimate,
@@ -944,15 +947,34 @@ def render_birdeye_debug(boundary_result, estimate):
     height, width = corridor.shape
     output = np.full((height, width, 3), 28, dtype=np.uint8)
     output[corridor > 0] = (40, 120, 40)
-    for curve, color in (
-        (boundary_result.left_curve, (255, 160, 0)),
-        (boundary_result.right_curve, (255, 160, 0)),
+    historical = boundary_result.source in {"history", "visible-history"}
+    for curve, inferred in (
+        (
+            boundary_result.left_curve,
+            historical or boundary_result.source == "inner+width",
+        ),
+        (
+            boundary_result.right_curve,
+            historical or boundary_result.source == "outer+width",
+        ),
     ):
         if curve.size == height:
             points = np.column_stack(
                 [np.clip(curve, 0, width - 1), np.arange(height)]
             ).astype(np.int32)
-            cv2.polylines(output, [points], False, color, 2)
+            if inferred:
+                for start in range(0, height - 1, 12):
+                    end = min(height - 1, start + 6)
+                    cv2.line(
+                        output,
+                        tuple(map(int, points[start])),
+                        tuple(map(int, points[end])),
+                        (255, 0, 255),
+                        2,
+                        cv2.LINE_AA,
+                    )
+            else:
+                cv2.polylines(output, [points], False, (255, 160, 0), 2)
     if estimate.centerline.size:
         cv2.polylines(output, [estimate.centerline], False, (0, 255, 255), 3)
     ego = (width // 2, int(height * 0.92))
@@ -965,6 +987,16 @@ def render_birdeye_debug(boundary_result, estimate):
             (255, 255, 255),
             2,
         )
+    cv2.putText(
+        output,
+        f"{boundary_result.source}: cyan=measured magenta=inferred",
+        (5, 14),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.35,
+        (255, 255, 255),
+        1,
+        cv2.LINE_AA,
+    )
     return output
 
 
@@ -1137,6 +1169,8 @@ def main():
             "boundary_ms",
             "boundary_source",
             "boundary_confidence",
+            "boundary_left_rows",
+            "boundary_right_rows",
             "lane_width_ratio",
             "boundary_visible_ratio",
             "ego_yellow_ratio",
@@ -1170,6 +1204,7 @@ def main():
             "corner_apex_trigger_reason",
             "corner_apex_completion_reason",
             "corner_apex_exit_valid_count",
+            "corner_apex_both_valid_count",
             "motion_gate_ready",
             "motion_gate_valid_frames",
             "archive_queue_depth",
@@ -1390,6 +1425,16 @@ def main():
                     if boundary_result is None
                     else round(boundary_result.confidence, 5)
                 ),
+                "boundary_left_rows": (
+                    None
+                    if boundary_result is None
+                    else boundary_result.observed_left_rows
+                ),
+                "boundary_right_rows": (
+                    None
+                    if boundary_result is None
+                    else boundary_result.observed_right_rows
+                ),
                 "lane_width_ratio": (
                     None
                     if boundary_result is None
@@ -1470,6 +1515,9 @@ def main():
                 ],
                 "corner_apex_exit_valid_count": corner_state[
                     "apex_exit_valid_count"
+                ],
+                "corner_apex_both_valid_count": corner_state[
+                    "apex_both_valid_count"
                 ],
                 "motion_gate_ready": motion_state["ready"],
                 "motion_gate_valid_frames": motion_state["consecutive_valid"],

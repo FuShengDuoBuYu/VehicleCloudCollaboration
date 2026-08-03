@@ -42,13 +42,12 @@ outer_loop:
   band_half_height: 2
   minimum_run_width: 2
   center_exclusion_ratio: 0.06
-  # Latest startup frame contained 45 usable outer-edge rows and 18 inner-edge
-  # rows. Their bird's-eye separation measured 0.868, but the old 0.60 ceiling
-  # rejected the real inner edge and replaced it with a 0.50-width corridor,
-  # putting the virtual centre well left of the physical road centre.
-  expected_lane_width_ratio: 0.85
-  minimum_lane_width_ratio: 0.55
-  maximum_lane_width_ratio: 0.95
+  # Fresh two-boundary fits in the corrected bird's-eye image measured
+  # 0.554-0.577 on the latest straight runs. Use the configured 0.70 only as
+  # the one-boundary fallback; when both edges fit, their real midpoint is used.
+  expected_lane_width_ratio: 0.70
+  minimum_lane_width_ratio: 0.42
+  maximum_lane_width_ratio: 0.72
   # The mat has a fixed calibrated width. Do not let partial corner/intersection
   # observations shrink the one-boundary width prior over successive laps.
   adaptive_lane_width: false
@@ -178,7 +177,10 @@ safety:
   # under the chassis, a missing boundary, timeout, or watchdog still stops.
   corner_continuation:
     enabled: true
-    enter_steering_threshold: 0.50
+    # With the configured one-edge fallback, the first two physical corners
+    # reached 0.468/0.409 immediately before their lateral safety stop. The two
+    # latest straight runs stayed at or below 0.255, leaving a clear margin.
+    enter_steering_threshold: 0.40
     exit_steering_threshold: 0.18
     exit_min_confidence: 0.35
     exit_valid_frames: 3
@@ -209,12 +211,14 @@ safety:
     # confidence/lateral recovery suppresses the secondary geometry trigger.
     # The latest first corner naturally entered at 0.33 s; 0.30 s preserves
     # that approach while making the second physical corner follow it.
-    apex_commit_delay_seconds: 0.30
+    apex_commit_delay_seconds: 0.05
     # One extra 20 Hz control frame gives the first corner the requested small
     # increase without changing the bounded 0.70 s hard apex limit.
-    minimum_apex_seconds: 0.55
+    minimum_apex_seconds: 0.6
     maximum_apex_seconds: 0.7
     apex_exit_near_heading: 0.30
+    # Confirm near-heading alignment and newly restored measured pairs
+    # independently; one frame of each must not be combined into an exit.
     apex_exit_valid_frames: 2
     # A sharp corner can turn the still-visible yellow edge almost horizontal,
     # where x(y) fitting has no corridor. Continue only when at least this much

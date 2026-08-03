@@ -17,6 +17,28 @@ def _scale_points(points: np.ndarray, mask_shape: tuple[int, int], frame_shape) 
     return np.rint(scaled).astype(np.int32)
 
 
+def _draw_boundary(
+    image: np.ndarray,
+    points: np.ndarray,
+    inferred: bool,
+) -> None:
+    """Draw measured edges solid cyan and inferred edges dashed magenta."""
+    if points.size == 0:
+        return
+    if not inferred:
+        cv2.polylines(image, [points], False, (255, 160, 0), 2)
+        return
+    for index in range(0, len(points) - 1, 2):
+        cv2.line(
+            image,
+            tuple(map(int, points[index])),
+            tuple(map(int, points[index + 1])),
+            (255, 0, 255),
+            2,
+            cv2.LINE_AA,
+        )
+
+
 def render_debug_frame(
     frame: np.ndarray,
     drivable_mask: np.ndarray,
@@ -25,6 +47,7 @@ def render_debug_frame(
     command: DifferentialDriveCommand,
     inference_ms: float,
     latency_label: str = "boundary",
+    boundary_source: str = "both",
 ) -> np.ndarray:
     output = frame.copy()
     frame_h, frame_w = output.shape[:2]
@@ -54,10 +77,17 @@ def render_debug_frame(
     left = _scale_points(estimate.left_boundary, (mask_h, mask_w), frame.shape)
     right = _scale_points(estimate.right_boundary, (mask_h, mask_w), frame.shape)
     center = _scale_points(estimate.centerline, (mask_h, mask_w), frame.shape)
-    if left.size:
-        cv2.polylines(output, [left], False, (255, 160, 0), 2)
-    if right.size:
-        cv2.polylines(output, [right], False, (255, 160, 0), 2)
+    historical = boundary_source in {"history", "visible-history"}
+    _draw_boundary(
+        output,
+        left,
+        inferred=historical or boundary_source == "inner+width",
+    )
+    _draw_boundary(
+        output,
+        right,
+        inferred=historical or boundary_source == "outer+width",
+    )
     if center.size:
         cv2.polylines(output, [center], False, (0, 255, 255), 4)
 

@@ -11,12 +11,16 @@ camera_pose:
   pan_angle: 25
   tilt_angle: null
 source_points:
-  - [0.3630673, 0.3131524]
-  - [0.5618153, 0.3131524]
+  - [0.30, 0.3131524]
+  - [0.79, 0.3131524]
   - [0.9937402, 0.6283924]
   - [0.0062598, 0.5511482]
 destination_points:
-  - [0.22, 0.0]
-  - [0.78, 0.0]
-  - [0.78, 1.0]
-  - [0.22, 1.0]
+  - [0.28, 0.0]
+  - [0.72, 0.0]
+  - [0.72, 1.0]
+  - [0.28, 1.0]
+# Configured fallback width for frames where only one physical boundary can be
+# fitted; it is not the destination quadrilateral's nominal x span and never
+# replaces a valid pair of measured boundaries.
+birdseye_lane_width_ratio: 0.70

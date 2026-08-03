@@ -509,6 +509,29 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         restored_mask = mapper.camera_mask(mask)
         self.assertTrue(np.array_equal(mask, restored_mask))
 
+    def test_runtime_width_prior_matches_calibrated_birdeye_width(self):
+        """Keep the one-edge fallback coupled to measured bird's-eye width."""
+        config_dir = CAR_DIR / "autodrive" / "config"
+        runtime = yaml.safe_load(
+            (config_dir / "onboard_runtime.yaml").read_text(encoding="utf-8")
+        )
+        calibration = yaml.safe_load(
+            (config_dir / "onboard_calibration.yaml").read_text(encoding="utf-8")
+        )
+        source = np.asarray(calibration["source_points"], dtype=np.float32)
+        destination = np.asarray(
+            calibration["destination_points"], dtype=np.float32
+        )
+
+        self.assertGreater(source[1, 0] - source[0, 0], 0.45)
+        self.assertAlmostEqual(float(destination[0, 0]), 0.28, places=6)
+        self.assertAlmostEqual(float(destination[1, 0]), 0.72, places=6)
+        self.assertAlmostEqual(
+            runtime["outer_loop"]["expected_lane_width_ratio"],
+            calibration["birdseye_lane_width_ratio"],
+            places=6,
+        )
+
     def test_camera_pose_signature_tracks_gimbal_and_rotated_image_size(self):
         pose = camera_pose_from_mapping(
             {
@@ -604,7 +627,7 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         self.assertLessEqual(result.lane_width_ratio, 0.60)
         self.assertLess(float(np.median(result.right_curve)), 285.0)
 
-    def test_outer_loop_can_keep_fixed_calibrated_lane_width(self):
+    def test_real_pair_is_used_before_fixed_width_fallback(self):
         drivable, lane = make_outer_loop_masks(
             right_gap=False,
             right_branch=True,
@@ -620,14 +643,54 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             )
         )
 
-        # The synthetic measurement is substantially narrower than 0.85 and
-        # the inferred right edge reaches the image border. Repeated temporal
-        # blending must still retain the physical one-boundary prior.
-        results = [tracker.update(drivable, lane) for _ in range(6)]
+        measured = tracker.update(drivable, lane)
+        estimate = self.estimator.estimate_from_boundaries(
+            measured.left_curve,
+            measured.right_curve,
+            drivable.shape[1],
+        )
+        self.assertEqual(measured.source, "both")
+        self.assertLess(measured.lane_width_ratio, 0.65)
+        self.assertAlmostEqual(estimate.lateral_error, 0.0, delta=0.08)
+
+        # Once the inner/right edge disappears, and only then, preserve the
+        # fixed calibrated fallback over repeated temporal updates.
+        outer_only = lane.copy()
+        outer_only[:, 160:] = 0
+        results = [tracker.update(drivable, outer_only) for _ in range(6)]
         self.assertTrue(all(result.valid for result in results))
-        self.assertEqual(results[0].source, "both")
+        self.assertTrue(all(result.source == "outer+width" for result in results))
         for result in results:
             self.assertAlmostEqual(result.lane_width_ratio, 0.85, delta=0.01)
+
+    def test_visualization_marks_inferred_right_boundary_magenta(self):
+        frame = np.zeros((180, 320, 3), dtype=np.uint8)
+        mask = np.zeros((180, 320), dtype=np.uint8)
+        ys = np.arange(120, 171, 5, dtype=np.int32)
+        estimate = LaneEstimate(
+            True,
+            0.8,
+            left_boundary=np.column_stack([np.full_like(ys, 70), ys]),
+            right_boundary=np.column_stack([np.full_like(ys, 250), ys]),
+        )
+        command = LaneCenteringController().update(estimate, dt=0.2)
+        rendered = render_debug_frame(
+            frame,
+            mask,
+            mask,
+            estimate,
+            command,
+            inference_ms=1.0,
+            boundary_source="outer+width",
+        )
+        cyan = np.all(rendered == np.array([255, 160, 0]), axis=2)
+        magenta = (
+            (rendered[..., 0] > 200)
+            & (rendered[..., 1] < 80)
+            & (rendered[..., 2] > 200)
+        )
+        self.assertGreater(np.count_nonzero(cyan), 10)
+        self.assertGreater(np.count_nonzero(magenta), 10)
 
     def test_outer_loop_surface_mask_excludes_green_island(self):
         frame = np.full((180, 320, 3), (150, 150, 150), dtype=np.uint8)
@@ -1451,6 +1514,88 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         )
         self.assertEqual(advancing.action, "turn-right")
         self.assertEqual(advancing.tight_turn_factor, 0.0)
+
+    def test_corner_apex_rejects_single_provisional_both_lateral_stop(self):
+        """Regression for run 20260803_193400 samples 792 through 796."""
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                enter_steering_threshold=0.40,
+                apex_commit_delay_seconds=0.30,
+                minimum_apex_seconds=0.60,
+                maximum_apex_seconds=0.70,
+                apex_exit_near_heading=0.30,
+                apex_exit_valid_frames=2,
+            )
+        )
+        outer = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        both = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="both",
+        )
+        approach = DifferentialDriveCommand(
+            "turn-right", 0.462, 0.35, -0.16, 0.42, "ok", 0.0
+        )
+        stop = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.37,
+            "lateral error exceeds recovery limit",
+        )
+        turning = LaneEstimate(
+            True,
+            0.42,
+            lateral_error=0.20,
+            heading_error=0.39,
+            near_heading_error=0.15,
+        )
+        misfit = LaneEstimate(
+            True,
+            0.37,
+            lateral_error=0.63,
+            heading_error=-0.71,
+            near_heading_error=-0.12,
+        )
+
+        gate.filter(approach, turning, outer, now=0.0)
+        armed = gate.filter(stop, misfit, outer, now=0.31)
+        self.assertEqual(armed.action, "turn-right")
+        self.assertEqual(armed.tight_turn_factor, 1.0)
+
+        # The physical failure contained exactly this early, one-frame both.
+        provisional = gate.filter(stop, misfit, both, now=0.50)
+        self.assertEqual(provisional.action, "turn-right")
+        self.assertEqual(provisional.tight_turn_factor, 1.0)
+        self.assertTrue(gate.get_state(now=0.50)["apex_active"])
+        self.assertEqual(
+            gate.get_state(now=0.50)["apex_both_valid_count"],
+            0,
+        )
+
+        # After the minimum, measured-pair recovery must be consecutive.
+        first_both = gate.filter(stop, misfit, both, now=0.92)
+        self.assertEqual(first_both.action, "turn-right")
+        self.assertEqual(
+            gate.get_state(now=0.92)["apex_both_valid_count"],
+            1,
+        )
+        reset_by_outer = gate.filter(stop, misfit, outer, now=0.95)
+        self.assertEqual(reset_by_outer.action, "turn-right")
+        self.assertEqual(
+            gate.get_state(now=0.95)["apex_both_valid_count"],
+            0,
+        )
+        gate.filter(stop, misfit, both, now=0.97)
+        confirmed = gate.filter(stop, misfit, both, now=1.00)
+        self.assertEqual(confirmed.action, "stop")
+        self.assertFalse(gate.get_state(now=1.00)["active"])
 
     def test_corner_apex_can_arm_on_recoverable_stop_geometry(self):
         gate = CornerContinuationGate(

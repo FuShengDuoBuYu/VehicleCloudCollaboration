@@ -653,6 +653,7 @@ class CornerContinuationGate:
         self._apex_completed = False
         self._apex_completion_reason: Optional[str] = None
         self._apex_exit_valid_count = 0
+        self._apex_both_valid_count = 0
         self._exit_valid_count = 0
         self._last_reason = "inactive"
 
@@ -845,6 +846,7 @@ class CornerContinuationGate:
         # only after the grounded minimum has actually elapsed.
         if apex_age < self.config.minimum_apex_seconds:
             self._apex_exit_valid_count = 0
+            self._apex_both_valid_count = 0
             return True
 
         # Do not decide from elapsed time alone. The latest physical run left
@@ -865,13 +867,21 @@ class CornerContinuationGate:
                 and abs(float(estimate.near_heading_error))
                 <= self.config.apex_exit_near_heading
             )
+            # Confirm the two kinds of recovery independently.  A single
+            # false ``both`` frame followed by one merely aligned one-edge
+            # frame must not be combined into an early apex exit.
+            self._apex_both_valid_count = (
+                self._apex_both_valid_count + 1 if both_visible else 0
+            )
             self._apex_exit_valid_count = (
-                self._apex_exit_valid_count + 1
-                if both_visible or near_aligned
-                else 0
+                self._apex_exit_valid_count + 1 if near_aligned else 0
             )
 
-        if self._apex_exit_valid_count >= self.config.apex_exit_valid_frames:
+        if (
+            self._apex_exit_valid_count >= self.config.apex_exit_valid_frames
+            or self._apex_both_valid_count
+            >= self.config.apex_exit_valid_frames
+        ):
             self._apex_completed = True
             self._apex_completion_reason = "alignment-restored"
             self._last_reason = "apex alignment restored"
@@ -1109,6 +1119,43 @@ class CornerContinuationGate:
                 else command
             )
 
+        # Enforce the bounded apex even when a recoverable LCC stop coincides
+        # with one provisional ``both`` frame.  The raw yellow-hazard check at
+        # the top of this method remains an unconditional immediate stop.
+        provisional_both = bool(
+            boundary_result is not None
+            and bool(getattr(boundary_result, "valid", False))
+            and not bool(getattr(boundary_result, "yellow_hazard", False))
+            and str(getattr(boundary_result, "source", "")) == "both"
+        )
+        apex_active = bool(
+            provisional_both
+            and self._apex_active(
+                current_time,
+                estimate,
+                boundary_result,
+            )
+        )
+        if (
+            apex_active
+            and command.reason in self._RECOVERABLE_REASONS
+            and self._last_command is not None
+            and provisional_both
+        ):
+            held = self._last_command
+            self._last_reason = (
+                "continuing bounded apex through provisional recovery"
+            )
+            return DifferentialDriveCommand(
+                held.action,
+                held.steering,
+                held.left_speed,
+                held.right_speed,
+                command.confidence,
+                self._last_reason,
+                1.0,
+            )
+
         if self._post_apex_lateral_stop_must_apply(command, estimate):
             self.reset()
             self._last_reason = "post-apex lateral safety stop"
@@ -1256,6 +1303,7 @@ class CornerContinuationGate:
             "minimum_apex_seconds": self.config.minimum_apex_seconds,
             "maximum_apex_seconds": self.config.maximum_apex_seconds,
             "apex_exit_valid_count": self._apex_exit_valid_count,
+            "apex_both_valid_count": self._apex_both_valid_count,
             "apex_exit_valid_frames": self.config.apex_exit_valid_frames,
             "exit_valid_count": self._exit_valid_count,
             "last_reason": self._last_reason,
