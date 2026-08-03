@@ -1,13 +1,12 @@
-"""Offline-testable lane-centering components for the small vehicle."""
+"""Lane-centering control and motion-safety components."""
 
-from .control.lane_centering import (
+from .lane_centering import (
     DifferentialDriveCommand,
     LCCConfig,
     LaneCenteringController,
     LaneEstimate,
     RoadCenterlineEstimator,
 )
-from .perception.perspective import PerspectiveMapper
 
 __all__ = [
     "DifferentialDriveCommand",
@@ -15,5 +14,4 @@ __all__ = [
     "LaneCenteringController",
     "LaneEstimate",
     "RoadCenterlineEstimator",
-    "PerspectiveMapper",
 ]

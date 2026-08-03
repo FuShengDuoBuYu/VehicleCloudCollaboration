@@ -10,16 +10,17 @@ import numpy as np
 import yaml
 
 
-AUTODRIVE_DIR = Path(__file__).resolve().parent
+AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
 CAR_DIR = AUTODRIVE_DIR.parent
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
 
-from autodrive.perspective import camera_pose_from_mapping
+from autodrive.perception.perspective import camera_pose_from_mapping
 
 
-DEFAULT_OUTPUT = AUTODRIVE_DIR / "onboard_calibration.yaml"
-LOCAL_RUNTIME_CONFIG = AUTODRIVE_DIR / "onboard_runtime.yaml"
+CONFIG_DIR = AUTODRIVE_DIR / "config"
+DEFAULT_OUTPUT = CONFIG_DIR / "onboard_calibration.yaml"
+LOCAL_RUNTIME_CONFIG = CONFIG_DIR / "onboard_runtime.yaml"
 
 
 def build_parser():

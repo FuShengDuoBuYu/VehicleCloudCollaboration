@@ -10,7 +10,7 @@ CAR_DIR = Path(__file__).resolve().parents[1]
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
 
-from autodrive.lcc_web import (
+from autodrive.web.server import (
     LCCProcessManager,
     MOTOR_CONFIRMATION,
     build_lcc_command,
@@ -114,4 +114,3 @@ class LCCWebTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

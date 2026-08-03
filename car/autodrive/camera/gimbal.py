@@ -7,7 +7,8 @@ import time
 from typing import Optional
 
 
-CAR_DIR = Path(__file__).resolve().parents[1]
+AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
+CAR_DIR = AUTODRIVE_DIR.parent
 CONTROL_UTILS_DIR = CAR_DIR / "control" / "utils"
 if str(CONTROL_UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(CONTROL_UTILS_DIR))

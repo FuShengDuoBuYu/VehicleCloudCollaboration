@@ -307,7 +307,7 @@ class LCCWebServer:
         self.manager = manager
         self.host = str(host)
         self.port = int(port)
-        self.html_path = Path(html_path or Path(__file__).with_name("lcc_web.html"))
+        self.html_path = Path(html_path or Path(__file__).with_name("index.html"))
         self._httpd = None
 
     def build_handler(self):

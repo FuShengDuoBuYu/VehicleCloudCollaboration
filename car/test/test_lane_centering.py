@@ -16,28 +16,31 @@ CAR_DIR = Path(__file__).resolve().parents[1]
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
 
-from autodrive.lane_centering import (
+from autodrive.control.lane_centering import (
     DifferentialDriveCommand,
     LCCConfig,
     LaneEstimate,
     LaneCenteringController,
     RoadCenterlineEstimator,
 )
-from autodrive.outer_loop import OuterLoopBoundaryConfig, OuterLoopBoundaryTracker
-from autodrive.perspective import (
+from autodrive.perception.outer_loop import (
+    OuterLoopBoundaryConfig,
+    OuterLoopBoundaryTracker,
+)
+from autodrive.perception.perspective import (
     PerspectiveMapper,
     camera_pose_from_mapping,
     validate_calibration_camera_pose,
 )
-from autodrive.run_onboard import (
+from autodrive.runtime.onboard import (
     SurfaceOnlyDetector,
     VideoSource,
     analyze,
     fuse_tracking_confidence,
 )
-from autodrive.visualization import render_debug_frame
-from autodrive.run_onboard import MOTOR_CONFIRMATION, validate_motor_request
-from autodrive.drive_runtime import (
+from autodrive.perception.visualization import render_debug_frame
+from autodrive.runtime.onboard import MOTOR_CONFIRMATION, validate_motor_request
+from autodrive.control.drive_runtime import (
     CommandWatchdog,
     CornerContinuationConfig,
     CornerContinuationGate,
@@ -587,6 +590,31 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         self.assertTrue(result.valid)
         self.assertLessEqual(result.lane_width_ratio, 0.60)
         self.assertLess(float(np.median(result.right_curve)), 285.0)
+
+    def test_outer_loop_can_keep_fixed_calibrated_lane_width(self):
+        drivable, lane = make_outer_loop_masks(
+            right_gap=False,
+            right_branch=True,
+        )
+        tracker = OuterLoopBoundaryTracker(
+            OuterLoopBoundaryConfig(
+                enabled=True,
+                expected_lane_width_ratio=0.85,
+                minimum_lane_width_ratio=0.24,
+                maximum_lane_width_ratio=0.95,
+                adaptive_lane_width=False,
+                minimum_observations=8,
+            )
+        )
+
+        # The synthetic measurement is substantially narrower than 0.85 and
+        # the inferred right edge reaches the image border. Repeated temporal
+        # blending must still retain the physical one-boundary prior.
+        results = [tracker.update(drivable, lane) for _ in range(6)]
+        self.assertTrue(all(result.valid for result in results))
+        self.assertEqual(results[0].source, "both")
+        for result in results:
+            self.assertAlmostEqual(result.lane_width_ratio, 0.85, delta=0.01)
 
     def test_outer_loop_surface_mask_excludes_green_island(self):
         frame = np.full((180, 320, 3), (150, 150, 150), dtype=np.uint8)
@@ -1164,6 +1192,71 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             "corner continuation stopped making progress",
         )
 
+    def test_corner_continuation_accepts_lateral_recovery_progress(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                maximum_hold_seconds=3.0,
+                progress_timeout_seconds=0.50,
+                minimum_heading_progress=0.05,
+                minimum_lateral_progress=0.03,
+            )
+        )
+        boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.70, 0.46, -0.30, 0.50, "ok", 1.0
+        )
+        stopped = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.40,
+            "lateral error exceeds recovery limit",
+        )
+
+        gate.filter(
+            sharp,
+            LaneEstimate(
+                True, 0.50, lateral_error=0.60, heading_error=0.30
+            ),
+            boundary,
+            now=0.0,
+        )
+        # Heading has stopped improving, but lateral error is converging by
+        # more than the configured increment on every observation.
+        for now, lateral in ((0.1, 0.55), (0.5, 0.50), (0.9, 0.45), (1.3, 0.40)):
+            held = gate.filter(
+                stopped,
+                LaneEstimate(
+                    True,
+                    0.40,
+                    lateral_error=lateral,
+                    heading_error=0.30,
+                ),
+                boundary,
+                now=now,
+            )
+            self.assertEqual(held.action, "turn-right")
+
+        no_progress = gate.filter(
+            stopped,
+            LaneEstimate(
+                True, 0.40, lateral_error=0.39, heading_error=0.30
+            ),
+            boundary,
+            now=1.81,
+        )
+        self.assertEqual(no_progress.action, "stop")
+        self.assertEqual(
+            gate.get_state(now=1.81)["last_reason"],
+            "corner continuation stopped making progress",
+        )
+
     def test_corner_apex_is_latched_for_a_bounded_minimum_duration(self):
         gate = CornerContinuationGate(
             CornerContinuationConfig(
@@ -1253,6 +1346,53 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         )
         self.assertEqual(latched.action, "turn-right")
         self.assertEqual(latched.tight_turn_factor, 1.0)
+
+    def test_corner_apex_does_not_arm_when_both_boundaries_are_visible(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(enabled=True)
+        )
+        outer_only = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        both = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="both",
+        )
+        approach = DifferentialDriveCommand(
+            "turn-right", 0.55, 0.0, 0.0, 0.50, "one-edge approach", 0.0
+        )
+        visible_corner = DifferentialDriveCommand(
+            "turn-right", 0.60, 0.0, 0.0, 0.60, "two-edge corner", 0.0
+        )
+
+        gate.filter(
+            approach,
+            LaneEstimate(
+                True, 0.50, heading_error=0.50, near_heading_error=0.20
+            ),
+            outer_only,
+            now=0.0,
+        )
+        applied = gate.filter(
+            visible_corner,
+            LaneEstimate(
+                True, 0.60, heading_error=0.80, near_heading_error=0.55
+            ),
+            both,
+            now=0.1,
+        )
+        self.assertEqual(applied.tight_turn_factor, 0.0)
+        self.assertFalse(gate.get_state(now=0.1)["apex_active"])
+
+        # Sustained two-boundary tracking also retires the one-boundary
+        # continuation state, so a later role change cannot reuse stale turn
+        # commitment.
+        gate.filter(visible_corner, LaneEstimate(True, 0.60), both, now=0.2)
+        gate.filter(visible_corner, LaneEstimate(True, 0.60), both, now=0.3)
+        self.assertFalse(gate.get_state(now=0.3)["active"])
 
     def test_corner_apex_waits_for_alignment_after_minimum_duration(self):
         gate = CornerContinuationGate(

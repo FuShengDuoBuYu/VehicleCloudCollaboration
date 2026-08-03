@@ -12,7 +12,7 @@ if str(CAR_DIR) not in sys.path:
 if str(CONTROL_UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(CONTROL_UTILS_DIR))
 
-from autodrive.camera_gimbal import (
+from autodrive.camera.gimbal import (
     CameraGimbalPose,
     initialize_configured_gimbal,
     startup_pose_from_mapping,

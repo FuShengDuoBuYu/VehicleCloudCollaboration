@@ -11,12 +11,8 @@
 自动驾驶、状态机、安全门和网页启动入口都位于 `car/autodrive/`：
 
 ```bash
-/home/pi/miniconda3/envs/car/bin/python car/autodrive/run_lcc_web.py \
-  --config car/autodrive/onboard_runtime.yaml \
-  --host 0.0.0.0 --port 8080 \
-  --default-max-runtime-seconds 60 \
-  --enable-motors \
-  --confirm-motor-motion I_UNDERSTAND_MOTORS_WILL_MOVE
+cd /home/pi/Desktop/VehicleCloudCollaboration
+./run.sh
 ```
 
 不要同时启动其他会打开同一摄像头或写同一 I2C 电机控制器的程序。

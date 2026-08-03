@@ -13,16 +13,16 @@ import sys
 import yaml
 
 
-AUTODRIVE_DIR = Path(__file__).resolve().parent
+AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
 CAR_DIR = AUTODRIVE_DIR.parent
 REPO_ROOT = CAR_DIR.parent
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
 
-from autodrive.perspective import validate_calibration_camera_pose
+from autodrive.perception.perspective import validate_calibration_camera_pose
 
 
-LOCAL_CONFIG = AUTODRIVE_DIR / "onboard_runtime.yaml"
+LOCAL_CONFIG = AUTODRIVE_DIR / "config" / "onboard_runtime.yaml"
 DEFAULT_CONFIG = LOCAL_CONFIG
 MINIMUM_PYTHON = (3, 9)
 MAXIMUM_PYTHON = (3, 12)

@@ -13,7 +13,7 @@ if str(CAR_DIR) not in sys.path:
 if str(CONTROL_DIR) not in sys.path:
     sys.path.insert(0, str(CONTROL_DIR))
 
-from autodrive.check_wheel_directions import individual_targets
+from autodrive.tools.check_wheel_directions import individual_targets
 from vehicle_control.hardware import RospbotChassis
 
 

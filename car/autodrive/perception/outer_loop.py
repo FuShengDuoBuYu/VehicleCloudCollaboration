@@ -22,6 +22,7 @@ class OuterLoopBoundaryConfig:
     expected_lane_width_ratio: float = 0.50
     minimum_lane_width_ratio: float = 0.24
     maximum_lane_width_ratio: float = 0.72
+    adaptive_lane_width: bool = True
     maximum_boundary_jump_ratio: float = 0.24
     minimum_observations: int = 10
     polynomial_degree: int = 2
@@ -428,7 +429,20 @@ class OuterLoopBoundaryTracker:
             if np.count_nonzero(valid_width) >= height // 4:
                 replacement = float(np.median(measured_width[valid_width]))
                 measured_width = np.where(valid_width, measured_width, replacement)
-                width_curve = self._blend(measured_width.astype(np.float32), width_curve)
+                if self.config.adaptive_lane_width:
+                    width_curve = self._blend(
+                        measured_width.astype(np.float32),
+                        width_curve,
+                    )
+                else:
+                    # This field has a fixed, physically calibrated lane
+                    # width. Partial inner edges around successive corners
+                    # made the learned width shrink from 0.85 to 0.698 over
+                    # two laps, pulling every one-boundary virtual centre
+                    # toward the outer yellow line. Keep the calibrated prior
+                    # instead of learning from geometrically foreshortened
+                    # corner observations.
+                    width_curve = self._default_width(height, width)
                 # Keep the continuous outer boundary as the geometric anchor.
                 # An intersection may provide a plausible-looking but incorrect
                 # inner branch; averaging both curves would drag the corridor
@@ -457,6 +471,18 @@ class OuterLoopBoundaryTracker:
             left_curve = self._blend(left_curve, self._left_curve)
             right_curve = self._blend(right_curve, self._right_curve)
             confidence = 0.5 * (left_confidence + right_confidence)
+
+        if not self.config.adaptive_lane_width:
+            # Independent temporal smoothing and image-edge clipping can
+            # otherwise shrink the two stored curves even when width learning
+            # is disabled. Re-anchor every frame after smoothing so the next
+            # one-boundary estimate always starts from the physical 0.85-width
+            # calibration instead of the previous clipped image separation.
+            width_curve = self._default_width(height, width)
+            if self.config.outer_boundary_side == "left":
+                right_curve = left_curve + width_curve
+            else:
+                left_curve = right_curve - width_curve
 
         minimum_width = width * self.config.minimum_lane_width_ratio
         maximum_width = width * self.config.maximum_lane_width_ratio

@@ -1,6 +1,6 @@
 calibrated: true
 source_image: outputs/onboard_capture/onboard_calibration_frame.jpg
-runtime_config: car/autodrive/onboard_runtime.yaml
+runtime_config: car/autodrive/config/onboard_runtime.yaml
 camera_pose:
   image_width: 640
   image_height: 480

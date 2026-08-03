@@ -16,17 +16,11 @@ LCC 网页 -> run_onboard.py -> 外圈边界/中心线 -> LCC -> 安全门 -> Ra
 
 ```bash
 cd /home/pi/Desktop/VehicleCloudCollaboration
-
-/home/pi/miniconda3/envs/car/bin/python car/autodrive/run_lcc_web.py \
-  --config car/autodrive/onboard_runtime.yaml \
-  --host 0.0.0.0 \
-  --port 8080 \
-  --default-max-runtime-seconds 60 \
-  --enable-motors \
-  --confirm-motor-motion I_UNDERSTAND_MOTORS_WILL_MOVE
+./run.sh
 ```
 
-浏览器访问 `http://<车辆IP>:8080`。页面只提供 LCC 启动、停止/急停、实时相机图、
+浏览器访问 `http://<车辆IP>:8080`。脚本默认网页运行时长为 120 秒，可在页面启动前
+修改。页面只提供 LCC 启动、停止/急停、实时相机图、
 鸟瞰图和运行状态。服务待机时不占用摄像头；关闭服务或按下急停会停止四轮输出。
 
 ## 直接运行
@@ -35,7 +29,7 @@ cd /home/pi/Desktop/VehicleCloudCollaboration
 
 ```bash
 /home/pi/miniconda3/envs/car/bin/python car/autodrive/run_onboard.py \
-  --config car/autodrive/onboard_runtime.yaml \
+  --config car/autodrive/config/onboard_runtime.yaml \
   --enable-motors \
   --confirm-motor-motion I_UNDERSTAND_MOTORS_WILL_MOVE \
   --max-runtime-seconds 60
@@ -55,15 +49,20 @@ cd /home/pi/Desktop/VehicleCloudCollaboration
 - 直行基准 PWM：`16/16/20/20`
 - 普通最大正向右弧 PWM：`26/26/10/10`
 - 饱和急弯右转 PWM：`30/30/0/0`（仅外侧轮前进，内侧轮停转；任何轮都不反转）
-- 单边界急弯感知盲区：仅保持最近圆弧最多 `1.6s`，黄线等硬安全条件仍立即停车
-- 运行配置：`car/autodrive/onboard_runtime.yaml`
-- 透视标定：`car/autodrive/onboard_calibration.yaml`
+- 单边界恢复：最多 `6.2s`，仅在航向或横向误差持续改善时前进；黄线等硬安全条件仍立即停车
+- 运行配置：`car/autodrive/config/onboard_runtime.yaml`
+- 透视标定：`car/autodrive/config/onboard_calibration.yaml`
 
 相机位置、角度、分辨率或画面旋转发生变化后，必须重新采集图片并完成透视标定。
 
 ## 目录
 
-- `car/autodrive/`：LCC、网页、安全控制及标定工具
+- `car/autodrive/perception/`：外圈边界、透视映射和可视化
+- `car/autodrive/control/`：LCC、PWM 映射和安全门
+- `car/autodrive/runtime/`：相机到四轮输出的实时闭环
+- `car/autodrive/camera/`：云台和图像方向处理
+- `car/autodrive/web/`：唯一的 LCC 网页
+- `car/autodrive/tools/`：采集、标定、自检和架空轮测试
 - `car/control/vehicle_control/`：相机和 Raspbot 底盘适配
 - `car/control/utils/Raspbot_Lib.py`：I2C 底层接口
 - `car/test/`：当前 LCC、相机和硬件映射测试

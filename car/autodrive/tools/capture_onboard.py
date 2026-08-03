@@ -3,16 +3,22 @@
 
 import argparse
 from pathlib import Path
+import sys
 import time
 
 import cv2
 import yaml
 
-from camera_gimbal import initialize_configured_gimbal
-from camera_transform import CameraTransformConfig, transform_frame
+AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
+CAR_DIR = AUTODRIVE_DIR.parent
+if str(CAR_DIR) not in sys.path:
+    sys.path.insert(0, str(CAR_DIR))
+
+from autodrive.camera.gimbal import initialize_configured_gimbal
+from autodrive.camera.transform import CameraTransformConfig, transform_frame
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = CAR_DIR.parent
 GIMBAL_CONFIRMATION = "CAMERA_GIMBAL_IS_CLEAR"
 
 

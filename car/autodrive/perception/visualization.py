@@ -3,7 +3,7 @@
 import cv2
 import numpy as np
 
-from .lane_centering import DifferentialDriveCommand, LaneEstimate
+from ..control.lane_centering import DifferentialDriveCommand, LaneEstimate
 
 
 def _scale_points(points: np.ndarray, mask_shape: tuple[int, int], frame_shape) -> np.ndarray:

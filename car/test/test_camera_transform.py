@@ -11,7 +11,7 @@ CAR_DIR = Path(__file__).resolve().parents[1]
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
 
-from autodrive.camera_transform import CameraTransformConfig, transform_frame
+from autodrive.camera.transform import CameraTransformConfig, transform_frame
 
 
 class CameraTransformTests(unittest.TestCase):

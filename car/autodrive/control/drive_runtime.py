@@ -87,6 +87,7 @@ class CornerContinuationConfig:
     maximum_hold_seconds: float = 2.80
     progress_timeout_seconds: float = 1.00
     minimum_heading_progress: float = 0.015
+    minimum_lateral_progress: float = 0.010
     apex_trigger_factor: float = 0.50
     apex_near_heading_trigger: float = 0.43
     minimum_apex_seconds: float = 0.40
@@ -115,6 +116,8 @@ class CornerContinuationConfig:
             )
         if not 0.0 < self.minimum_heading_progress <= 1.0:
             raise ValueError("minimum_heading_progress must be in (0, 1]")
+        if not 0.0 < self.minimum_lateral_progress <= 1.0:
+            raise ValueError("minimum_lateral_progress must be in (0, 1]")
         if not 0.0 < self.apex_trigger_factor <= 1.0:
             raise ValueError("apex_trigger_factor must be in (0, 1]")
         if not 0.0 < self.apex_near_heading_trigger <= 1.0:
@@ -496,6 +499,7 @@ class CornerContinuationGate:
         self._hold_started_at: Optional[float] = None
         self._last_progress_at: Optional[float] = None
         self._best_heading_magnitude: Optional[float] = None
+        self._best_lateral_magnitude: Optional[float] = None
         self._apex_started_at: Optional[float] = None
         self._apex_completed = False
         self._apex_exit_valid_count = 0
@@ -529,8 +533,14 @@ class CornerContinuationGate:
         self,
         command: DifferentialDriveCommand,
         estimate: LaneEstimate,
+        boundary_result,
         current_time: float,
     ) -> None:
+        # The apex latch exists only to bridge a one-boundary blind corner.
+        # If both physical edges are visible, normal LCC has enough geometry
+        # to steer and recenter without a forced minimum-duration pivot.
+        if not self._boundary_allows_continuation(boundary_result):
+            return
         factor = float(command.tight_turn_factor or 0.0)
         near_heading = (
             abs(float(estimate.near_heading_error)) if estimate.valid else 0.0
@@ -627,7 +637,12 @@ class CornerContinuationGate:
             ):
                 self._direction = direction
                 self._last_command = command
-                self._arm_apex(command, estimate, current_time)
+                self._arm_apex(
+                    command,
+                    estimate,
+                    boundary_result,
+                    current_time,
+                )
                 self._last_reason = "sharp one-boundary corner committed"
             return (
                 self._with_tight_turn_factor(command, 1.0)
@@ -636,16 +651,30 @@ class CornerContinuationGate:
             )
 
         if command.action != "stop":
-            if (
+            opposite_steering = bool(
                 direction != 0
                 and direction != self._direction
                 and abs(command.steering) > self.config.exit_steering_threshold
-            ):
+            )
+            if not opposite_steering and direction == self._direction:
+                self._last_command = command
+                self._arm_apex(
+                    command,
+                    estimate,
+                    boundary_result,
+                    current_time,
+                )
+            apex_active = self._apex_active(
+                current_time,
+                estimate,
+                boundary_result,
+            )
+            if opposite_steering:
                 # A newly visible opposite correction is often exactly what
                 # follows the sharp corner. Confirm it for the configured
                 # apex-exit window instead of allowing one noisy frame to
                 # reverse a still-committed pivot.
-                if self._apex_active(current_time, estimate, boundary_result):
+                if apex_active:
                     return self._with_tight_turn_factor(
                         self._last_command,
                         1.0,
@@ -653,14 +682,22 @@ class CornerContinuationGate:
                 self.reset()
                 self._last_reason = "opposite steering cancelled corner continuation"
                 return command
-            if direction == self._direction:
-                self._last_command = command
-                self._arm_apex(command, estimate, current_time)
 
+            both_boundaries_restored = bool(
+                boundary_result is not None
+                and boundary_result.valid
+                and not boundary_result.yellow_hazard
+                and boundary_result.source == "both"
+            )
             stable_exit = bool(
                 estimate.valid
                 and command.confidence >= self.config.exit_min_confidence
-                and abs(command.steering) <= self.config.exit_steering_threshold
+                and not apex_active
+                and (
+                    both_boundaries_restored
+                    or abs(command.steering)
+                    <= self.config.exit_steering_threshold
+                )
             )
             self._exit_valid_count = (
                 self._exit_valid_count + 1 if stable_exit else 0
@@ -670,7 +707,7 @@ class CornerContinuationGate:
                 self._last_reason = "stable forward tracking restored"
             return (
                 self._with_tight_turn_factor(command, 1.0)
-                if self._apex_active(current_time, estimate, boundary_result)
+                if apex_active
                 else command
             )
 
@@ -687,7 +724,12 @@ class CornerContinuationGate:
         # the same frame that near-field geometry first proves the apex. Arm
         # from the estimate as well as the smoothed command factor so that one
         # ordering difference cannot suppress the whole tight-turn phase.
-        self._arm_apex(self._last_command, estimate, current_time)
+        self._arm_apex(
+            self._last_command,
+            estimate,
+            boundary_result,
+            current_time,
+        )
 
         if self._hold_started_at is None:
             self._hold_started_at = current_time
@@ -695,8 +737,13 @@ class CornerContinuationGate:
             self._best_heading_magnitude = (
                 abs(float(estimate.heading_error)) if estimate.valid else None
             )
+            self._best_lateral_magnitude = (
+                abs(float(estimate.lateral_error)) if estimate.valid else None
+            )
         elif estimate.valid:
             heading_magnitude = abs(float(estimate.heading_error))
+            lateral_magnitude = abs(float(estimate.lateral_error))
+            made_progress = False
             if (
                 self._best_heading_magnitude is None
                 or heading_magnitude
@@ -704,6 +751,16 @@ class CornerContinuationGate:
                 - self.config.minimum_heading_progress
             ):
                 self._best_heading_magnitude = heading_magnitude
+                made_progress = True
+            if (
+                self._best_lateral_magnitude is None
+                or lateral_magnitude
+                <= self._best_lateral_magnitude
+                - self.config.minimum_lateral_progress
+            ):
+                self._best_lateral_magnitude = lateral_magnitude
+                made_progress = True
+            if made_progress:
                 self._last_progress_at = current_time
         hold_age = current_time - self._hold_started_at
         if hold_age > self.config.maximum_hold_seconds:
@@ -780,6 +837,7 @@ class CornerContinuationGate:
             "progress_age_seconds": progress_age,
             "progress_timeout_seconds": self.config.progress_timeout_seconds,
             "best_heading_magnitude": self._best_heading_magnitude,
+            "best_lateral_magnitude": self._best_lateral_magnitude,
             "apex_active": self._apex_active(current_time),
             "apex_age_seconds": apex_age,
             "minimum_apex_seconds": self.config.minimum_apex_seconds,

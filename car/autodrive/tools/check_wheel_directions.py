@@ -8,7 +8,7 @@ import sys
 import time
 
 
-AUTODRIVE_DIR = Path(__file__).resolve().parent
+AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
 CAR_DIR = AUTODRIVE_DIR.parent
 CONTROL_DIR = CAR_DIR / "control"
 REPO_ROOT = CAR_DIR.parent
@@ -187,7 +187,7 @@ def main():
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"Saved: {output}")
-    print("Copy the suggested signs into onboard_runtime.yaml, then repeat dry-run.")
+    print("Copy the suggested signs into config/onboard_runtime.yaml, then repeat dry-run.")
     return 0
 
 

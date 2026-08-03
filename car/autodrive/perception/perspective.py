@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import yaml
 
-from .lane_centering import LaneEstimate
+from ..control.lane_centering import LaneEstimate
 
 
 def camera_pose_from_mapping(camera_config):

@@ -9,15 +9,18 @@ import time
 import cv2
 
 
-AUTODRIVE_DIR = Path(__file__).resolve().parent
+AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
 CAR_DIR = AUTODRIVE_DIR.parent
 CONTROL_UTILS_DIR = CAR_DIR / "control" / "utils"
 REPO_ROOT = CAR_DIR.parent
 if str(CONTROL_UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(CONTROL_UTILS_DIR))
 
-from camera_gimbal import CameraGimbalPose
-from camera_transform import CameraTransformConfig, transform_frame
+if str(CAR_DIR) not in sys.path:
+    sys.path.insert(0, str(CAR_DIR))
+
+from autodrive.camera.gimbal import CameraGimbalPose
+from autodrive.camera.transform import CameraTransformConfig, transform_frame
 
 
 CONFIRMATION = "CAMERA_GIMBAL_IS_CLEAR"
