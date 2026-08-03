@@ -90,10 +90,13 @@ class CornerContinuationConfig:
     minimum_lateral_progress: float = 0.010
     apex_trigger_factor: float = 0.50
     apex_near_heading_trigger: float = 0.43
+    apex_commit_delay_seconds: float = 0.30
     minimum_apex_seconds: float = 0.40
     maximum_apex_seconds: float = 0.70
     apex_exit_near_heading: float = 0.30
     apex_exit_valid_frames: int = 2
+    minimum_transverse_boundary_ratio: float = 0.01
+    reacquire_steering_limit: float = 0.35
     tight_turn_factor_cap: float = 0.0
 
     def __post_init__(self):
@@ -122,6 +125,11 @@ class CornerContinuationConfig:
             raise ValueError("apex_trigger_factor must be in (0, 1]")
         if not 0.0 < self.apex_near_heading_trigger <= 1.0:
             raise ValueError("apex_near_heading_trigger must be in (0, 1]")
+        if not 0.0 < self.apex_commit_delay_seconds <= self.maximum_hold_seconds:
+            raise ValueError(
+                "apex_commit_delay_seconds must be positive and no greater "
+                "than maximum_hold_seconds"
+            )
         if not 0.0 < self.minimum_apex_seconds <= self.maximum_hold_seconds:
             raise ValueError(
                 "minimum_apex_seconds must be positive and no greater than "
@@ -143,6 +151,19 @@ class CornerContinuationConfig:
             )
         if self.apex_exit_valid_frames < 1:
             raise ValueError("apex_exit_valid_frames must be at least 1")
+        if not 0.0 < self.minimum_transverse_boundary_ratio <= 1.0:
+            raise ValueError(
+                "minimum_transverse_boundary_ratio must be in (0, 1]"
+            )
+        if not (
+            self.exit_steering_threshold
+            < self.reacquire_steering_limit
+            <= 1.0
+        ):
+            raise ValueError(
+                "reacquire_steering_limit must be above the exit threshold "
+                "and no greater than 1"
+            )
         if not 0.0 <= self.tight_turn_factor_cap <= 1.0:
             raise ValueError("tight_turn_factor_cap must be in [0, 1]")
 
@@ -397,40 +418,148 @@ class PerceptionMotionGate:
         self,
         resume_valid_frames: int = 4,
         resume_min_confidence: float = 0.0,
+        maximum_lateral_jump: float = 0.0,
+        maximum_heading_jump: float = 0.0,
+        require_consistent_source: bool = False,
     ):
         self.resume_valid_frames = int(resume_valid_frames)
         self.resume_min_confidence = float(resume_min_confidence)
+        self.maximum_lateral_jump = float(maximum_lateral_jump)
+        self.maximum_heading_jump = float(maximum_heading_jump)
+        self.require_consistent_source = bool(require_consistent_source)
         if self.resume_valid_frames < 1:
             raise ValueError("resume_valid_frames must be at least 1")
         if not 0.0 <= self.resume_min_confidence <= 1.0:
             raise ValueError("resume_min_confidence must be in [0, 1]")
+        if self.maximum_lateral_jump < 0.0:
+            raise ValueError("maximum_lateral_jump must not be negative")
+        if self.maximum_heading_jump < 0.0:
+            raise ValueError("maximum_heading_jump must not be negative")
         self._ready = False
         self._consecutive_valid = 0
         self._last_stop_reason = "waiting for initial perception"
+        self._candidate_source: Optional[str] = None
+        self._last_lateral: Optional[float] = None
+        self._last_heading: Optional[float] = None
+        self._last_source: Optional[str] = None
 
     def reset(self, reason: str = "motion gate reset") -> None:
         self._ready = False
         self._consecutive_valid = 0
         self._last_stop_reason = str(reason)
+        self._candidate_source = None
+        self._last_lateral = None
+        self._last_heading = None
+        self._last_source = None
+
+    @staticmethod
+    def _stop_command(
+        command: DifferentialDriveCommand,
+        reason: str,
+    ) -> DifferentialDriveCommand:
+        return DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            command.confidence,
+            reason,
+        )
+
+    @staticmethod
+    def _source(boundary_result) -> Optional[str]:
+        if boundary_result is None:
+            return None
+        source = getattr(boundary_result, "source", None)
+        return None if source is None else str(source)
+
+    def _continuity_issue(
+        self,
+        estimate: Optional[LaneEstimate],
+        boundary_result,
+    ) -> Optional[str]:
+        if estimate is None or boundary_result is None or not estimate.valid:
+            return None
+        lateral = float(estimate.lateral_error)
+        heading = float(estimate.heading_error)
+        source = self._source(boundary_result)
+        if (
+            self.maximum_lateral_jump > 0.0
+            and self._last_lateral is not None
+            and abs(lateral - self._last_lateral) > self.maximum_lateral_jump
+        ):
+            return (
+                "perception lateral estimate jumped "
+                f"{abs(lateral - self._last_lateral):.3f} > "
+                f"{self.maximum_lateral_jump:.3f}"
+            )
+        if (
+            self.maximum_heading_jump > 0.0
+            and self._last_heading is not None
+            and abs(heading - self._last_heading) > self.maximum_heading_jump
+        ):
+            return (
+                "perception heading estimate jumped "
+                f"{abs(heading - self._last_heading):.3f} > "
+                f"{self.maximum_heading_jump:.3f}"
+            )
+        if (
+            self.require_consistent_source
+            and not self._ready
+            and self._candidate_source is not None
+            and source is not None
+            and source != self._candidate_source
+        ):
+            return (
+                "perception boundary source changed while validating "
+                f"({self._candidate_source} -> {source})"
+            )
+        return None
+
+    def _remember_observation(
+        self,
+        estimate: Optional[LaneEstimate],
+        boundary_result,
+    ) -> None:
+        if estimate is None or boundary_result is None or not estimate.valid:
+            return
+        self._last_lateral = float(estimate.lateral_error)
+        self._last_heading = float(estimate.heading_error)
+        self._last_source = self._source(boundary_result)
 
     def filter(
-        self, command: DifferentialDriveCommand
+        self,
+        command: DifferentialDriveCommand,
+        estimate: Optional[LaneEstimate] = None,
+        boundary_result=None,
+        allow_discontinuity: bool = False,
     ) -> DifferentialDriveCommand:
         if command.action == "stop":
             self.reset(command.reason or "perception requested stop")
             return command
+
+        source = self._source(boundary_result)
+        issue = None
+        if not allow_discontinuity:
+            issue = self._continuity_issue(estimate, boundary_result)
+        if issue is not None:
+            self._ready = False
+            self._consecutive_valid = 0
+            self._last_stop_reason = issue
+            self._candidate_source = source
+            self._remember_observation(estimate, boundary_result)
+            return self._stop_command(command, issue)
+
+        self._remember_observation(estimate, boundary_result)
         if self._ready:
             return command
 
         if command.confidence < self.resume_min_confidence:
             self._consecutive_valid = 0
             self._last_stop_reason = "waiting for resume confidence"
-            return DifferentialDriveCommand(
-                "stop",
-                0.0,
-                0.0,
-                0.0,
-                command.confidence,
+            self._candidate_source = source
+            return self._stop_command(
+                command,
                 (
                     "waiting for resume confidence "
                     f"({command.confidence:.3f} < "
@@ -438,16 +567,14 @@ class PerceptionMotionGate:
                 ),
             )
 
+        if self._candidate_source is None:
+            self._candidate_source = source
         self._consecutive_valid += 1
         if self._consecutive_valid >= self.resume_valid_frames:
             self._ready = True
             return command
-        return DifferentialDriveCommand(
-            "stop",
-            0.0,
-            0.0,
-            0.0,
-            command.confidence,
+        return self._stop_command(
+            command,
             (
                 "validating perception before motion "
                 f"({self._consecutive_valid}/{self.resume_valid_frames})"
@@ -460,6 +587,10 @@ class PerceptionMotionGate:
             "consecutive_valid": self._consecutive_valid,
             "resume_valid_frames": self.resume_valid_frames,
             "resume_min_confidence": self.resume_min_confidence,
+            "maximum_lateral_jump": self.maximum_lateral_jump,
+            "maximum_heading_jump": self.maximum_heading_jump,
+            "require_consistent_source": self.require_consistent_source,
+            "last_boundary_source": self._last_source,
             "last_stop_reason": self._last_stop_reason,
         }
 
@@ -481,6 +612,7 @@ class CornerContinuationGate:
         "visible-history",
     }
     _RECOVERABLE_REASONS = {
+        "boundary remains visible outside x(y) fit",
         "road confidence below safety threshold",
         "lateral error exceeds recovery limit",
         "too few valid road rows",
@@ -496,11 +628,15 @@ class CornerContinuationGate:
     def reset(self) -> None:
         self._direction = 0
         self._last_command: Optional[DifferentialDriveCommand] = None
+        self._committed_boundary_role: Optional[str] = None
+        self._committed_at: Optional[float] = None
         self._hold_started_at: Optional[float] = None
         self._last_progress_at: Optional[float] = None
         self._best_heading_magnitude: Optional[float] = None
         self._best_lateral_magnitude: Optional[float] = None
+        self._progress_boundary_role: Optional[str] = None
         self._apex_started_at: Optional[float] = None
+        self._apex_trigger_reason: Optional[str] = None
         self._apex_completed = False
         self._apex_exit_valid_count = 0
         self._exit_valid_count = 0
@@ -529,6 +665,84 @@ class CornerContinuationGate:
             float(factor),
         )
 
+    def _reacquire_steering(self) -> float:
+        if self._last_command is None:
+            return 0.0
+        magnitude = min(
+            abs(float(self._last_command.steering)),
+            self.config.reacquire_steering_limit,
+        )
+        return magnitude if self._direction > 0 else -magnitude
+
+    @staticmethod
+    def _boundary_role(boundary_result) -> Optional[str]:
+        """Return only a directly observed single-edge role.
+
+        History has no reliable role of its own, while ``both`` is the exit
+        geometry rather than a replacement single edge.  Keeping those out of
+        this value prevents one transitional frame from changing the command
+        that grounded the committed corner.
+        """
+        if boundary_result is None:
+            return None
+        source = str(getattr(boundary_result, "source", ""))
+        if source == "outer+width":
+            return "outer"
+        if source == "inner+width":
+            return "inner"
+        return None
+
+    def _set_progress_baseline(
+        self,
+        estimate: LaneEstimate,
+        boundary_result,
+        current_time: float,
+    ) -> None:
+        """Start a progress window in one comparable boundary coordinate."""
+        self._last_progress_at = current_time
+        self._best_heading_magnitude = (
+            abs(float(estimate.heading_error)) if estimate.valid else None
+        )
+        self._best_lateral_magnitude = (
+            abs(float(estimate.lateral_error)) if estimate.valid else None
+        )
+        role = self._boundary_role(boundary_result)
+        if role is not None:
+            self._progress_boundary_role = role
+
+    def _refresh_grounded_progress(
+        self,
+        estimate: LaneEstimate,
+        boundary_result,
+        current_time: float,
+    ) -> None:
+        """A fresh moving LCC command is positive recovery evidence.
+
+        The former timer advanced only on raw stop frames.  In the fourth
+        field corner the controller recovered for five frames, but that valid
+        movement did not refresh the timer; its next recoverable stop therefore
+        expired immediately.  Refreshing here grants the normal bounded
+        recovery window only after a fresh, non-stop perception command.
+        """
+        if self._hold_started_at is None:
+            return
+        self._set_progress_baseline(
+            estimate,
+            boundary_result,
+            current_time,
+        )
+
+    @staticmethod
+    def _stop(reason: str, confidence: float) -> DifferentialDriveCommand:
+        return DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            confidence,
+            reason,
+        )
+
     def _arm_apex(
         self,
         command: DifferentialDriveCommand,
@@ -545,15 +759,28 @@ class CornerContinuationGate:
         near_heading = (
             abs(float(estimate.near_heading_error)) if estimate.valid else 0.0
         )
+        factor_triggered = factor >= self.config.apex_trigger_factor
+        near_heading_triggered = (
+            near_heading >= self.config.apex_near_heading_trigger
+        )
+        commit_delay_elapsed = bool(
+            self._committed_at is not None
+            and current_time - self._committed_at
+            >= self.config.apex_commit_delay_seconds
+        )
         if (
             not self._apex_completed
             and self._apex_started_at is None
-            and (
-                factor >= self.config.apex_trigger_factor
-                or near_heading >= self.config.apex_near_heading_trigger
-            )
+            and (factor_triggered or near_heading_triggered or commit_delay_elapsed)
         ):
             self._apex_started_at = current_time
+            self._apex_trigger_reason = (
+                "tight-turn factor"
+                if factor_triggered
+                else "near-heading geometry"
+                if near_heading_triggered
+                else "committed-corner delay"
+            )
 
     def _apex_active(
         self,
@@ -568,6 +795,15 @@ class CornerContinuationGate:
             self._apex_completed = True
             self._last_reason = "apex hard time limit reached"
             return False
+
+        # Observations from the forced minimum turn do not prove that the new
+        # straight has been acquired. The failed second field corner had five
+        # such observations banked before 0.40 s, so it left the 30/0 apex on
+        # the very first eligible frame. Start the consecutive exit window
+        # only after the grounded minimum has actually elapsed.
+        if apex_age < self.config.minimum_apex_seconds:
+            self._apex_exit_valid_count = 0
+            return True
 
         # Do not decide from elapsed time alone. The latest physical run left
         # the apex while the outer yellow edge was still nearly transverse,
@@ -593,8 +829,6 @@ class CornerContinuationGate:
                 else 0
             )
 
-        if apex_age < self.config.minimum_apex_seconds:
-            return True
         if self._apex_exit_valid_count >= self.config.apex_exit_valid_frames:
             self._apex_completed = True
             self._last_reason = "apex alignment restored"
@@ -602,11 +836,21 @@ class CornerContinuationGate:
         return True
 
     def _boundary_allows_continuation(self, boundary_result) -> bool:
+        if boundary_result is None or bool(boundary_result.yellow_hazard):
+            return False
+        source = str(getattr(boundary_result, "source", ""))
+        transverse_boundary_visible = bool(
+            source == "visible-history"
+            and str(getattr(boundary_result, "reason", ""))
+            == "boundary remains visible outside x(y) fit"
+            and float(
+                getattr(boundary_result, "boundary_visible_ratio", 0.0)
+            )
+            >= self.config.minimum_transverse_boundary_ratio
+        )
         return bool(
-            boundary_result is not None
-            and boundary_result.valid
-            and not boundary_result.yellow_hazard
-            and boundary_result.source in self._ONE_BOUNDARY_SOURCES
+            source in self._ONE_BOUNDARY_SOURCES
+            and (bool(boundary_result.valid) or transverse_boundary_visible)
         )
 
     def filter(
@@ -627,6 +871,16 @@ class CornerContinuationGate:
             self._last_reason = "yellow hazard stopped corner continuation"
             return command
 
+        if (
+            self._direction != 0
+            and self._committed_at is not None
+            and current_time - self._committed_at
+            > self.config.maximum_hold_seconds
+        ):
+            self.reset()
+            self._last_reason = "corner continuation hard time limit reached"
+            return self._stop(self._last_reason, command.confidence)
+
         direction = self._steering_direction(command)
         if self._direction == 0:
             if (
@@ -637,6 +891,10 @@ class CornerContinuationGate:
             ):
                 self._direction = direction
                 self._last_command = command
+                self._committed_boundary_role = self._boundary_role(
+                    boundary_result
+                )
+                self._committed_at = current_time
                 self._arm_apex(
                     command,
                     estimate,
@@ -656,7 +914,13 @@ class CornerContinuationGate:
                 and direction != self._direction
                 and abs(command.steering) > self.config.exit_steering_threshold
             )
-            if not opposite_steering and direction == self._direction:
+            if (
+                not opposite_steering
+                and direction == self._direction
+                and abs(command.steering) > self.config.exit_steering_threshold
+                and self._boundary_role(boundary_result)
+                == self._committed_boundary_role
+            ):
                 self._last_command = command
                 self._arm_apex(
                     command,
@@ -664,11 +928,25 @@ class CornerContinuationGate:
                     boundary_result,
                     current_time,
                 )
+            self._refresh_grounded_progress(
+                estimate,
+                boundary_result,
+                current_time,
+            )
             apex_active = self._apex_active(
                 current_time,
                 estimate,
                 boundary_result,
             )
+            weak_or_opposite = bool(
+                direction != self._direction
+                or abs(command.steering) <= self.config.exit_steering_threshold
+            )
+            if apex_active and weak_or_opposite:
+                return self._with_tight_turn_factor(
+                    self._last_command,
+                    1.0,
+                )
             if opposite_steering:
                 # A newly visible opposite correction is often exactly what
                 # follows the sharp corner. Confirm it for the configured
@@ -679,9 +957,6 @@ class CornerContinuationGate:
                         self._last_command,
                         1.0,
                     )
-                self.reset()
-                self._last_reason = "opposite steering cancelled corner continuation"
-                return command
 
             both_boundaries_restored = bool(
                 boundary_result is not None
@@ -693,11 +968,7 @@ class CornerContinuationGate:
                 estimate.valid
                 and command.confidence >= self.config.exit_min_confidence
                 and not apex_active
-                and (
-                    both_boundaries_restored
-                    or abs(command.steering)
-                    <= self.config.exit_steering_threshold
-                )
+                and both_boundaries_restored
             )
             self._exit_valid_count = (
                 self._exit_valid_count + 1 if stable_exit else 0
@@ -705,6 +976,31 @@ class CornerContinuationGate:
             if self._exit_valid_count >= self.config.exit_valid_frames:
                 self.reset()
                 self._last_reason = "stable forward tracking restored"
+                return command
+
+            # A single fitted edge is exactly the ambiguous geometry this
+            # state bridges. Do not let a weak/forward/opposite estimate cancel
+            # the committed direction until both physical boundaries have
+            # remained visible for the configured confirmation window. The
+            # retained command is the latest meaningful same-direction arc,
+            # with the forced 30/0 factor removed after the apex.
+            if not apex_active and weak_or_opposite:
+                self._last_reason = (
+                    "holding corner direction until two-boundary reacquisition"
+                )
+                held = self._last_command
+                return DifferentialDriveCommand(
+                    "turn-right" if self._direction > 0 else "turn-left",
+                    self._reacquire_steering(),
+                    held.left_speed,
+                    held.right_speed,
+                    command.confidence,
+                    self._last_reason,
+                    min(
+                        float(held.tight_turn_factor or 0.0),
+                        self.config.tight_turn_factor_cap,
+                    ),
+                )
             return (
                 self._with_tight_turn_factor(command, 1.0)
                 if apex_active
@@ -733,14 +1029,27 @@ class CornerContinuationGate:
 
         if self._hold_started_at is None:
             self._hold_started_at = current_time
-            self._last_progress_at = current_time
-            self._best_heading_magnitude = (
-                abs(float(estimate.heading_error)) if estimate.valid else None
-            )
-            self._best_lateral_magnitude = (
-                abs(float(estimate.lateral_error)) if estimate.valid else None
+            self._set_progress_baseline(
+                estimate,
+                boundary_result,
+                current_time,
             )
         elif estimate.valid:
+            role = self._boundary_role(boundary_result)
+            if (
+                role is not None
+                and self._progress_boundary_role is not None
+                and role != self._progress_boundary_role
+            ):
+                # Outer- and inner-derived virtual centrelines use different
+                # coordinates.  The fourth field corner changed from outer to
+                # inner after one ``both`` frame; comparing the new errors to
+                # the old minima falsely reported a full second of no progress.
+                self._set_progress_baseline(
+                    estimate,
+                    boundary_result,
+                    current_time,
+                )
             heading_magnitude = abs(float(estimate.heading_error))
             lateral_magnitude = abs(float(estimate.lateral_error))
             made_progress = False
@@ -777,13 +1086,7 @@ class CornerContinuationGate:
             self._last_reason = "corner continuation stopped making progress"
             return command
 
-        steering = float(
-            np.clip(
-                self._last_command.steering,
-                -1.0,
-                1.0,
-            )
-        )
+        steering = self._reacquire_steering()
         action = "turn-right" if self._direction > 0 else "turn-left"
         tight_turn_factor = (
             1.0
@@ -840,6 +1143,8 @@ class CornerContinuationGate:
             "best_lateral_magnitude": self._best_lateral_magnitude,
             "apex_active": self._apex_active(current_time),
             "apex_age_seconds": apex_age,
+            "apex_commit_delay_seconds": self.config.apex_commit_delay_seconds,
+            "apex_trigger_reason": self._apex_trigger_reason,
             "minimum_apex_seconds": self.config.minimum_apex_seconds,
             "maximum_apex_seconds": self.config.maximum_apex_seconds,
             "apex_exit_valid_count": self._apex_exit_valid_count,

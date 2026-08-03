@@ -160,6 +160,14 @@ safety:
   resume_valid_frames: 4
   # A stopped car needs stronger evidence than a moving car needs to continue.
   resume_min_confidence: 0.35
+  # The failed second corner changed the inferred lateral/heading errors by
+  # 0.396/0.628 in one frame when the fitted edge changed roles. Reject those
+  # discontinuities outside a committed corner and revalidate before moving.
+  resume_maximum_lateral_jump: 0.32
+  resume_maximum_heading_jump: 0.45
+  # Four confidence-qualified frames must describe the same boundary source;
+  # alternating inner/outer fits no longer satisfy the restart gate.
+  resume_require_consistent_source: true
   # A 90-degree bend can temporarily leave only a near-horizontal outer edge
   # in view. If a strong one-boundary turn was already established, bridge
   # only confidence/lateral-fit dropouts for this bounded interval. Yellow
@@ -176,20 +184,39 @@ safety:
     # a data-derived margin above the longest successful field observation;
     # yellow/missing boundaries and the progress timeout remain immediate
     # independent safety stops.
-    maximum_hold_seconds: 6.20
+    # Successful laps used up to 5.67 s, while run 20260803_162426 still had a
+    # valid outer edge and a grounded right command when the former 6.50 s cap
+    # stopped it. Keep a bounded margin for entry-position variation; yellow,
+    # missing-boundary and no-progress stops remain independent and immediate.
+    maximum_hold_seconds: 8.00
     progress_timeout_seconds: 1.00
     minimum_heading_progress: 0.015
     minimum_lateral_progress: 0.010
-    # Near-field fitting exceeded the tight threshold for only one frame in an
-    # earlier physical corner. Hold the grounded 30/0 apex until the new
-    # straight is geometrically aligned (two real boundaries, or a settled
-    # near-edge heading), rather than leaving after a fixed five frames.
+    # Do not count exit evidence during the forced minimum. After the apex,
+    # retain the committed direction until both real boundaries remain visible
+    # for exit_valid_frames; a one-edge fit cannot immediately reverse it.
     apex_trigger_factor: 0.50
-    apex_near_heading_trigger: 0.43
-    minimum_apex_seconds: 0.40
-    maximum_apex_seconds: 0.70
+    # The failed run measured 0.452 live but 0.429 on deterministic replay;
+    # 0.40 preserves a small margin without moving the normal 0.30 exit line.
+    apex_near_heading_trigger: 0.40
+    # Every committed one-edge right corner gets the same apex action even if
+    # confidence/lateral recovery suppresses the secondary geometry trigger.
+    # The latest first corner naturally entered at 0.33 s; 0.30 s preserves
+    # that approach while making the second physical corner follow it.
+    apex_commit_delay_seconds: 0.30
+    # One extra 20 Hz control frame gives the first corner the requested small
+    # increase without changing the bounded 0.70 s hard apex limit.
+    minimum_apex_seconds: 0.55
+    maximum_apex_seconds: 0.7
     apex_exit_near_heading: 0.30
     apex_exit_valid_frames: 2
+    # A sharp corner can turn the still-visible yellow edge almost horizontal,
+    # where x(y) fitting has no corridor. Continue only when at least this much
+    # physical boundary remains visible and the raw vehicle safety zone is clear.
+    minimum_transverse_boundary_ratio: 0.01
+    # After the 30/0 apex, stale one-edge geometry may retain only a moderate
+    # forward right arc (roughly 23/13), never the preceding saturated command.
+    reacquire_steering_limit: 0.35
     # Latest run reached roughly 2/3 of the bend, then the lateral safety stop
     # handed control to continuation and discarded the apex turn strength.
     # Once the bounded apex interval completes, continuation must move forward
@@ -202,8 +229,15 @@ runtime:
   video_sample_every: 6
   output_dir: outputs/onboard_runtime
   save_latest_frame: true
+  # Web snapshots/status do not need the camera's full frame rate. Throttling
+  # JPEG/JSON/console I/O keeps those diagnostics out of the steering cadence.
+  live_update_hz: 5
+  console_update_hz: 4
   # Every hardware/web experiment gets its own immutable replay bundle under
   # outputs/onboard_runtime/runs/: raw/annotated/bird's-eye MP4, CSV, final
   # status, and exact configuration/calibration snapshots.
   archive_runs: true
   archive_fps: 20
+  # Keep video encoding out of the motor-control critical path. This queue
+  # absorbs short MP4 flush stalls without dropping the continuous run video.
+  archive_queue_frames: 32

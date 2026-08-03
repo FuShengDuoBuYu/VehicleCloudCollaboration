@@ -1092,7 +1092,7 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             now=1.0,
         )
         self.assertEqual(held.action, "turn-right")
-        self.assertAlmostEqual(held.steering, 0.68)
+        self.assertAlmostEqual(held.steering, 0.35)
         self.assertEqual(held.tight_turn_factor, 0.40)
         self.assertTrue(gate.get_state(now=1.0)["holding"])
 
@@ -1104,6 +1104,44 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         )
         self.assertEqual(expired.action, "stop")
         self.assertFalse(gate.get_state(now=2.61)["active"])
+
+    def test_corner_continuation_hard_limit_applies_while_controller_moves(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                maximum_hold_seconds=1.0,
+                progress_timeout_seconds=0.5,
+                maximum_apex_seconds=0.7,
+                reacquire_steering_limit=0.35,
+            )
+        )
+        boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        estimate = LaneEstimate(True, 0.50, heading_error=0.60)
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.60, 0.4, -0.2, 0.50, "ok", 0.0
+        )
+        weak_forward = DifferentialDriveCommand(
+            "forward", 0.02, 0.1, 0.1, 0.50, "ok", 0.0
+        )
+
+        gate.filter(sharp, estimate, boundary, now=0.0)
+        self.assertEqual(
+            gate.filter(weak_forward, estimate, boundary, now=0.9).action,
+            "turn-right",
+        )
+        expired = gate.filter(
+            weak_forward, estimate, boundary, now=1.01
+        )
+        self.assertEqual(expired.action, "stop")
+        self.assertEqual(
+            expired.reason,
+            "corner continuation hard time limit reached",
+        )
+        self.assertFalse(gate.get_state(now=1.01)["active"])
 
     def test_corner_continuation_never_overrides_yellow_hazard(self):
         gate = CornerContinuationGate(
@@ -1134,6 +1172,101 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
 
         gate.filter(sharp, estimate, clear_boundary, now=0.0)
         applied = gate.filter(yellow_stop, estimate, yellow_boundary, now=0.1)
+        self.assertEqual(applied.action, "stop")
+        self.assertFalse(gate.get_state(now=0.1)["active"])
+
+    def test_corner_continuation_bridges_visible_transverse_boundary(self):
+        """Regression for run 20260803_151551 sample 258."""
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                minimum_transverse_boundary_ratio=0.01,
+            )
+        )
+        fitted_boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+            reason="ok",
+            boundary_visible_ratio=0.18,
+        )
+        transverse_boundary = SimpleNamespace(
+            valid=False,
+            yellow_hazard=False,
+            source="visible-history",
+            reason="boundary remains visible outside x(y) fit",
+            # The physical frame measured 0.23771.
+            boundary_visible_ratio=0.23771,
+        )
+        estimate = LaneEstimate(
+            True,
+            0.35,
+            lateral_error=0.42,
+            heading_error=0.57,
+            near_heading_error=0.55,
+        )
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.663, 0.45, -0.28, 0.35, "ok", 1.0
+        )
+        fit_failure = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.27,
+            "boundary remains visible outside x(y) fit",
+        )
+
+        gate.filter(sharp, estimate, fitted_boundary, now=0.0)
+        bridged = gate.filter(
+            fit_failure,
+            LaneEstimate(
+                False,
+                0.27,
+                reason="boundary remains visible outside x(y) fit",
+            ),
+            transverse_boundary,
+            now=0.07,
+        )
+        self.assertEqual(bridged.action, "turn-right")
+        self.assertAlmostEqual(bridged.steering, 0.35)
+        self.assertEqual(bridged.tight_turn_factor, 1.0)
+        self.assertTrue(gate.get_state(now=0.07)["active"])
+
+    def test_corner_continuation_rejects_unsubstantiated_transverse_history(self):
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                minimum_transverse_boundary_ratio=0.01,
+            )
+        )
+        fitted_boundary = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        weak_history = SimpleNamespace(
+            valid=False,
+            yellow_hazard=False,
+            source="visible-history",
+            reason="boundary remains visible outside x(y) fit",
+            boundary_visible_ratio=0.005,
+        )
+        estimate = LaneEstimate(True, 0.40, heading_error=0.70)
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.65, 0.4, -0.2, 0.40, "ok"
+        )
+        failed = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            "boundary remains visible outside x(y) fit",
+        )
+
+        gate.filter(sharp, estimate, fitted_boundary, now=0.0)
+        applied = gate.filter(failed, estimate, weak_history, now=0.1)
         self.assertEqual(applied.action, "stop")
         self.assertFalse(gate.get_state(now=0.1)["active"])
 
@@ -1297,6 +1430,11 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         )
         advancing = gate.filter(
             recoverable_stop, estimate, boundary, now=0.33
+        )
+        self.assertEqual(advancing.action, "turn-right")
+        self.assertEqual(advancing.tight_turn_factor, 1.0)
+        advancing = gate.filter(
+            recoverable_stop, estimate, boundary, now=0.40
         )
         self.assertEqual(advancing.action, "turn-right")
         self.assertEqual(advancing.tight_turn_factor, 0.0)
@@ -1503,6 +1641,7 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         gate = CornerContinuationGate(
             CornerContinuationConfig(
                 enabled=True,
+                exit_valid_frames=2,
                 minimum_apex_seconds=0.40,
                 maximum_apex_seconds=0.70,
                 apex_exit_near_heading=0.30,
@@ -1549,8 +1688,388 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             both,
             now=0.48,
         )
+        self.assertEqual(released.action, "turn-right")
+        released = gate.filter(
+            left_correction,
+            LaneEstimate(
+                True, 0.72, heading_error=-0.17, near_heading_error=-0.11
+            ),
+            both,
+            now=0.55,
+        )
         self.assertEqual(released.action, "turn-left")
         self.assertEqual(released.tight_turn_factor, 0.0)
+
+    def test_second_corner_trace_keeps_right_until_boundaries_reacquire(self):
+        """Regression for run 20260803_145311 samples 255 through 266."""
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                enter_steering_threshold=0.50,
+                exit_steering_threshold=0.18,
+                exit_min_confidence=0.35,
+                exit_valid_frames=3,
+                maximum_hold_seconds=6.20,
+                minimum_apex_seconds=0.40,
+                maximum_apex_seconds=0.70,
+                apex_exit_near_heading=0.30,
+                apex_exit_valid_frames=2,
+                tight_turn_factor_cap=0.0,
+            )
+        )
+        outer = SimpleNamespace(
+            valid=True, yellow_hazard=False, source="outer+width"
+        )
+        both = SimpleNamespace(valid=True, yellow_hazard=False, source="both")
+        inner = SimpleNamespace(
+            valid=True, yellow_hazard=False, source="inner+width"
+        )
+
+        trace = (
+            # now, steering, lateral, heading, near heading, boundary
+            (18.4019, +0.525, -0.141, +0.708, +0.452, outer),
+            (18.4661, +0.527, +0.028, +0.552, +0.340, outer),
+            (18.5333, +0.498, +0.162, +0.397, +0.233, outer),
+            (18.6025, +0.444, +0.185, +0.305, +0.186, outer),
+            (18.6655, +0.356, +0.201, +0.178, +0.126, outer),
+            (18.7337, +0.236, +0.202, +0.029, +0.053, outer),
+            (18.8020, +0.025, +0.181, -0.237, -0.016, outer),
+            (18.8666, -0.046, +0.126, -0.190, -0.138, outer),
+            (18.9336, -0.108, +0.095, -0.228, -0.192, outer),
+            (19.0016, -0.135, +0.074, -0.221, -0.214, both),
+            (19.0664, +0.046, -0.322, +0.407, +0.130, inner),
+        )
+        applied = []
+        for now, steering, lateral, heading, near_heading, boundary in trace:
+            action = (
+                "turn-right"
+                if steering > 0.07
+                else "turn-left"
+                if steering < -0.07
+                else "forward"
+            )
+            command = DifferentialDriveCommand(
+                action,
+                steering,
+                0.0,
+                0.0,
+                0.53,
+                "ok",
+                1.0 if now == trace[0][0] else 0.0,
+            )
+            estimate = LaneEstimate(
+                True,
+                0.53,
+                lateral_error=lateral,
+                heading_error=heading,
+                near_heading_error=near_heading,
+            )
+            applied.append(gate.filter(command, estimate, boundary, now=now))
+
+        self.assertTrue(all(item.action == "turn-right" for item in applied))
+        self.assertTrue(all(item.steering > 0.0 for item in applied))
+        self.assertTrue(gate.get_state(now=19.0664)["active"])
+
+        lateral_stop = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.45,
+            "lateral error exceeds recovery limit",
+        )
+        bridged = gate.filter(
+            lateral_stop,
+            LaneEstimate(
+                True,
+                0.45,
+                lateral_error=-0.380,
+                heading_error=+0.512,
+                near_heading_error=+0.188,
+            ),
+            inner,
+            now=19.1337,
+        )
+        self.assertEqual(bridged.action, "turn-right")
+        self.assertGreater(bridged.steering, 0.0)
+
+    def test_fourth_corner_role_swap_refreshes_recovery_window(self):
+        """Regression for run 20260803_153056 samples 449 through 468."""
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                maximum_hold_seconds=8.0,
+                progress_timeout_seconds=1.0,
+                apex_near_heading_trigger=0.40,
+                minimum_apex_seconds=0.50,
+                maximum_apex_seconds=0.70,
+                reacquire_steering_limit=0.35,
+                tight_turn_factor_cap=0.0,
+            )
+        )
+        outer = SimpleNamespace(
+            valid=True, yellow_hazard=False, source="outer+width"
+        )
+        both = SimpleNamespace(valid=True, yellow_hazard=False, source="both")
+        inner = SimpleNamespace(
+            valid=True, yellow_hazard=False, source="inner+width"
+        )
+        sharp = DifferentialDriveCommand(
+            "turn-right", 0.54, 0.39, -0.20, 0.48, "ok", 0.0
+        )
+        recoverable_stop = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.24,
+            "road confidence below safety threshold",
+        )
+
+        gate.filter(
+            sharp,
+            LaneEstimate(
+                True,
+                0.48,
+                lateral_error=0.15,
+                heading_error=0.52,
+                near_heading_error=0.12,
+            ),
+            outer,
+            now=0.0,
+        )
+        # A misleading one-edge heading minimum used to start a timeout that
+        # kept running even after the raw controller recovered.
+        gate.filter(
+            recoverable_stop,
+            LaneEstimate(
+                True,
+                0.24,
+                lateral_error=0.21,
+                heading_error=0.64,
+                near_heading_error=0.25,
+            ),
+            outer,
+            now=0.20,
+        )
+        gate.filter(
+            recoverable_stop,
+            LaneEstimate(
+                True,
+                0.24,
+                lateral_error=0.46,
+                heading_error=0.01,
+                near_heading_error=0.02,
+            ),
+            outer,
+            now=0.60,
+        )
+
+        recovered_outer = DifferentialDriveCommand(
+            "turn-right", 0.55, 0.39, -0.21, 0.51, "ok", 0.0
+        )
+        gate.filter(
+            recovered_outer,
+            LaneEstimate(
+                True,
+                0.51,
+                lateral_error=-0.12,
+                heading_error=0.71,
+                near_heading_error=0.42,
+            ),
+            outer,
+            now=1.00,
+        )
+        # The weak transitional commands use a second physical edge. They
+        # must not replace the strong outer-edge command that grounded the
+        # committed right turn.
+        for now, command, estimate, boundary in (
+            (
+                1.40,
+                DifferentialDriveCommand(
+                    "turn-right", 0.23, 0.23, -0.02, 0.56, "ok", 0.0
+                ),
+                LaneEstimate(
+                    True,
+                    0.56,
+                    lateral_error=0.14,
+                    heading_error=-0.05,
+                    near_heading_error=0.02,
+                ),
+                both,
+            ),
+            (
+                1.60,
+                DifferentialDriveCommand(
+                    "turn-right", 0.20, 0.22, 0.0, 0.39, "ok", 0.0
+                ),
+                LaneEstimate(
+                    True,
+                    0.39,
+                    lateral_error=-0.30,
+                    heading_error=0.43,
+                    near_heading_error=0.14,
+                ),
+                inner,
+            ),
+        ):
+            self.assertEqual(
+                gate.filter(command, estimate, boundary, now=now).action,
+                "turn-right",
+            )
+
+        bridged = gate.filter(
+            DifferentialDriveCommand(
+                "stop",
+                0.0,
+                0.0,
+                0.0,
+                0.55,
+                "lateral error exceeds recovery limit",
+            ),
+            LaneEstimate(
+                True,
+                0.55,
+                lateral_error=-0.42,
+                heading_error=0.37,
+                near_heading_error=0.14,
+            ),
+            inner,
+            now=1.67,
+        )
+        self.assertEqual(bridged.action, "turn-right")
+        self.assertAlmostEqual(bridged.steering, 0.35)
+        self.assertTrue(gate.get_state(now=1.67)["active"])
+
+    def test_committed_corner_uses_fixed_apex_fallback(self):
+        """Regression for run 20260803_165757 second physical corner."""
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                apex_near_heading_trigger=0.40,
+                apex_commit_delay_seconds=0.30,
+                minimum_apex_seconds=0.55,
+                maximum_apex_seconds=0.70,
+            )
+        )
+        outer = SimpleNamespace(
+            valid=True, yellow_hazard=False, source="outer+width"
+        )
+        detected_corner = DifferentialDriveCommand(
+            "turn-right", 0.52, 0.38, -0.19, 0.32, "ok", 0.0
+        )
+        estimate = LaneEstimate(
+            True,
+            0.32,
+            lateral_error=0.23,
+            heading_error=0.40,
+            near_heading_error=0.24,
+        )
+
+        entered = gate.filter(detected_corner, estimate, outer, now=0.0)
+        self.assertEqual(entered.tight_turn_factor, 0.0)
+        before_delay = gate.filter(
+            detected_corner,
+            estimate,
+            outer,
+            now=0.29,
+        )
+        self.assertEqual(before_delay.tight_turn_factor, 0.0)
+
+        recovery_stop = DifferentialDriveCommand(
+            "stop",
+            0.0,
+            0.0,
+            0.0,
+            0.24,
+            "road confidence below safety threshold",
+        )
+        standardized = gate.filter(
+            recovery_stop,
+            LaneEstimate(
+                True,
+                0.24,
+                lateral_error=0.37,
+                heading_error=0.09,
+                near_heading_error=0.06,
+            ),
+            outer,
+            now=0.31,
+        )
+        self.assertEqual(standardized.action, "turn-right")
+        self.assertEqual(standardized.tight_turn_factor, 1.0)
+        state = gate.get_state(now=0.31)
+        self.assertTrue(state["apex_active"])
+        self.assertEqual(
+            state["apex_trigger_reason"],
+            "committed-corner delay",
+        )
+
+    def test_motion_gate_rejects_role_swap_estimate_jump(self):
+        gate = PerceptionMotionGate(
+            resume_valid_frames=3,
+            resume_min_confidence=0.35,
+            maximum_lateral_jump=0.32,
+            maximum_heading_jump=0.45,
+            require_consistent_source=True,
+        )
+        both = SimpleNamespace(valid=True, source="both")
+        inner = SimpleNamespace(valid=True, source="inner+width")
+        command = DifferentialDriveCommand(
+            "forward", 0.04, 0.0, 0.0, 0.55, "ok"
+        )
+
+        for lateral in (0.07, 0.08):
+            self.assertEqual(
+                gate.filter(
+                    command,
+                    LaneEstimate(True, 0.55, lateral_error=lateral),
+                    both,
+                ).action,
+                "stop",
+            )
+        self.assertEqual(
+            gate.filter(
+                command,
+                LaneEstimate(True, 0.55, lateral_error=0.09),
+                both,
+            ).action,
+            "forward",
+        )
+
+        rejected = gate.filter(
+            command,
+            LaneEstimate(
+                True,
+                0.45,
+                lateral_error=-0.322,
+                heading_error=0.407,
+            ),
+            inner,
+        )
+        self.assertEqual(rejected.action, "stop")
+        self.assertIn("estimate jumped", rejected.reason)
+        self.assertFalse(gate.get_state()["ready"])
+
+        # The new source becomes a candidate, but still needs a complete stable
+        # validation window before motion resumes.
+        for lateral in (-0.31, -0.30):
+            self.assertEqual(
+                gate.filter(
+                    command,
+                    LaneEstimate(True, 0.45, lateral_error=lateral),
+                    inner,
+                ).action,
+                "stop",
+            )
+        self.assertEqual(
+            gate.filter(
+                command,
+                LaneEstimate(True, 0.45, lateral_error=-0.29),
+                inner,
+            ).action,
+            "forward",
+        )
 
     def test_corner_continuation_does_not_mask_two_boundary_lateral_stop(self):
         gate = CornerContinuationGate(

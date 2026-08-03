@@ -7,8 +7,10 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import queue
 import shutil
 import sys
+import threading
 import time
 
 import cv2
@@ -245,20 +247,33 @@ class CameraSource:
 class RunArchive:
     """Persist one self-contained experiment for deterministic diagnosis."""
 
-    def __init__(self, output_dir, enabled, fps, mode):
+    def __init__(self, output_dir, enabled, fps, mode, queue_frames=32):
         self.enabled = bool(enabled)
         self.fps = max(1.0, float(fps))
         self.run_dir = None
         self.status_path = None
         self.log_path = None
         self._writers = {}
+        self._frame_queue = None
+        self._writer_thread = None
+        self._writer_error = None
         if not self.enabled:
             return
+        queue_frames = int(queue_frames)
+        if queue_frames < 1:
+            raise ValueError("archive queue_frames must be at least 1")
         run_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f") + f"_{mode}"
         self.run_dir = Path(output_dir) / "runs" / run_id
         self.run_dir.mkdir(parents=True, exist_ok=False)
         self.status_path = self.run_dir / "status.json"
         self.log_path = self.run_dir / "onboard_log.csv"
+        self._frame_queue = queue.Queue(maxsize=queue_frames)
+        self._writer_thread = threading.Thread(
+            target=self._write_loop,
+            name="lcc-run-archive",
+            daemon=True,
+        )
+        self._writer_thread.start()
 
     def snapshot_file(self, source, target_name):
         if not self.enabled or source is None:
@@ -284,22 +299,58 @@ class RunArchive:
         self._writers[name] = writer
         return writer
 
-    def write_frames(self, raw, annotated, birdeye):
-        if not self.enabled:
-            return
+    def _write_frames_now(self, raw, annotated, birdeye):
         self._writer("raw.mp4", raw).write(raw)
         self._writer("annotated.mp4", annotated).write(annotated)
         if birdeye is not None:
             self._writer("birdeye.mp4", birdeye).write(birdeye)
+
+    def _write_loop(self):
+        try:
+            while True:
+                frames = self._frame_queue.get()
+                try:
+                    if frames is None:
+                        break
+                    if self._writer_error is None:
+                        self._write_frames_now(*frames)
+                except Exception as exc:  # surfaced to the control thread
+                    self._writer_error = exc
+                finally:
+                    self._frame_queue.task_done()
+        finally:
+            for writer in self._writers.values():
+                writer.release()
+            self._writers.clear()
+
+    def _raise_writer_error(self):
+        if self._writer_error is not None:
+            raise RuntimeError(
+                f"run archive video writer failed: {self._writer_error}"
+            ) from self._writer_error
+
+    def write_frames(self, raw, annotated, birdeye):
+        if not self.enabled:
+            return
+        self._raise_writer_error()
+        # Video encoding occasionally paused the hardware control loop for
+        # 200-330 ms while the last 30/0 apex command remained applied.  A
+        # bounded queue absorbs those short encoder flushes while preserving
+        # every experiment frame.  Sustained disk backpressure still blocks
+        # safely instead of silently dropping diagnostic data.
+        self._frame_queue.put((raw, annotated, birdeye))
 
     def write_status(self, payload):
         if self.enabled:
             write_status(self.status_path, payload)
 
     def close(self):
-        for writer in self._writers.values():
-            writer.release()
-        self._writers.clear()
+        if not self.enabled or self._writer_thread is None:
+            return
+        self._frame_queue.put(None)
+        self._writer_thread.join()
+        self._writer_thread = None
+        self._raise_writer_error()
 
     def copy_log(self, source):
         if self.enabled and Path(source).is_file():
@@ -664,6 +715,7 @@ def main():
         ),
         fps=float(runtime_config.get("archive_fps", archive_fps)),
         mode="hardware" if args.enable_motors else "dryrun",
+        queue_frames=int(runtime_config.get("archive_queue_frames", 32)),
     )
     archive.snapshot_file(config_path, "runtime_config.yaml")
     archive.snapshot_file(calibration_path, "perspective_calibration.yaml")
@@ -769,6 +821,7 @@ def main():
             "corner_continuation_best_lateral",
             "corner_apex_active",
             "corner_apex_age_s",
+            "corner_apex_trigger_reason",
             "corner_apex_exit_valid_count",
             "motion_gate_ready",
             "motion_gate_valid_frames",
@@ -786,6 +839,15 @@ def main():
             resume_min_confidence=float(
                 safety_config.get("resume_min_confidence", 0.0)
             ),
+            maximum_lateral_jump=float(
+                safety_config.get("resume_maximum_lateral_jump", 0.0)
+            ),
+            maximum_heading_jump=float(
+                safety_config.get("resume_maximum_heading_jump", 0.0)
+            ),
+            require_consistent_source=bool(
+                safety_config.get("resume_require_consistent_source", False)
+            ),
         )
         corner_gate = CornerContinuationGate(
             CornerContinuationConfig(
@@ -795,6 +857,14 @@ def main():
         route_hint = str(config.get("runtime", {}).get("route_hint", "center"))
         max_inference = maximum_inference_time
         runtime_started = time.monotonic()
+        live_update_hz = float(runtime_config.get("live_update_hz", 5.0))
+        console_update_hz = float(runtime_config.get("console_update_hz", 4.0))
+        if live_update_hz <= 0.0 or console_update_hz <= 0.0:
+            raise ValueError("runtime update frequencies must be positive")
+        live_update_interval = 1.0 / live_update_hz
+        console_update_interval = 1.0 / console_update_hz
+        next_live_update_at = 0.0
+        next_console_update_at = 0.0
         save_latest = bool(
             config.get("runtime", {}).get("save_latest_frame", True)
         )
@@ -858,7 +928,15 @@ def main():
                 now=timestamp,
             )
             corner_state = corner_gate.get_state(now=timestamp)
-            command = motion_gate.filter(command)
+            command = motion_gate.filter(
+                command,
+                estimate,
+                boundary_result,
+                # The continuation gate deliberately bridges unreliable
+                # one-edge geometry. Let its bounded direction latch own that
+                # interval; yellow/missing boundaries still stop upstream.
+                allow_discontinuity=bool(corner_state["active"]),
+            )
             if command != displayed_command:
                 cv2.rectangle(
                     annotated,
@@ -887,7 +965,9 @@ def main():
                 if boundary_result is None
                 else render_birdeye_debug(boundary_result, estimate)
             )
-            if save_latest:
+            diagnostic_now = time.monotonic()
+            live_update_due = diagnostic_now >= next_live_update_at
+            if save_latest and live_update_due:
                 cv2.imwrite(str(latest_frame_path), annotated)
                 if birdeye is not None:
                     cv2.imwrite(str(latest_birdeye_path), birdeye)
@@ -992,6 +1072,9 @@ def main():
                     if corner_state["apex_age_seconds"] is None
                     else round(corner_state["apex_age_seconds"], 5)
                 ),
+                "corner_apex_trigger_reason": corner_state[
+                    "apex_trigger_reason"
+                ],
                 "corner_apex_exit_valid_count": corner_state[
                     "apex_exit_valid_count"
                 ],
@@ -1003,39 +1086,45 @@ def main():
             last_row = row
             writer.writerow(row)
             log_handle.flush()
-            live_status = {
-                "mode": wheel_state["mode"],
-                "source": str(
-                    args.video or f"camera:{camera_config.get('index', 0)}"
-                ),
-                "config": str(config_path),
-                "calibration": (
-                    str(calibration_path) if calibration_path else None
-                ),
-                "last_result": row,
-                "wheel_driver": driver.get_state(),
-                "watchdog": watchdog.get_state(),
-                "corner_continuation": corner_state,
-                "motion_gate": motion_gate.get_state(),
-                "run_archive": (
-                    None if not archive.enabled else str(archive.run_dir)
-                ),
-            }
-            write_status(status_path, live_status)
-            archive.write_status(live_status)
-            print(
-                f"sample={sample} action={command.action} "
-                f"boundary={boundary_result.source if boundary_result else 'off'} "
-                f"conf={estimate.confidence:.2f} steer={command.steering:+.3f} "
-                f"tight={float(command.tight_turn_factor or 0.0):.2f} "
-                f"pwm=({wheel_state['front_left_pwm']:+d},"
-                f"{wheel_state['rear_left_pwm']:+d},"
-                f"{wheel_state['front_right_pwm']:+d},"
-                f"{wheel_state['rear_right_pwm']:+d}) "
-                f"inference={inference_time * 1000:.0f}ms "
-                f"boundary_ms={boundary_time * 1000:.1f}",
-                flush=True,
-            )
+            if live_update_due:
+                live_status = {
+                    "mode": wheel_state["mode"],
+                    "source": str(
+                        args.video or f"camera:{camera_config.get('index', 0)}"
+                    ),
+                    "config": str(config_path),
+                    "calibration": (
+                        str(calibration_path) if calibration_path else None
+                    ),
+                    "last_result": row,
+                    "wheel_driver": driver.get_state(),
+                    "watchdog": watchdog.get_state(),
+                    "corner_continuation": corner_state,
+                    "motion_gate": motion_gate.get_state(),
+                    "run_archive": (
+                        None if not archive.enabled else str(archive.run_dir)
+                    ),
+                }
+                write_status(status_path, live_status)
+                archive.write_status(live_status)
+                next_live_update_at = diagnostic_now + live_update_interval
+            if diagnostic_now >= next_console_update_at:
+                print(
+                    f"sample={sample} action={command.action} "
+                    f"boundary={boundary_result.source if boundary_result else 'off'} "
+                    f"conf={estimate.confidence:.2f} steer={command.steering:+.3f} "
+                    f"tight={float(command.tight_turn_factor or 0.0):.2f} "
+                    f"pwm=({wheel_state['front_left_pwm']:+d},"
+                    f"{wheel_state['rear_left_pwm']:+d},"
+                    f"{wheel_state['front_right_pwm']:+d},"
+                    f"{wheel_state['rear_right_pwm']:+d}) "
+                    f"inference={inference_time * 1000:.0f}ms "
+                    f"boundary_ms={boundary_time * 1000:.1f}",
+                    flush=True,
+                )
+                next_console_update_at = (
+                    diagnostic_now + console_update_interval
+                )
             sample += 1
             if args.max_samples and sample >= args.max_samples:
                 termination_reason = f"maximum samples reached ({args.max_samples})"

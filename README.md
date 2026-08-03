@@ -49,7 +49,7 @@ cd /home/pi/Desktop/VehicleCloudCollaboration
 - 直行基准 PWM：`16/16/20/20`
 - 普通最大正向右弧 PWM：`26/26/10/10`
 - 饱和急弯右转 PWM：`30/30/0/0`（仅外侧轮前进，内侧轮停转；任何轮都不反转）
-- 单边界恢复：最多 `6.2s`，仅在航向或横向误差持续改善时前进；黄线等硬安全条件仍立即停车
+- 单边界恢复：最多 `8s`，弯顶后保持受限原转向直到双边界连续稳定；黄线等硬安全条件仍立即停车
 - 运行配置：`car/autodrive/config/onboard_runtime.yaml`
 - 透视标定：`car/autodrive/config/onboard_calibration.yaml`
 

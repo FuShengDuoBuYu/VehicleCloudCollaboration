@@ -95,22 +95,28 @@ safety:
   maximum_inference_time: 2.5
   resume_valid_frames: 4
   resume_min_confidence: 0.35
+  resume_maximum_lateral_jump: 0.32
+  resume_maximum_heading_jump: 0.45
+  resume_require_consistent_source: true
   corner_continuation:
     enabled: true
     enter_steering_threshold: 0.50
     exit_steering_threshold: 0.18
     exit_min_confidence: 0.35
     exit_valid_frames: 3
-    maximum_hold_seconds: 6.20
+    maximum_hold_seconds: 8.00
     progress_timeout_seconds: 1.00
     minimum_heading_progress: 0.015
     minimum_lateral_progress: 0.010
     apex_trigger_factor: 0.50
-    apex_near_heading_trigger: 0.43
-    minimum_apex_seconds: 0.40
+    apex_near_heading_trigger: 0.40
+    apex_commit_delay_seconds: 0.30
+    minimum_apex_seconds: 0.55
     maximum_apex_seconds: 0.70
     apex_exit_near_heading: 0.30
     apex_exit_valid_frames: 2
+    minimum_transverse_boundary_ratio: 0.01
+    reacquire_steering_limit: 0.35
     tight_turn_factor_cap: 0.0
 
 runtime:
@@ -118,5 +124,8 @@ runtime:
   video_sample_every: 6
   output_dir: outputs/onboard_runtime
   save_latest_frame: true
+  live_update_hz: 5
+  console_update_hz: 4
   archive_runs: true
   archive_fps: 20
+  archive_queue_frames: 32
