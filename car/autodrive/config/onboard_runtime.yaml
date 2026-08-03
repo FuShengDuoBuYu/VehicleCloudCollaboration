@@ -25,6 +25,36 @@ perception:
   # Geometry resolution used by the yellow-boundary and road-surface tracker.
   mask_width: 320
   mask_height: 180
+  # Share YOLOPv2 with the existing outer-loop LCC. The current yellow-boundary
+  # tracker still chooses the route; the semantic mask may only validate or
+  # shrink that corridor, never enlarge it into a false-positive island.
+  yolopv2:
+    enabled: true
+    weights: /media/pi/FSDBY/weights/yolopv2.pt
+    device: cpu
+    img_size: 320
+    fast_mask: true
+    # LCC only consumes drivable area. Freeze/fuse the TorchScript graph and
+    # remove the unused detection and lane heads without changing the weights.
+    optimize_for_inference: true
+    drivable_only: true
+    # Reserve CPU capacity for yellow-boundary fitting and the 20 Hz controller.
+    torch_num_threads: 1
+    torch_interop_threads: 1
+    # After one stopped warm-up inference, keep the ~20 Hz boundary/control loop
+    # independent from the slower semantic worker and always replace queued work
+    # with the newest camera frame.
+    asynchronous: true
+    fusion_mode: intersection
+    max_result_age_seconds: 2.5
+    # Reject an obviously unrelated semantic result instead of carving the LCC
+    # corridor with it. A rejected/stale result falls back to classical LCC.
+    minimum_overlap_ratio: 0.30
+    drivable_dilate_kernel: 9
+    confidence_weight: 0.20
+    # Keep false until dry-run replay shows stable overlap on every normal lap.
+    # If later enabled, missing/stale/low-overlap YOLO evidence stops the car.
+    required_for_motion: false
 
 perspective:
   calibration: car/autodrive/config/onboard_calibration.yaml

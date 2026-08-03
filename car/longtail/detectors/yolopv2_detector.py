@@ -9,6 +9,17 @@ import torch
 from .base_detector import BaseDetector
 
 
+class _DrivableOnlyModel(torch.nn.Module):
+    """Expose only the segmentation branch needed by onboard LCC fusion."""
+
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def forward(self, tensor):
+        return self.model(tensor)[1]
+
+
 class YOLOPv2Detector(BaseDetector):
     """Analyzes road geometry using YOLOPv2 drivable-area and lane masks."""
     
@@ -21,6 +32,10 @@ class YOLOPv2Detector(BaseDetector):
         self.device = torch.device(self.config.get('device', 'cpu'))
         self.geometry_mode = self.config.get('geometry_mode', 'weighted')
         self.fast_mask = self.config.get('fast_mask', True)
+        self.optimize_for_inference = bool(
+            self.config.get('optimize_for_inference', False)
+        )
+        self.drivable_only = bool(self.config.get('drivable_only', False))
         self.geometry_weights = self.config.get('geometry_weights', {})
         self.linear_coefficients = self.config.get('linear_coefficients', [])
         self.linear_intercept = float(self.config.get('linear_intercept', 0.0))
@@ -29,6 +44,35 @@ class YOLOPv2Detector(BaseDetector):
         if self.use_full_model:
             self.model = torch.jit.load(self.weights_path, map_location=self.device)
             self.model.to(self.device).eval()
+            self._prepare_inference_graph()
+
+    def _prepare_inference_graph(self) -> None:
+        """Specialize the loaded graph without changing learned weights.
+
+        The onboard LCC fusion consumes only the drivable-area logits. Tracing
+        that output and freezing the graph lets TorchScript remove the unused
+        object-detection and lane branches. Full-model long-tail callers keep
+        the original three outputs unless they explicitly request this mode.
+        """
+        if not self.drivable_only and not self.optimize_for_inference:
+            return
+
+        with torch.inference_mode():
+            if self.drivable_only:
+                example, _ = self._preprocess_image(
+                    np.zeros((720, 1280, 3), dtype=np.uint8)
+                )
+                model = torch.jit.trace(
+                    _DrivableOnlyModel(self.model).eval(),
+                    example,
+                    check_trace=False,
+                )
+                model = torch.jit.freeze(model.eval())
+            else:
+                model = torch.jit.freeze(self.model.eval())
+            if self.optimize_for_inference:
+                model = torch.jit.optimize_for_inference(model)
+        self.model = model
     
     def _analyze_image_heuristics(self, image_path: str) -> float:
         img = cv2.imread(image_path)
@@ -105,27 +149,45 @@ class YOLOPv2Detector(BaseDetector):
         else:
             tensor, padding = self._preprocess_image(image)
 
-        with torch.no_grad():
-            _, seg, lane = self.model(tensor)
+        with torch.inference_mode():
+            if self.drivable_only:
+                seg = self.model(tensor)
+                lane = None
+            else:
+                _, seg, lane = self.model(tensor)
 
         if self.fast_mask:
             top, bottom, left, right = padding
             h_end = seg.shape[2] - bottom if bottom else seg.shape[2]
             w_end = seg.shape[3] - right if right else seg.shape[3]
             da_predict = seg[:, :, top:h_end, left:w_end]
-            lane_predict = lane[:, :, top:h_end, left:w_end]
+            lane_predict = (
+                None if lane is None else lane[:, :, top:h_end, left:w_end]
+            )
         else:
             da_predict = seg[:, :, 12:372, :]
             da_predict = torch.nn.functional.interpolate(da_predict, scale_factor=2, mode='bilinear')
-            lane_predict = lane[:, :, 12:372, :]
-            lane_predict = torch.nn.functional.interpolate(lane_predict, scale_factor=2, mode='bilinear')
+            if lane is None:
+                lane_predict = None
+            else:
+                lane_predict = lane[:, :, 12:372, :]
+                lane_predict = torch.nn.functional.interpolate(lane_predict, scale_factor=2, mode='bilinear')
 
         _, da_mask = torch.max(da_predict, 1)
-        lane_mask = torch.round(lane_predict).squeeze(1)
-        return (
-            da_mask.int().squeeze().cpu().numpy().astype(np.uint8),
-            lane_mask.int().squeeze().cpu().numpy().astype(np.uint8),
-        )
+        da_mask = da_mask.int().squeeze().cpu().numpy().astype(np.uint8)
+        if lane_predict is None:
+            lane_mask = np.zeros_like(da_mask)
+        else:
+            lane_mask = (
+                torch.round(lane_predict)
+                .squeeze(1)
+                .int()
+                .squeeze()
+                .cpu()
+                .numpy()
+                .astype(np.uint8)
+            )
+        return da_mask, lane_mask
 
     def _predict_masks(self, image_path: str) -> tuple:
         """Backward-compatible private wrapper used by existing code."""

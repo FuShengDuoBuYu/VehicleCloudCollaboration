@@ -21,6 +21,24 @@ camera:
 perception:
   mask_width: 320
   mask_height: 180
+  yolopv2:
+    # Enable only with a valid local weight file and after dry-run replay.
+    enabled: false
+    weights: /media/pi/FSDBY/weights/yolopv2.pt
+    device: cpu
+    img_size: 320
+    fast_mask: true
+    optimize_for_inference: true
+    drivable_only: true
+    torch_num_threads: 1
+    torch_interop_threads: 1
+    asynchronous: true
+    fusion_mode: intersection
+    max_result_age_seconds: 2.5
+    minimum_overlap_ratio: 0.30
+    drivable_dilate_kernel: 9
+    confidence_weight: 0.20
+    required_for_motion: false
 
 perspective:
   # Replace with car/autodrive/config/onboard_calibration.yaml after calibration.

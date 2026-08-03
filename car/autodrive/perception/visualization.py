@@ -48,6 +48,8 @@ def render_debug_frame(
     inference_ms: float,
     latency_label: str = "boundary",
     boundary_source: str = "both",
+    semantic_mask: np.ndarray = None,
+    semantic_label: str = "",
 ) -> np.ndarray:
     output = frame.copy()
     frame_h, frame_w = output.shape[:2]
@@ -62,17 +64,33 @@ def render_debug_frame(
         (frame_w, frame_h),
         interpolation=cv2.INTER_NEAREST,
     )
+    semantic = None
+    if semantic_mask is not None:
+        semantic = cv2.resize(
+            (np.asarray(semantic_mask) > 0).astype(np.uint8),
+            (frame_w, frame_h),
+            interpolation=cv2.INTER_NEAREST,
+        )
 
     color_layer = np.zeros_like(output)
     color_layer[drivable > 0] = (30, 150, 30)
     color_layer[lane > 0] = (20, 20, 230)
     visible = (drivable > 0) | (lane > 0)
     if np.any(visible):
-        blended = (
-            output[visible].astype(np.float32) * 0.55
-            + color_layer[visible].astype(np.float32) * 0.45
+        # OpenCV performs the full-frame blend in optimized native code. This
+        # is materially faster than float-converting a broad YOLO mask through
+        # NumPy fancy indexing on the Raspberry Pi.
+        blended = cv2.addWeighted(output, 0.55, color_layer, 0.45, 0)
+        output[visible] = blended[visible]
+    if semantic is not None:
+        # Drawing only the proposal outline keeps the broad semantic mask
+        # interpretable without alpha-blending most of every camera frame.
+        contours, _ = cv2.findContours(
+            semantic,
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE,
         )
-        output[visible] = np.clip(blended, 0, 255).astype(np.uint8)
+        cv2.drawContours(output, contours, -1, (255, 100, 0), 2, cv2.LINE_AA)
 
     left = _scale_points(estimate.left_boundary, (mask_h, mask_w), frame.shape)
     right = _scale_points(estimate.right_boundary, (mask_h, mask_w), frame.shape)
@@ -128,6 +146,17 @@ def render_debug_frame(
             0.72,
             (255, 255, 255),
             2,
+            cv2.LINE_AA,
+        )
+    if semantic is not None:
+        cv2.putText(
+            output,
+            semantic_label or "blue outline=YOLOPv2  green=fused LCC",
+            (8, frame_h - 9),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.42,
+            (255, 255, 255),
+            1,
             cv2.LINE_AA,
         )
     return output

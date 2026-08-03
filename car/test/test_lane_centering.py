@@ -33,6 +33,10 @@ from autodrive.perception.perspective import (
     camera_pose_from_mapping,
     validate_calibration_camera_pose,
 )
+from autodrive.perception.yolopv2_fusion import (
+    YOLOPv2FusionConfig,
+    YOLOPv2FusionDetector,
+)
 from autodrive.runtime.onboard import (
     SurfaceOnlyDetector,
     VideoSource,
@@ -167,6 +171,122 @@ def make_outer_loop_masks(shift_at_top=0, right_gap=True, right_branch=True):
 
 
 class RoadCenterlineEstimatorTest(unittest.TestCase):
+    def test_yolopv2_intersection_fusion_can_only_shrink_classical_corridor(self):
+        class FakeModel:
+            def predict_masks(self, _frame):
+                drivable = np.zeros((18, 32), dtype=np.uint8)
+                drivable[:, :16] = 1
+                return drivable, np.zeros_like(drivable)
+
+        detector = YOLOPv2FusionDetector(
+            YOLOPv2FusionConfig(
+                enabled=True,
+                asynchronous=False,
+                drivable_dilate_kernel=1,
+                minimum_overlap_ratio=0.30,
+            ),
+            output_width=32,
+            output_height=18,
+            model=FakeModel(),
+        )
+        semantic, _ = detector.predict_masks(
+            np.zeros((36, 64, 3), dtype=np.uint8)
+        )
+        classical = np.ones((18, 32), dtype=np.uint8)
+        fused, state = detector.fuse_corridor(classical, semantic)
+
+        self.assertEqual(state["source"], "fused-intersection")
+        self.assertAlmostEqual(state["overlap_ratio"], 0.5)
+        self.assertTrue(np.all(fused <= classical))
+        self.assertEqual(np.count_nonzero(fused), 18 * 16)
+
+    def test_yolopv2_low_overlap_falls_back_without_expanding_corridor(self):
+        class FakeModel:
+            def predict_masks(self, _frame):
+                drivable = np.zeros((18, 32), dtype=np.uint8)
+                drivable[:, :2] = 1
+                return drivable, np.zeros_like(drivable)
+
+        detector = YOLOPv2FusionDetector(
+            YOLOPv2FusionConfig(
+                enabled=True,
+                asynchronous=False,
+                drivable_dilate_kernel=1,
+                minimum_overlap_ratio=0.30,
+                required_for_motion=False,
+            ),
+            output_width=32,
+            output_height=18,
+            model=FakeModel(),
+        )
+        semantic, _ = detector.predict_masks(
+            np.zeros((36, 64, 3), dtype=np.uint8)
+        )
+        classical = np.ones((18, 32), dtype=np.uint8)
+        fused, state = detector.fuse_corridor(classical, semantic)
+
+        self.assertEqual(state["source"], "fallback-low-overlap")
+        self.assertTrue(state["motion_allowed"])
+        self.assertTrue(np.array_equal(fused, classical))
+
+    def test_required_yolopv2_low_overlap_blocks_motion(self):
+        class FakeModel:
+            def predict_masks(self, _frame):
+                empty = np.zeros((18, 32), dtype=np.uint8)
+                return empty, empty
+
+        detector = YOLOPv2FusionDetector(
+            YOLOPv2FusionConfig(
+                enabled=True,
+                asynchronous=False,
+                drivable_dilate_kernel=1,
+                minimum_overlap_ratio=0.30,
+                required_for_motion=True,
+            ),
+            output_width=32,
+            output_height=18,
+            model=FakeModel(),
+        )
+        semantic, _ = detector.predict_masks(
+            np.zeros((36, 64, 3), dtype=np.uint8)
+        )
+        fused, state = detector.fuse_corridor(
+            np.ones((18, 32), dtype=np.uint8), semantic
+        )
+
+        self.assertEqual(state["source"], "required-low-overlap")
+        self.assertFalse(state["motion_allowed"])
+        self.assertFalse(np.any(fused))
+
+    def test_stale_yolopv2_result_falls_back_to_classical_corridor(self):
+        class FakeModel:
+            def predict_masks(self, _frame):
+                full = np.ones((18, 32), dtype=np.uint8)
+                return full, np.zeros_like(full)
+
+        now = [10.0]
+        detector = YOLOPv2FusionDetector(
+            YOLOPv2FusionConfig(
+                enabled=True,
+                asynchronous=False,
+                max_result_age_seconds=1.0,
+                drivable_dilate_kernel=1,
+            ),
+            output_width=32,
+            output_height=18,
+            model=FakeModel(),
+            clock=lambda: now[0],
+        )
+        semantic, _ = detector.predict_masks(
+            np.zeros((36, 64, 3), dtype=np.uint8)
+        )
+        now[0] = 11.5
+        classical = np.ones((18, 32), dtype=np.uint8)
+        fused, state = detector.fuse_corridor(classical, semantic)
+
+        self.assertEqual(state["source"], "fallback-stale")
+        self.assertTrue(np.array_equal(fused, classical))
+
     def test_diagnostic_queue_replaces_oldest_without_waiting(self):
         work_queue = queue.Queue(maxsize=1)
         work_queue.put_nowait("old")

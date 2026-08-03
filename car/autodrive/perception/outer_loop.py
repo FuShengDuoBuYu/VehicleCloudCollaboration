@@ -103,6 +103,11 @@ class BoundaryTrackResult:
     ego_yellow_ratio: float = 0.0
     yellow_hazard: bool = False
     boundary_visible_ratio: float = 0.0
+    semantic_fusion_source: str = "disabled"
+    semantic_result_age_seconds: Optional[float] = None
+    semantic_overlap_ratio: Optional[float] = None
+    semantic_drivable_ratio: Optional[float] = None
+    semantic_inference_seconds: Optional[float] = None
 
 
 class OuterLoopBoundaryTracker:

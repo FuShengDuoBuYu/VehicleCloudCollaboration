@@ -3,6 +3,12 @@
 此包只维护当前树莓派实车使用的外圈车道居中控制。它直接处理车载相机中的黄色道路
 边界和绿色岛区，不依赖 DonkeyCar、云端变道或旧网页。
 
+当前实车配置还会在独立后台线程运行 YOLOPv2，并把其可行驶区域与黄色边界 LCC 的
+最终走廊做保守融合。YOLOPv2 只能验证或缩小当前走廊，不能把走廊扩大到绿色岛区；
+结果过旧、缺失或与当前走廊重叠不足时，默认回退到传统 LCC。这样同一份原始语义 mask
+可继续供长尾突变检测使用，而后台语义推理不会阻塞控制循环。LCC 专用配置会冻结并融合
+TorchScript 推理图，只计算实际使用的可行驶区域分支；权重和 320 输入分辨率均不改变。
+
 ## 目录结构
 
 ```text
@@ -52,6 +58,20 @@ cd /home/pi/Desktop/VehicleCloudCollaboration
   --output-dir /tmp/lcc_replay \
   --no-run-archive
 ```
+
+融合配置位于 `perception.yolopv2`。当前调试图中蓝色轮廓是原始 YOLOPv2 可行驶区域，
+绿色是控制器实际使用的融合走廊。CSV 中的 `semantic_fusion_source` 表示当帧状态：
+
+- `fused-intersection`：YOLOPv2 与当前 LCC 走廊正在做保守交集。
+- `fallback-low-overlap`：两者重叠不足，继续使用当前 LCC。
+- `fallback-stale`：YOLOPv2 结果超过最大年龄，继续使用当前 LCC。
+
+`required_for_motion` 默认保持 `false`。只有在多段正常实车视频均验证稳定后才可改为
+`true`；严格模式下，YOLOPv2 缺失、过期或低重叠都会请求停车。
+
+`optimize_for_inference: true` 与 `drivable_only: true` 是无需微调的车端加速项。后者会跳过
+LCC 当前不用的目标检测和车道线输出；如果其他调用方需要这两类输出，应在该调用方的
+YOLOPv2 配置中保持 `drivable_only: false`。
 
 ## 标定和诊断工具
 

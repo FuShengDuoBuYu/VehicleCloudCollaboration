@@ -53,6 +53,10 @@ from autodrive.perception.perspective import (
     camera_pose_from_mapping,
     validate_calibration_camera_pose,
 )
+from autodrive.perception.yolopv2_fusion import (
+    YOLOPv2FusionConfig,
+    YOLOPv2FusionDetector,
+)
 from autodrive.perception.visualization import render_debug_frame
 LOCAL_CONFIG = AUTODRIVE_DIR / "config" / "onboard_runtime.yaml"
 DEFAULT_CONFIG = LOCAL_CONFIG
@@ -724,10 +728,19 @@ def build_components(config, motors_enabled, calibration_path):
         and outer_loop_config.include_lane_mask
     ):
         raise ValueError("boundary mode requires include_lane_mask=false")
-    detector = SurfaceOnlyDetector(
-        width=int(perception.get("mask_width", 320)),
-        height=int(perception.get("mask_height", 180)),
-    )
+    mask_width = int(perception.get("mask_width", 320))
+    mask_height = int(perception.get("mask_height", 180))
+    yolopv2_settings = dict(perception.get("yolopv2", {}))
+    if bool(yolopv2_settings.get("enabled", False)):
+        weights = repo_path(yolopv2_settings.get("weights"))
+        yolopv2_settings["weights"] = "" if weights is None else str(weights)
+        detector = YOLOPv2FusionDetector(
+            YOLOPv2FusionConfig(**yolopv2_settings),
+            output_width=mask_width,
+            output_height=mask_height,
+        )
+    else:
+        detector = SurfaceOnlyDetector(width=mask_width, height=mask_height)
 
     estimator = RoadCenterlineEstimator(**config.get("centerline", {}))
     controller = LaneCenteringController(LCCConfig(**config.get("lcc", {})))
@@ -805,6 +818,7 @@ def analyze(
     yellow_hazard = False
     ego_yellow_ratio = 0.0
     display_drivable = drivable_mask
+    semantic_fusion = None
     if boundary_tracker is not None:
         yellow_mask = boundary_tracker.yellow_mask(frame, lane_mask.shape)
         # The calibration trapezoid can end where the lane boundaries leave
@@ -840,6 +854,33 @@ def analyze(
                 control_lane,
                 control_yellow,
             )
+        if hasattr(detector, "fuse_corridor"):
+            fused_corridor, semantic_fusion = detector.fuse_corridor(
+                boundary_result.corridor_mask,
+                control_drivable,
+            )
+            boundary_result.corridor_mask = fused_corridor
+            boundary_result.semantic_fusion_source = semantic_fusion["source"]
+            boundary_result.semantic_result_age_seconds = semantic_fusion[
+                "result_age_seconds"
+            ]
+            boundary_result.semantic_overlap_ratio = semantic_fusion[
+                "overlap_ratio"
+            ]
+            boundary_result.semantic_drivable_ratio = semantic_fusion[
+                "drivable_ratio"
+            ]
+            boundary_result.semantic_inference_seconds = semantic_fusion[
+                "inference_seconds"
+            ]
+            boundary_result.confidence *= semantic_fusion["confidence_scale"]
+            if not semantic_fusion["motion_allowed"]:
+                boundary_result.valid = False
+                boundary_result.confidence = 0.0
+                boundary_result.reason = (
+                    "YOLOPv2 fusion required for motion: "
+                    f"{semantic_fusion['source']}"
+                )
         boundary_result.ego_yellow_ratio = ego_yellow_ratio
         boundary_result.yellow_hazard = yellow_hazard
         control_drivable = boundary_result.corridor_mask
@@ -921,6 +962,19 @@ def analyze(
         ),
         boundary_source=(
             "missing" if boundary_result is None else boundary_result.source
+        ),
+        semantic_mask=(
+            drivable_mask if hasattr(detector, "fuse_corridor") else None
+        ),
+        semantic_label=(
+            ""
+            if semantic_fusion is None
+            else (
+                "blue outline=YOLOPv2 green=fused LCC  "
+                f"{semantic_fusion['source']} "
+                f"overlap={float(semantic_fusion['overlap_ratio'] or 0.0):.2f} "
+                f"age={float(semantic_fusion['result_age_seconds'] or 0.0):.2f}s"
+            )
         ),
     )
     return (
@@ -1166,6 +1220,11 @@ def main():
             "hardware_apply_ms",
             "birdeye_render_ms",
             "inference_ms",
+            "semantic_inference_ms",
+            "semantic_result_age_s",
+            "semantic_fusion_source",
+            "semantic_overlap_ratio",
+            "semantic_drivable_ratio",
             "boundary_ms",
             "boundary_source",
             "boundary_confidence",
@@ -1416,6 +1475,41 @@ def main():
                     birdeye_render_time * 1000, 3
                 ),
                 "inference_ms": round(inference_time * 1000, 3),
+                "semantic_inference_ms": (
+                    None
+                    if boundary_result is None
+                    or boundary_result.semantic_inference_seconds is None
+                    else round(
+                        boundary_result.semantic_inference_seconds * 1000,
+                        3,
+                    )
+                ),
+                "semantic_result_age_s": (
+                    None
+                    if boundary_result is None
+                    or boundary_result.semantic_result_age_seconds is None
+                    else round(
+                        boundary_result.semantic_result_age_seconds,
+                        4,
+                    )
+                ),
+                "semantic_fusion_source": (
+                    None
+                    if boundary_result is None
+                    else boundary_result.semantic_fusion_source
+                ),
+                "semantic_overlap_ratio": (
+                    None
+                    if boundary_result is None
+                    or boundary_result.semantic_overlap_ratio is None
+                    else round(boundary_result.semantic_overlap_ratio, 5)
+                ),
+                "semantic_drivable_ratio": (
+                    None
+                    if boundary_result is None
+                    or boundary_result.semantic_drivable_ratio is None
+                    else round(boundary_result.semantic_drivable_ratio, 5)
+                ),
                 "boundary_ms": round(boundary_time * 1000, 3),
                 "boundary_source": (
                     None if boundary_result is None else boundary_result.source
@@ -1558,6 +1652,11 @@ def main():
                         "control_log": log_writer.get_state(),
                         "live_publisher": live_publisher.get_state(),
                         "debug_frames": debug_writer.get_state(),
+                        "yolopv2_fusion": (
+                            detector.get_state()
+                            if hasattr(detector, "get_state")
+                            else {"enabled": False}
+                        ),
                     },
                 }
                 live_publisher.publish(live_status, annotated, birdeye)
@@ -1573,6 +1672,8 @@ def main():
                     f"{wheel_state['front_right_pwm']:+d},"
                     f"{wheel_state['rear_right_pwm']:+d}) "
                     f"inference={inference_time * 1000:.0f}ms "
+                    "yolopv2="
+                    f"{boundary_result.semantic_fusion_source if boundary_result else 'off'} "
                     f"boundary_ms={boundary_time * 1000:.1f} "
                     f"hardware_ms={hardware_apply_time * 1000:.1f} "
                     f"loop_gap_ms={float(loop_start_interval or 0.0) * 1000:.1f}",
@@ -1596,6 +1697,8 @@ def main():
             watchdog.close()
         if driver is not None:
             driver.stop(termination_reason)
+        if detector is not None and hasattr(detector, "close"):
+            detector.close()
         source.close()
         # Drain diagnostic workers only after the wheels are stopped.  Closing
         # may legitimately wait for buffered I/O, but it is no longer on the
@@ -1652,6 +1755,11 @@ def main():
                     ),
                     "debug_frames": (
                         None if debug_writer is None else debug_writer.get_state()
+                    ),
+                    "yolopv2_fusion": (
+                        detector.get_state()
+                        if detector is not None and hasattr(detector, "get_state")
+                        else {"enabled": False}
                     ),
                 },
             }
