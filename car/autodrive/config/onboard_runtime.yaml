@@ -152,9 +152,13 @@ wheels:
   transition_time: 0.25
 
 safety:
-  watchdog_timeout: 3.0
+  # A stale arc held for 0.801 s was enough to miss a corner. Diagnostics are
+  # now asynchronous; the watchdog requests a stop after 0.40 s if fresh
+  # control stops. Hardware-call duration is logged separately because an I2C
+  # transaction that is already blocked cannot be pre-empted safely in Python.
+  watchdog_timeout: 0.40
   watchdog_check_interval: 0.05
-  maximum_inference_time: 2.5
+  maximum_inference_time: 0.25
   # A bad frame stops immediately. Four consecutive valid frames are required
   # before starting again, instead of latching the stop for the whole process.
   resume_valid_frames: 4
@@ -192,9 +196,11 @@ safety:
     progress_timeout_seconds: 1.00
     minimum_heading_progress: 0.015
     minimum_lateral_progress: 0.010
-    # Do not count exit evidence during the forced minimum. After the apex,
-    # retain the committed direction until both real boundaries remain visible
-    # for exit_valid_frames; a one-edge fit cannot immediately reverse it.
+    # Do not count exit evidence during the forced minimum. Once consecutive
+    # near-field observations show the new straight is aligned, one fresh
+    # fitted boundary is enough to hand control back to LCC. The stricter
+    # exit_valid_frames/two-boundary rule remains only as a fallback when the
+    # apex ends without geometric alignment.
     apex_trigger_factor: 0.50
     # The failed run measured 0.452 live but 0.429 on deterministic replay;
     # 0.40 preserves a small margin without moving the normal 0.30 exit line.
@@ -238,6 +244,11 @@ runtime:
   # status, and exact configuration/calibration snapshots.
   archive_runs: true
   archive_fps: 20
-  # Keep video encoding out of the motor-control critical path. This queue
-  # absorbs short MP4 flush stalls without dropping the continuous run video.
+  # Video encoding is best-effort and never blocks motor control. If storage
+  # falls behind this bounded queue, the oldest pending diagnostic frame is
+  # dropped and the archive CSV remains aligned to the frames actually kept.
   archive_queue_frames: 32
+  # CSV, web JPEG/JSON, and optional full-resolution debug frames also run on
+  # background workers with bounded queues.
+  log_queue_rows: 256
+  debug_queue_frames: 8

@@ -82,7 +82,10 @@ def build_parser():
     parser.add_argument(
         "--save-debug-frames",
         action="store_true",
-        help="Save every raw, annotated, and bird's-eye frame for diagnosis",
+        help=(
+            "Best-effort raw, annotated, and bird's-eye snapshots for diagnosis; "
+            "slow storage may drop old pending frames"
+        ),
     )
     parser.add_argument(
         "--no-run-archive",
@@ -244,8 +247,36 @@ class CameraSource:
         self.camera.stop()
 
 
+def _offer_latest(work_queue, item):
+    """Enqueue without blocking, replacing the oldest queued diagnostic.
+
+    Diagnostics must never delay a motor update.  When storage falls behind,
+    retaining the newest observation is also more useful than allowing an old
+    backlog to hide the vehicle's current state.
+    """
+    try:
+        work_queue.put_nowait(item)
+        return True, 0
+    except queue.Full:
+        pass
+
+    try:
+        work_queue.get_nowait()
+        work_queue.task_done()
+    except queue.Empty:
+        # The consumer won the race after ``Full``; retrying below is safe.
+        pass
+    try:
+        work_queue.put_nowait(item)
+        return True, 1
+    except queue.Full:
+        # A consumer cannot cause this in the single-producer design, but do
+        # not turn a diagnostic race back into a control-loop wait.
+        return False, 1
+
+
 class RunArchive:
-    """Persist one self-contained experiment for deterministic diagnosis."""
+    """Persist replay-aligned videos without blocking the control loop."""
 
     def __init__(self, output_dir, enabled, fps, mode, queue_frames=32):
         self.enabled = bool(enabled)
@@ -257,6 +288,12 @@ class RunArchive:
         self._frame_queue = None
         self._writer_thread = None
         self._writer_error = None
+        self._stats_lock = threading.Lock()
+        self._enqueued_frames = 0
+        self._written_frames = 0
+        self._dropped_frames = 0
+        self._archive_log_handle = None
+        self._archive_log_writer = None
         if not self.enabled:
             return
         queue_frames = int(queue_frames)
@@ -305,40 +342,88 @@ class RunArchive:
         if birdeye is not None:
             self._writer("birdeye.mp4", birdeye).write(birdeye)
 
+    def _write_record_now(self, raw, annotated, birdeye, row):
+        self._write_frames_now(raw, annotated, birdeye)
+        # Keep the archive sidecar exactly aligned with the frames that were
+        # actually encoded.  If backpressure forced a frame drop, deterministic
+        # replay still receives the correct timestamp for every retained frame.
+        if self._archive_log_writer is None:
+            self._archive_log_handle = self.log_path.open(
+                "w", encoding="utf-8", newline=""
+            )
+            self._archive_log_writer = csv.DictWriter(
+                self._archive_log_handle,
+                fieldnames=list(row.keys()),
+            )
+            self._archive_log_writer.writeheader()
+        self._archive_log_writer.writerow(row)
+        self._archive_log_handle.flush()
+
     def _write_loop(self):
         try:
             while True:
-                frames = self._frame_queue.get()
+                record = self._frame_queue.get()
                 try:
-                    if frames is None:
+                    if record is None:
                         break
                     if self._writer_error is None:
-                        self._write_frames_now(*frames)
-                except Exception as exc:  # surfaced to the control thread
+                        self._write_record_now(*record)
+                        with self._stats_lock:
+                            self._written_frames += 1
+                    else:
+                        with self._stats_lock:
+                            self._dropped_frames += 1
+                except Exception as exc:
                     self._writer_error = exc
+                    with self._stats_lock:
+                        self._dropped_frames += 1
                 finally:
                     self._frame_queue.task_done()
         finally:
             for writer in self._writers.values():
                 writer.release()
             self._writers.clear()
+            if self._archive_log_handle is not None:
+                self._archive_log_handle.close()
+                self._archive_log_handle = None
+                self._archive_log_writer = None
 
-    def _raise_writer_error(self):
-        if self._writer_error is not None:
-            raise RuntimeError(
-                f"run archive video writer failed: {self._writer_error}"
-            ) from self._writer_error
-
-    def write_frames(self, raw, annotated, birdeye):
+    def write_frames(self, raw, annotated, birdeye, row):
         if not self.enabled:
-            return
-        self._raise_writer_error()
-        # Video encoding occasionally paused the hardware control loop for
-        # 200-330 ms while the last 30/0 apex command remained applied.  A
-        # bounded queue absorbs those short encoder flushes while preserving
-        # every experiment frame.  Sustained disk backpressure still blocks
-        # safely instead of silently dropping diagnostic data.
-        self._frame_queue.put((raw, annotated, birdeye))
+            return False
+        if self._writer_error is not None:
+            with self._stats_lock:
+                self._dropped_frames += 1
+            return False
+        accepted, dropped = _offer_latest(
+            self._frame_queue,
+            (raw, annotated, birdeye, dict(row)),
+        )
+        with self._stats_lock:
+            self._enqueued_frames += int(accepted)
+            self._dropped_frames += dropped + int(not accepted)
+        return accepted
+
+    def get_state(self):
+        with self._stats_lock:
+            state = {
+                "enabled": self.enabled,
+                "queue_capacity": (
+                    0 if self._frame_queue is None else self._frame_queue.maxsize
+                ),
+                "queue_depth": (
+                    0 if self._frame_queue is None else self._frame_queue.qsize()
+                ),
+                "enqueued_frames": self._enqueued_frames,
+                "written_frames": self._written_frames,
+                "dropped_frames": self._dropped_frames,
+                "error": (
+                    None
+                    if self._writer_error is None
+                    else str(self._writer_error)
+                ),
+            }
+        return state
 
     def write_status(self, payload):
         if self.enabled:
@@ -350,11 +435,262 @@ class RunArchive:
         self._frame_queue.put(None)
         self._writer_thread.join()
         self._writer_thread = None
-        self._raise_writer_error()
 
-    def copy_log(self, source):
-        if self.enabled and Path(source).is_file():
-            shutil.copy2(source, self.log_path)
+
+class AsyncCsvLogger:
+    """Write control records in the background with bounded memory."""
+
+    def __init__(self, path, fieldnames, queue_rows=256):
+        queue_rows = int(queue_rows)
+        if queue_rows < 1:
+            raise ValueError("CSV queue_rows must be at least 1")
+        self.path = Path(path)
+        self.fieldnames = list(fieldnames)
+        self._queue = queue.Queue(maxsize=queue_rows)
+        self._lock = threading.Lock()
+        self._enqueued = 0
+        self._written = 0
+        self._dropped = 0
+        self._error = None
+        self._thread = threading.Thread(
+            target=self._write_loop,
+            name="lcc-csv-log",
+            daemon=True,
+        )
+        self._thread.start()
+
+    def _write_loop(self):
+        try:
+            with self.path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=self.fieldnames)
+                writer.writeheader()
+                while True:
+                    row = self._queue.get()
+                    try:
+                        if row is None:
+                            break
+                        writer.writerow(row)
+                        handle.flush()
+                        with self._lock:
+                            self._written += 1
+                    finally:
+                        self._queue.task_done()
+        except Exception as exc:
+            with self._lock:
+                self._error = exc
+
+    def submit(self, row):
+        with self._lock:
+            failed = self._error is not None
+        if failed:
+            with self._lock:
+                self._dropped += 1
+            return False
+        accepted, dropped = _offer_latest(self._queue, dict(row))
+        with self._lock:
+            self._enqueued += int(accepted)
+            self._dropped += dropped + int(not accepted)
+        return accepted
+
+    def get_state(self):
+        with self._lock:
+            return {
+                "queue_capacity": self._queue.maxsize,
+                "queue_depth": self._queue.qsize(),
+                "enqueued_rows": self._enqueued,
+                "written_rows": self._written,
+                "dropped_rows": self._dropped,
+                "error": None if self._error is None else str(self._error),
+            }
+
+    def close(self):
+        if self._thread is None:
+            return
+        if self._thread.is_alive():
+            self._queue.put(None)
+            self._thread.join()
+        self._thread = None
+
+
+class LivePublisher:
+    """Publish replaceable web snapshots/status outside motor control."""
+
+    def __init__(
+        self,
+        status_path,
+        archive_status_path,
+        latest_frame_path,
+        latest_birdeye_path,
+        save_latest,
+    ):
+        self.status_path = Path(status_path)
+        self.archive_status_path = (
+            None
+            if archive_status_path is None
+            else Path(archive_status_path)
+        )
+        self.latest_frame_path = Path(latest_frame_path)
+        self.latest_birdeye_path = Path(latest_birdeye_path)
+        self.save_latest = bool(save_latest)
+        self._queue = queue.Queue(maxsize=1)
+        self._lock = threading.Lock()
+        self._published = 0
+        self._dropped = 0
+        self._error = None
+        self._thread = threading.Thread(
+            target=self._write_loop,
+            name="lcc-live-publisher",
+            daemon=True,
+        )
+        self._thread.start()
+
+    def _write_loop(self):
+        try:
+            while True:
+                record = self._queue.get()
+                try:
+                    if record is None:
+                        break
+                    payload, annotated, birdeye = record
+                    if self.save_latest:
+                        if not cv2.imwrite(str(self.latest_frame_path), annotated):
+                            raise RuntimeError("failed to write latest annotated frame")
+                        if birdeye is not None and not cv2.imwrite(
+                            str(self.latest_birdeye_path), birdeye
+                        ):
+                            raise RuntimeError("failed to write latest bird's-eye frame")
+                    write_status(self.status_path, payload)
+                    if self.archive_status_path is not None:
+                        write_status(self.archive_status_path, payload)
+                    with self._lock:
+                        self._published += 1
+                finally:
+                    self._queue.task_done()
+        except Exception as exc:
+            with self._lock:
+                self._error = exc
+
+    def publish(self, payload, annotated, birdeye):
+        with self._lock:
+            failed = self._error is not None
+        if failed:
+            with self._lock:
+                self._dropped += 1
+            return False
+        accepted, dropped = _offer_latest(
+            self._queue,
+            (dict(payload), annotated, birdeye),
+        )
+        with self._lock:
+            self._dropped += dropped + int(not accepted)
+        return accepted
+
+    def get_state(self):
+        with self._lock:
+            return {
+                "queue_depth": self._queue.qsize(),
+                "published_updates": self._published,
+                "dropped_updates": self._dropped,
+                "error": None if self._error is None else str(self._error),
+            }
+
+    def close(self):
+        if self._thread is None:
+            return
+        if self._thread.is_alive():
+            self._queue.put(None)
+            self._thread.join()
+        self._thread = None
+
+
+class DebugFrameWriter:
+    """Best-effort debug image writer that cannot stall vehicle control."""
+
+    def __init__(self, output_dir, queue_frames=8):
+        self.output_dir = None if output_dir is None else Path(output_dir)
+        self._queue = None
+        self._thread = None
+        self._lock = threading.Lock()
+        self._written = 0
+        self._dropped = 0
+        self._error = None
+        if self.output_dir is None:
+            return
+        queue_frames = int(queue_frames)
+        if queue_frames < 1:
+            raise ValueError("debug queue_frames must be at least 1")
+        self._queue = queue.Queue(maxsize=queue_frames)
+        self._thread = threading.Thread(
+            target=self._write_loop,
+            name="lcc-debug-frames",
+            daemon=True,
+        )
+        self._thread.start()
+
+    def _write_loop(self):
+        try:
+            while True:
+                record = self._queue.get()
+                try:
+                    if record is None:
+                        break
+                    sample, raw, annotated, birdeye = record
+                    stem = f"{sample:04d}"
+                    if not cv2.imwrite(
+                        str(self.output_dir / f"{stem}_raw.jpg"), raw
+                    ):
+                        raise RuntimeError("failed to write raw debug frame")
+                    if not cv2.imwrite(
+                        str(self.output_dir / f"{stem}_annotated.jpg"),
+                        annotated,
+                    ):
+                        raise RuntimeError("failed to write annotated debug frame")
+                    if birdeye is not None and not cv2.imwrite(
+                        str(self.output_dir / f"{stem}_birdeye.png"), birdeye
+                    ):
+                        raise RuntimeError("failed to write bird's-eye debug frame")
+                    with self._lock:
+                        self._written += 1
+                finally:
+                    self._queue.task_done()
+        except Exception as exc:
+            with self._lock:
+                self._error = exc
+
+    def submit(self, sample, raw, annotated, birdeye):
+        if self._queue is None:
+            return False
+        with self._lock:
+            failed = self._error is not None
+        if failed:
+            with self._lock:
+                self._dropped += 1
+            return False
+        accepted, dropped = _offer_latest(
+            self._queue,
+            (int(sample), raw, annotated, birdeye),
+        )
+        with self._lock:
+            self._dropped += dropped + int(not accepted)
+        return accepted
+
+    def get_state(self):
+        with self._lock:
+            return {
+                "enabled": self._queue is not None,
+                "queue_depth": 0 if self._queue is None else self._queue.qsize(),
+                "written_frames": self._written,
+                "dropped_frames": self._dropped,
+                "error": None if self._error is None else str(self._error),
+            }
+
+    def close(self):
+        if self._thread is None:
+            return
+        if self._thread.is_alive():
+            self._queue.put(None)
+            self._thread.join()
+        self._thread = None
 
 
 class SurfaceOnlyDetector:
@@ -419,7 +755,7 @@ def build_components(config, motors_enabled, calibration_path):
     safety = config.get("safety", {})
     watchdog = CommandWatchdog(
         driver,
-        timeout=float(safety.get("watchdog_timeout", 3.0)),
+        timeout=float(safety.get("watchdog_timeout", 0.40)),
         check_interval=float(safety.get("watchdog_check_interval", 0.05)),
     )
     return detector, estimator, controller, mapper, boundary_tracker, driver, watchdog
@@ -647,9 +983,9 @@ def main():
         camera_config["index"] = args.camera_index
     safety_config = config.get("safety", {})
     maximum_inference_time = float(
-        safety_config.get("maximum_inference_time", 2.5)
+        safety_config.get("maximum_inference_time", 0.25)
     )
-    watchdog_timeout = float(safety_config.get("watchdog_timeout", 3.0))
+    watchdog_timeout = float(safety_config.get("watchdog_timeout", 0.40))
     if maximum_inference_time <= 0:
         raise ValueError("maximum_inference_time must be positive")
     if watchdog_timeout <= maximum_inference_time:
@@ -730,8 +1066,11 @@ def main():
     detector = estimator = controller = mapper = boundary_tracker = driver = watchdog = None
     motion_gate = None
     corner_gate = None
-    log_handle = None
+    log_writer = None
+    live_publisher = None
+    debug_writer = None
     last_row = None
+    previous_timestamp = None
     termination_reason = "runtime shutdown"
     try:
         (
@@ -787,6 +1126,13 @@ def main():
             "sample",
             "timestamp_s",
             "frame_age_s",
+            "capture_interval_s",
+            "loop_start_interval_s",
+            "source_wait_ms",
+            "analysis_ms",
+            "control_gate_ms",
+            "hardware_apply_ms",
+            "birdeye_render_ms",
             "inference_ms",
             "boundary_ms",
             "boundary_source",
@@ -822,15 +1168,27 @@ def main():
             "corner_apex_active",
             "corner_apex_age_s",
             "corner_apex_trigger_reason",
+            "corner_apex_completion_reason",
             "corner_apex_exit_valid_count",
             "motion_gate_ready",
             "motion_gate_valid_frames",
+            "archive_queue_depth",
+            "archive_dropped_frames",
+            "log_queue_depth",
+            "log_dropped_rows",
+            "live_dropped_updates",
+            "debug_dropped_frames",
         ]
-        log_handle = log_path.open("w", encoding="utf-8", newline="")
-        writer = csv.DictWriter(log_handle, fieldnames=fieldnames)
-        writer.writeheader()
+        log_writer = AsyncCsvLogger(
+            log_path,
+            fieldnames,
+            queue_rows=int(runtime_config.get("log_queue_rows", 256)),
+        )
+        debug_writer = DebugFrameWriter(
+            debug_output_dir,
+            queue_frames=int(runtime_config.get("debug_queue_frames", 8)),
+        )
 
-        previous_timestamp = None
         sample = 0
         motion_gate = PerceptionMotionGate(
             resume_valid_frames=int(
@@ -868,6 +1226,14 @@ def main():
         save_latest = bool(
             config.get("runtime", {}).get("save_latest_frame", True)
         )
+        live_publisher = LivePublisher(
+            status_path,
+            archive.status_path if archive.enabled else None,
+            latest_frame_path,
+            latest_birdeye_path,
+            save_latest,
+        )
+        previous_loop_started = None
         print(
             f"Onboard runtime started: mode={'HARDWARE' if args.enable_motors else 'DRY-RUN'}, "
             f"source={args.video or 'camera'}, calibration={calibration_path or 'none'}",
@@ -877,6 +1243,13 @@ def main():
             print(f"Run archive: {archive.run_dir}", flush=True)
 
         while True:
+            loop_started = time.monotonic()
+            loop_start_interval = (
+                None
+                if previous_loop_started is None
+                else loop_started - previous_loop_started
+            )
+            previous_loop_started = loop_started
             if (
                 args.max_runtime_seconds
                 and time.monotonic() - runtime_started
@@ -888,7 +1261,9 @@ def main():
                 )
                 print("Maximum runtime reached; stopping.", flush=True)
                 break
+            source_wait_started = time.monotonic()
             frame, timestamp, frame_age = source.read()
+            source_wait_time = time.monotonic() - source_wait_started
             if frame is None:
                 termination_reason = "camera/video source ended"
                 break
@@ -898,6 +1273,7 @@ def main():
                 else max(1e-3, float(timestamp - previous_timestamp))
             )
             previous_timestamp = timestamp
+            analysis_started = time.monotonic()
             (
                 estimate,
                 command,
@@ -916,6 +1292,8 @@ def main():
                 max_inference,
                 boundary_tracker,
             )
+            analysis_time = time.monotonic() - analysis_started
+            gate_started = time.monotonic()
             displayed_command = command
             command = corner_gate.filter(
                 command,
@@ -937,6 +1315,7 @@ def main():
                 # interval; yellow/missing boundaries still stop upstream.
                 allow_discontinuity=bool(corner_state["active"]),
             )
+            gate_time = time.monotonic() - gate_started
             if command != displayed_command:
                 cv2.rectangle(
                     annotated,
@@ -958,37 +1337,48 @@ def main():
                     1,
                     cv2.LINE_AA,
                 )
+            hardware_started = time.monotonic()
             watchdog.heartbeat()
             wheel_state = driver.apply(command)
+            hardware_apply_time = time.monotonic() - hardware_started
+            # Starting motion can include a bounded ramp.  Refresh after the
+            # hardware call so that intentional transition time does not eat
+            # into the much shorter stale-command watchdog window.
+            watchdog.heartbeat()
+            birdeye_started = time.monotonic()
             birdeye = (
                 None
                 if boundary_result is None
                 else render_birdeye_debug(boundary_result, estimate)
             )
+            birdeye_render_time = time.monotonic() - birdeye_started
             diagnostic_now = time.monotonic()
             live_update_due = diagnostic_now >= next_live_update_at
-            if save_latest and live_update_due:
-                cv2.imwrite(str(latest_frame_path), annotated)
-                if birdeye is not None:
-                    cv2.imwrite(str(latest_birdeye_path), birdeye)
-            archive.write_frames(frame, annotated, birdeye)
-            if debug_output_dir is not None:
-                stem = f"{sample:04d}"
-                cv2.imwrite(str(debug_output_dir / f"{stem}_raw.jpg"), frame)
-                cv2.imwrite(
-                    str(debug_output_dir / f"{stem}_annotated.jpg"), annotated
-                )
-                if birdeye is not None:
-                    cv2.imwrite(
-                        str(debug_output_dir / f"{stem}_birdeye.png"),
-                        birdeye,
-                    )
-
+            archive_state = archive.get_state()
+            log_state = log_writer.get_state()
+            live_state = live_publisher.get_state()
+            debug_state = debug_writer.get_state()
+            motion_state = motion_gate.get_state()
             row = {
                 "sample": sample,
                 "timestamp_s": round(float(timestamp), 4),
                 "frame_age_s": (
                     None if frame_age is None else round(float(frame_age), 4)
+                ),
+                "capture_interval_s": (
+                    None if dt is None else round(float(dt), 4)
+                ),
+                "loop_start_interval_s": (
+                    None
+                    if loop_start_interval is None
+                    else round(float(loop_start_interval), 4)
+                ),
+                "source_wait_ms": round(source_wait_time * 1000, 3),
+                "analysis_ms": round(analysis_time * 1000, 3),
+                "control_gate_ms": round(gate_time * 1000, 3),
+                "hardware_apply_ms": round(hardware_apply_time * 1000, 3),
+                "birdeye_render_ms": round(
+                    birdeye_render_time * 1000, 3
                 ),
                 "inference_ms": round(inference_time * 1000, 3),
                 "boundary_ms": round(boundary_time * 1000, 3),
@@ -1075,17 +1465,28 @@ def main():
                 "corner_apex_trigger_reason": corner_state[
                     "apex_trigger_reason"
                 ],
+                "corner_apex_completion_reason": corner_state[
+                    "apex_completion_reason"
+                ],
                 "corner_apex_exit_valid_count": corner_state[
                     "apex_exit_valid_count"
                 ],
-                "motion_gate_ready": motion_gate.get_state()["ready"],
-                "motion_gate_valid_frames": motion_gate.get_state()[
-                    "consecutive_valid"
-                ],
+                "motion_gate_ready": motion_state["ready"],
+                "motion_gate_valid_frames": motion_state["consecutive_valid"],
+                "archive_queue_depth": archive_state["queue_depth"],
+                "archive_dropped_frames": archive_state["dropped_frames"],
+                "log_queue_depth": log_state["queue_depth"],
+                "log_dropped_rows": log_state["dropped_rows"],
+                "live_dropped_updates": live_state["dropped_updates"],
+                "debug_dropped_frames": debug_state["dropped_frames"],
             }
             last_row = row
-            writer.writerow(row)
-            log_handle.flush()
+            # Every operation below is a non-blocking memory enqueue.  Slow
+            # disks/JPEG/MP4 encoding can drop diagnostics, but can no longer
+            # leave the previous wheel command applied through a corner.
+            log_writer.submit(row)
+            archive.write_frames(frame, annotated, birdeye, row)
+            debug_writer.submit(sample, frame, annotated, birdeye)
             if live_update_due:
                 live_status = {
                     "mode": wheel_state["mode"],
@@ -1100,13 +1501,18 @@ def main():
                     "wheel_driver": driver.get_state(),
                     "watchdog": watchdog.get_state(),
                     "corner_continuation": corner_state,
-                    "motion_gate": motion_gate.get_state(),
+                    "motion_gate": motion_state,
                     "run_archive": (
                         None if not archive.enabled else str(archive.run_dir)
                     ),
+                    "diagnostics": {
+                        "archive": archive.get_state(),
+                        "control_log": log_writer.get_state(),
+                        "live_publisher": live_publisher.get_state(),
+                        "debug_frames": debug_writer.get_state(),
+                    },
                 }
-                write_status(status_path, live_status)
-                archive.write_status(live_status)
+                live_publisher.publish(live_status, annotated, birdeye)
                 next_live_update_at = diagnostic_now + live_update_interval
             if diagnostic_now >= next_console_update_at:
                 print(
@@ -1119,7 +1525,9 @@ def main():
                     f"{wheel_state['front_right_pwm']:+d},"
                     f"{wheel_state['rear_right_pwm']:+d}) "
                     f"inference={inference_time * 1000:.0f}ms "
-                    f"boundary_ms={boundary_time * 1000:.1f}",
+                    f"boundary_ms={boundary_time * 1000:.1f} "
+                    f"hardware_ms={hardware_apply_time * 1000:.1f} "
+                    f"loop_gap_ms={float(loop_start_interval or 0.0) * 1000:.1f}",
                     flush=True,
                 )
                 next_console_update_at = (
@@ -1140,6 +1548,19 @@ def main():
             watchdog.close()
         if driver is not None:
             driver.stop(termination_reason)
+        source.close()
+        # Drain diagnostic workers only after the wheels are stopped.  Closing
+        # may legitimately wait for buffered I/O, but it is no longer on the
+        # vehicle-control critical path.  Stop the live publisher first so an
+        # older queued update cannot overwrite the final stopped status.
+        if live_publisher is not None:
+            live_publisher.close()
+        if debug_writer is not None:
+            debug_writer.close()
+        if log_writer is not None:
+            log_writer.close()
+        archive.close()
+        if driver is not None:
             final_wheel_state = driver.get_state()
             final_status = {
                 "mode": final_wheel_state["mode"],
@@ -1171,14 +1592,23 @@ def main():
                 "run_archive": (
                     None if not archive.enabled else str(archive.run_dir)
                 ),
+                "diagnostics": {
+                    "archive": archive.get_state(),
+                    "control_log": (
+                        None if log_writer is None else log_writer.get_state()
+                    ),
+                    "live_publisher": (
+                        None
+                        if live_publisher is None
+                        else live_publisher.get_state()
+                    ),
+                    "debug_frames": (
+                        None if debug_writer is None else debug_writer.get_state()
+                    ),
+                },
             }
             write_status(status_path, final_status)
             archive.write_status(final_status)
-        source.close()
-        archive.close()
-        if log_handle is not None:
-            log_handle.close()
-        archive.copy_log(log_path)
     return 0
 
 

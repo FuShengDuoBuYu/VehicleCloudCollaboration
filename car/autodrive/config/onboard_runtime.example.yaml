@@ -90,9 +90,9 @@ wheels:
   transition_time: 0.25
 
 safety:
-  watchdog_timeout: 3.0
+  watchdog_timeout: 0.40
   watchdog_check_interval: 0.05
-  maximum_inference_time: 2.5
+  maximum_inference_time: 0.25
   resume_valid_frames: 4
   resume_min_confidence: 0.35
   resume_maximum_lateral_jump: 0.32
@@ -129,3 +129,5 @@ runtime:
   archive_runs: true
   archive_fps: 20
   archive_queue_frames: 32
+  log_queue_rows: 256
+  debug_queue_frames: 8

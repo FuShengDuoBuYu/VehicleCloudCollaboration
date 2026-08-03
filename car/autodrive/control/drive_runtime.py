@@ -414,6 +414,8 @@ class PerceptionMotionGate:
     stopped validation window before the wheels move again.
     """
 
+    _HISTORICAL_SOURCES = {"history", "visible-history"}
+
     def __init__(
         self,
         resume_valid_frames: int = 4,
@@ -483,6 +485,15 @@ class PerceptionMotionGate:
         lateral = float(estimate.lateral_error)
         heading = float(estimate.heading_error)
         source = self._source(boundary_result)
+        # A history-backed estimate reuses extrapolated geometry and can jump
+        # for one frame when a fresh fit momentarily disappears.  Treating it
+        # as a new continuity anchor caused run 20260803_180818 to stop at
+        # sample 242, then reject the following fresh outer-edge estimate as a
+        # second jump.  The controller's own confidence/missing-boundary stops
+        # still apply; history simply cannot trip or rebase the fresh-geometry
+        # continuity check by itself.
+        if source in self._HISTORICAL_SOURCES:
+            return None
         if (
             self.maximum_lateral_jump > 0.0
             and self._last_lateral is not None
@@ -522,6 +533,8 @@ class PerceptionMotionGate:
         boundary_result,
     ) -> None:
         if estimate is None or boundary_result is None or not estimate.valid:
+            return
+        if self._source(boundary_result) in self._HISTORICAL_SOURCES:
             return
         self._last_lateral = float(estimate.lateral_error)
         self._last_heading = float(estimate.heading_error)
@@ -638,6 +651,7 @@ class CornerContinuationGate:
         self._apex_started_at: Optional[float] = None
         self._apex_trigger_reason: Optional[str] = None
         self._apex_completed = False
+        self._apex_completion_reason: Optional[str] = None
         self._apex_exit_valid_count = 0
         self._exit_valid_count = 0
         self._last_reason = "inactive"
@@ -782,6 +796,33 @@ class CornerContinuationGate:
                 else "committed-corner delay"
             )
 
+    def _arm_delayed_apex(
+        self,
+        boundary_result,
+        current_time: float,
+    ) -> None:
+        """Apply the fixed apex fallback even after fresh fitting drops out.
+
+        A control-loop pause can skip directly from the committing frame to a
+        history-backed frame after ``apex_commit_delay_seconds``.  The old
+        code checked the delay only while a fresh edge with the original role
+        was still fitted, so that skipped interval could suppress the apex
+        entirely.  Once a direction is committed, elapsed time is sufficient
+        to arm the bounded apex as long as the tracked physical boundary still
+        permits continuation.  Yellow or genuinely missing boundaries remain
+        non-recoverable and are rejected before this method is reached.
+        """
+        if (
+            not self._apex_completed
+            and self._apex_started_at is None
+            and self._committed_at is not None
+            and current_time - self._committed_at
+            >= self.config.apex_commit_delay_seconds
+            and self._boundary_allows_continuation(boundary_result)
+        ):
+            self._apex_started_at = current_time
+            self._apex_trigger_reason = "committed-corner delay"
+
     def _apex_active(
         self,
         current_time: float,
@@ -793,6 +834,7 @@ class CornerContinuationGate:
         apex_age = current_time - self._apex_started_at
         if apex_age >= self.config.maximum_apex_seconds:
             self._apex_completed = True
+            self._apex_completion_reason = "hard-time-limit"
             self._last_reason = "apex hard time limit reached"
             return False
 
@@ -831,9 +873,58 @@ class CornerContinuationGate:
 
         if self._apex_exit_valid_count >= self.config.apex_exit_valid_frames:
             self._apex_completed = True
+            self._apex_completion_reason = "alignment-restored"
             self._last_reason = "apex alignment restored"
             return False
         return True
+
+    def _lcc_handoff_ready(
+        self,
+        command: DifferentialDriveCommand,
+        estimate: LaneEstimate,
+        boundary_result,
+    ) -> bool:
+        """Return control after a geometrically confirmed apex recovery.
+
+        Waiting for two physical boundaries kept the old right arc active for
+        another 2.7-3.5 seconds on the straight, even while LCC requested a
+        left correction.  The apex latch already requires consecutive aligned
+        observations; one fresh fitted edge is sufficient for ordinary LCC to
+        resume once that bounded turn has completed.
+        """
+        source = (
+            None
+            if boundary_result is None
+            else str(getattr(boundary_result, "source", ""))
+        )
+        return bool(
+            self._apex_completed
+            and self._apex_completion_reason == "alignment-restored"
+            and command.action != "stop"
+            and estimate.valid
+            and command.confidence >= self.config.exit_min_confidence
+            and source in {"both", "outer+width", "inner+width"}
+            and abs(float(estimate.near_heading_error))
+            <= self.config.apex_exit_near_heading
+        )
+
+    def _post_apex_lateral_stop_must_apply(
+        self,
+        command: DifferentialDriveCommand,
+        estimate: LaneEstimate,
+    ) -> bool:
+        """Never steer farther past centre after the bounded apex is over."""
+        if (
+            not self._apex_completed
+            or command.reason != "lateral error exceeds recovery limit"
+            or not estimate.valid
+        ):
+            return False
+        # A same-side error can be the conservative one-edge virtual centre
+        # settling immediately after the pivot.  An opposite-side error means
+        # the retained corner command has already carried the car through and
+        # must not override LCC's hard safety stop.
+        return float(estimate.lateral_error) * self._direction < 0.0
 
     def _boundary_allows_continuation(self, boundary_result) -> bool:
         if boundary_result is None or bool(boundary_result.yellow_hazard):
@@ -880,6 +971,13 @@ class CornerContinuationGate:
             self.reset()
             self._last_reason = "corner continuation hard time limit reached"
             return self._stop(self._last_reason, command.confidence)
+
+        if self._direction != 0:
+            # Check the time fallback on every safe continuation frame, not
+            # only on a fresh fit with the same boundary role.  This makes a
+            # committed 90-degree corner deterministic even when one control
+            # interval is skipped and the next estimate comes from history.
+            self._arm_delayed_apex(boundary_result, current_time)
 
         direction = self._steering_direction(command)
         if self._direction == 0:
@@ -938,6 +1036,10 @@ class CornerContinuationGate:
                 estimate,
                 boundary_result,
             )
+            if self._lcc_handoff_ready(command, estimate, boundary_result):
+                self.reset()
+                self._last_reason = "aligned post-apex handoff to LCC"
+                return command
             weak_or_opposite = bool(
                 direction != self._direction
                 or abs(command.steering) <= self.config.exit_steering_threshold
@@ -1006,6 +1108,11 @@ class CornerContinuationGate:
                 if apex_active
                 else command
             )
+
+        if self._post_apex_lateral_stop_must_apply(command, estimate):
+            self.reset()
+            self._last_reason = "post-apex lateral safety stop"
+            return command
 
         if (
             command.reason not in self._RECOVERABLE_REASONS
@@ -1145,6 +1252,7 @@ class CornerContinuationGate:
             "apex_age_seconds": apex_age,
             "apex_commit_delay_seconds": self.config.apex_commit_delay_seconds,
             "apex_trigger_reason": self._apex_trigger_reason,
+            "apex_completion_reason": self._apex_completion_reason,
             "minimum_apex_seconds": self.config.minimum_apex_seconds,
             "maximum_apex_seconds": self.config.maximum_apex_seconds,
             "apex_exit_valid_count": self._apex_exit_valid_count,

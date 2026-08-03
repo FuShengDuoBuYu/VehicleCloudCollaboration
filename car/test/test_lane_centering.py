@@ -3,6 +3,7 @@
 import sys
 import tempfile
 import time
+import queue
 from types import SimpleNamespace
 import unittest
 from pathlib import Path
@@ -35,6 +36,7 @@ from autodrive.perception.perspective import (
 from autodrive.runtime.onboard import (
     SurfaceOnlyDetector,
     VideoSource,
+    _offer_latest,
     analyze,
     fuse_tracking_confidence,
 )
@@ -165,6 +167,17 @@ def make_outer_loop_masks(shift_at_top=0, right_gap=True, right_branch=True):
 
 
 class RoadCenterlineEstimatorTest(unittest.TestCase):
+    def test_diagnostic_queue_replaces_oldest_without_waiting(self):
+        work_queue = queue.Queue(maxsize=1)
+        work_queue.put_nowait("old")
+
+        accepted, dropped = _offer_latest(work_queue, "latest")
+
+        self.assertTrue(accepted)
+        self.assertEqual(dropped, 1)
+        self.assertEqual(work_queue.get_nowait(), "latest")
+        work_queue.task_done()
+
     def test_video_source_uses_archived_per_frame_timestamps(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1637,7 +1650,7 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             0.0,
         )
 
-    def test_two_visible_boundaries_release_apex_to_left_correction(self):
+    def test_single_fresh_boundary_releases_aligned_apex_to_lcc(self):
         gate = CornerContinuationGate(
             CornerContinuationConfig(
                 enabled=True,
@@ -1652,11 +1665,6 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             valid=True,
             yellow_hazard=False,
             source="outer+width",
-        )
-        both = SimpleNamespace(
-            valid=True,
-            yellow_hazard=False,
-            source="both",
         )
         turning_estimate = LaneEstimate(
             True, 0.50, heading_error=0.80, near_heading_error=0.55
@@ -1674,7 +1682,7 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             LaneEstimate(
                 True, 0.70, heading_error=-0.20, near_heading_error=-0.15
             ),
-            both,
+            outer_only,
             now=0.41,
         )
         self.assertEqual(debounced.action, "turn-right")
@@ -1685,23 +1693,15 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             LaneEstimate(
                 True, 0.72, heading_error=-0.18, near_heading_error=-0.12
             ),
-            both,
+            outer_only,
             now=0.48,
-        )
-        self.assertEqual(released.action, "turn-right")
-        released = gate.filter(
-            left_correction,
-            LaneEstimate(
-                True, 0.72, heading_error=-0.17, near_heading_error=-0.11
-            ),
-            both,
-            now=0.55,
         )
         self.assertEqual(released.action, "turn-left")
         self.assertEqual(released.tight_turn_factor, 0.0)
+        self.assertFalse(gate.get_state(now=0.48)["active"])
 
-    def test_second_corner_trace_keeps_right_until_boundaries_reacquire(self):
-        """Regression for run 20260803_145311 samples 255 through 266."""
+    def test_second_corner_trace_hands_back_after_apex_alignment(self):
+        """A fresh one-edge straight must not retain the old corner arc."""
         gate = CornerContinuationGate(
             CornerContinuationConfig(
                 enabled=True,
@@ -1766,9 +1766,11 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             )
             applied.append(gate.filter(command, estimate, boundary, now=now))
 
-        self.assertTrue(all(item.action == "turn-right" for item in applied))
-        self.assertTrue(all(item.steering > 0.0 for item in applied))
-        self.assertTrue(gate.get_state(now=19.0664)["active"])
+        self.assertTrue(all(item.action == "turn-right" for item in applied[:7]))
+        self.assertEqual(applied[7].action, "forward")
+        self.assertLess(applied[7].steering, 0.0)
+        self.assertEqual(applied[8].action, "turn-left")
+        self.assertFalse(gate.get_state(now=19.0664)["active"])
 
         lateral_stop = DifferentialDriveCommand(
             "stop",
@@ -1790,11 +1792,10 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             inner,
             now=19.1337,
         )
-        self.assertEqual(bridged.action, "turn-right")
-        self.assertGreater(bridged.steering, 0.0)
+        self.assertEqual(bridged.action, "stop")
 
-    def test_fourth_corner_role_swap_refreshes_recovery_window(self):
-        """Regression for run 20260803_153056 samples 449 through 468."""
+    def test_fourth_corner_role_swap_honors_opposite_lateral_stop(self):
+        """Post-apex continuation cannot drive farther across centre."""
         gate = CornerContinuationGate(
             CornerContinuationConfig(
                 enabled=True,
@@ -1937,9 +1938,8 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             inner,
             now=1.67,
         )
-        self.assertEqual(bridged.action, "turn-right")
-        self.assertAlmostEqual(bridged.steering, 0.35)
-        self.assertTrue(gate.get_state(now=1.67)["active"])
+        self.assertEqual(bridged.action, "stop")
+        self.assertFalse(gate.get_state(now=1.67)["active"])
 
     def test_committed_corner_uses_fixed_apex_fallback(self):
         """Regression for run 20260803_165757 second physical corner."""
@@ -2002,6 +2002,66 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
         self.assertTrue(state["apex_active"])
         self.assertEqual(
             state["apex_trigger_reason"],
+            "committed-corner delay",
+        )
+
+    def test_delayed_apex_survives_control_gap_and_history_frame(self):
+        """Regression for run 20260803_174558 samples 91 through 92."""
+        gate = CornerContinuationGate(
+            CornerContinuationConfig(
+                enabled=True,
+                apex_commit_delay_seconds=0.30,
+                minimum_apex_seconds=0.55,
+                maximum_apex_seconds=0.70,
+            )
+        )
+        fresh_outer = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="outer+width",
+        )
+        history = SimpleNamespace(
+            valid=True,
+            yellow_hazard=False,
+            source="history",
+        )
+        committed = DifferentialDriveCommand(
+            "turn-right", 0.59632, 0.42, -0.24, 0.46687, "ok", 0.0
+        )
+        entered = gate.filter(
+            committed,
+            LaneEstimate(
+                True,
+                0.46687,
+                lateral_error=0.24258,
+                heading_error=0.59710,
+                near_heading_error=0.14485,
+            ),
+            fresh_outer,
+            now=7.0622,
+        )
+        self.assertEqual(entered.tight_turn_factor, 0.0)
+
+        # The next processed camera frame arrived 0.801 s later and had only
+        # history geometry. It must still execute the standardized apex turn.
+        after_gap = gate.filter(
+            DifferentialDriveCommand(
+                "turn-right", 0.66371, 0.45, -0.28, 0.36415, "ok", 0.0
+            ),
+            LaneEstimate(
+                True,
+                0.36415,
+                lateral_error=0.16364,
+                heading_error=0.64048,
+                near_heading_error=0.22302,
+            ),
+            history,
+            now=7.8632,
+        )
+        self.assertEqual(after_gap.action, "turn-right")
+        self.assertEqual(after_gap.tight_turn_factor, 1.0)
+        self.assertEqual(
+            gate.get_state(now=7.8632)["apex_trigger_reason"],
             "committed-corner delay",
         )
 
@@ -2070,6 +2130,56 @@ class RoadCenterlineEstimatorTest(unittest.TestCase):
             ).action,
             "forward",
         )
+
+    def test_motion_gate_history_jump_does_not_poison_fresh_baseline(self):
+        """Regression for run 20260803_180818 samples 241 through 243."""
+        gate = PerceptionMotionGate(
+            resume_valid_frames=2,
+            resume_min_confidence=0.35,
+            maximum_lateral_jump=0.32,
+            maximum_heading_jump=0.45,
+            require_consistent_source=True,
+        )
+        outer = SimpleNamespace(valid=True, source="outer+width")
+        history = SimpleNamespace(valid=True, source="history")
+        command = DifferentialDriveCommand(
+            "turn-left", -0.15, 0.0, 0.0, 0.55, "ok"
+        )
+
+        self.assertEqual(
+            gate.filter(
+                command,
+                LaneEstimate(True, 0.55, heading_error=-0.18),
+                outer,
+            ).action,
+            "stop",
+        )
+        self.assertEqual(
+            gate.filter(
+                command,
+                LaneEstimate(True, 0.55, heading_error=-0.17),
+                outer,
+            ).action,
+            "turn-left",
+        )
+
+        # The extrapolated frame jumps by more than the normal fresh-geometry
+        # threshold, but neither stops motion nor replaces the outer baseline.
+        self.assertEqual(
+            gate.filter(
+                command,
+                LaneEstimate(True, 0.40, heading_error=-0.68),
+                history,
+            ).action,
+            "turn-left",
+        )
+        fresh = gate.filter(
+            command,
+            LaneEstimate(True, 0.55, heading_error=-0.16),
+            outer,
+        )
+        self.assertEqual(fresh.action, "turn-left")
+        self.assertTrue(gate.get_state()["ready"])
 
     def test_corner_continuation_does_not_mask_two_boundary_lateral_stop(self):
         gate = CornerContinuationGate(

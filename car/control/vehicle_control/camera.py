@@ -66,15 +66,23 @@ class CameraStream:
     def _capture_loop(self):
         interval = 1.0 / max(self.config.fps, 1)
         while self._running:
+            started_at = time.monotonic()
             ok, frame = self.capture.read() if self.capture else (False, None)
             if ok:
                 with self._lock:
                     self._latest_frame = frame
                     self._latest_frame_time = time.monotonic()
                     self._latest_frame_sequence += 1
-            else:
-                time.sleep(0.1)
-            time.sleep(interval)
+            elapsed = time.monotonic() - started_at
+            # VideoCapture often already blocks until the next sensor frame.
+            # Sleeping a full interval again reduced a configured 20 Hz camera
+            # to roughly 15 Hz and removed useful pre-apex observations.  Only
+            # sleep for the unconsumed part of the target period.
+            delay = max(0.0, interval - elapsed)
+            if not ok:
+                delay = max(delay, 0.1)
+            if delay:
+                time.sleep(delay)
 
     def get_jpeg_bytes(self):
         with self._lock:
