@@ -37,6 +37,7 @@ from autodrive.perception.yolopv2_fusion import (
     YOLOPv2FusionConfig,
     YOLOPv2FusionDetector,
 )
+from autodrive.perception.yolopv2_onnx import YOLOPv2ONNXDetector
 from autodrive.runtime.onboard import (
     SurfaceOnlyDetector,
     VideoSource,
@@ -171,6 +172,113 @@ def make_outer_loop_masks(shift_at_top=0, right_gap=True, right_branch=True):
 
 
 class RoadCenterlineEstimatorTest(unittest.TestCase):
+    def test_adaptive_yolopv2_uses_int8_only_after_stable_straight(self):
+        class FakeModel:
+            def __init__(self, fill):
+                self.fill = fill
+                self.calls = 0
+
+            def predict_masks(self, _frame):
+                self.calls += 1
+                mask = np.full((18, 32), self.fill, dtype=np.uint8)
+                return mask, np.zeros_like(mask)
+
+        fp32 = FakeModel(1)
+        int8 = FakeModel(0)
+        detector = YOLOPv2FusionDetector(
+            YOLOPv2FusionConfig(
+                enabled=True,
+                backend="onnxruntime",
+                adaptive_precision=True,
+                straight_enter_frames=2,
+                asynchronous=False,
+                drivable_dilate_kernel=1,
+            ),
+            output_width=32,
+            output_height=18,
+            model=fp32,
+            int8_model=int8,
+        )
+        straight = SimpleNamespace(
+            valid=True,
+            source="both",
+            confidence=0.8,
+            yellow_hazard=False,
+        )
+        forward = SimpleNamespace(action="forward", steering=0.04)
+
+        first, _ = detector.predict_masks(
+            np.zeros((36, 64, 3), dtype=np.uint8)
+        )
+        detector.update_route_state(straight, forward)
+        detector.update_route_state(straight, forward)
+        quantized, _ = detector.predict_masks(
+            np.zeros((36, 64, 3), dtype=np.uint8)
+        )
+
+        self.assertTrue(np.all(first == 1))
+        self.assertFalse(np.any(quantized))
+        self.assertEqual(fp32.calls, 1)
+        self.assertEqual(int8.calls, 1)
+        self.assertEqual(detector.get_state()["requested_precision"], "int8")
+
+        turn = SimpleNamespace(
+            valid=True,
+            source="outer+width",
+            confidence=0.8,
+            yellow_hazard=False,
+        )
+        detector.observe_boundary(turn)
+        classical = np.ones((18, 32), dtype=np.uint8)
+        fused, state = detector.fuse_corridor(classical, quantized)
+
+        self.assertEqual(state["source"], "fallback-precision-transition")
+        self.assertEqual(state["precision"], "int8")
+        self.assertEqual(state["requested_precision"], "fp32")
+        self.assertTrue(np.array_equal(fused, classical))
+
+        restored, _ = detector.predict_masks(
+            np.zeros((36, 64, 3), dtype=np.uint8)
+        )
+        self.assertTrue(np.all(restored == 1))
+        self.assertEqual(fp32.calls, 2)
+        self.assertEqual(detector.get_state()["precision_switches"], 2)
+
+    def test_onnx_detector_crops_padding_and_returns_drivable_mask(self):
+        class TensorInfo:
+            def __init__(self, name):
+                self.name = name
+
+        class FakeSession:
+            def __init__(self):
+                self.tensor = None
+
+            def get_inputs(self):
+                return [TensorInfo("images")]
+
+            def get_outputs(self):
+                return [TensorInfo("drivable_logits")]
+
+            def run(self, outputs, inputs):
+                self.tensor = inputs["images"]
+                logits = np.zeros((1, 2, 192, 320), dtype=np.float32)
+                logits[:, 1, 26:166, 80:240] = 1.0
+                return [logits]
+
+        session = FakeSession()
+        detector = YOLOPv2ONNXDetector(
+            weights="unused.onnx",
+            session=session,
+        )
+        drivable, lane = detector.predict_masks(
+            np.zeros((480, 640, 3), dtype=np.uint8)
+        )
+
+        self.assertEqual(session.tensor.shape, (1, 3, 192, 320))
+        self.assertEqual(drivable.shape, (180, 320))
+        self.assertTrue(np.any(drivable))
+        self.assertFalse(np.any(lane))
+
     def test_yolopv2_intersection_fusion_can_only_shrink_classical_corridor(self):
         class FakeModel:
             def predict_masks(self, _frame):

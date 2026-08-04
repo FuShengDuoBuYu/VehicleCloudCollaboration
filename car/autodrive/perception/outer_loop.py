@@ -108,6 +108,8 @@ class BoundaryTrackResult:
     semantic_overlap_ratio: Optional[float] = None
     semantic_drivable_ratio: Optional[float] = None
     semantic_inference_seconds: Optional[float] = None
+    semantic_precision: Optional[str] = None
+    semantic_requested_precision: Optional[str] = None
 
 
 class OuterLoopBoundaryTracker:

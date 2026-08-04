@@ -24,7 +24,8 @@ perception:
   yolopv2:
     # Enable only with a valid local weight file and after dry-run replay.
     enabled: false
-    weights: /media/pi/FSDBY/weights/yolopv2.pt
+    backend: onnxruntime
+    weights: /media/pi/FSDBY/weights/yolopv2_drivable_fp32.onnx
     device: cpu
     img_size: 320
     fast_mask: true
@@ -32,6 +33,13 @@ perception:
     drivable_only: true
     torch_num_threads: 1
     torch_interop_threads: 1
+    # One inference thread preserves maximum headroom for LCC and the OS.
+    onnx_intra_op_threads: 1
+    adaptive_precision: true
+    int8_weights: /media/pi/FSDBY/weights/yolopv2_drivable_int8_u8s8.onnx
+    straight_enter_frames: 8
+    straight_max_abs_steering: 0.08
+    straight_min_confidence: 0.55
     asynchronous: true
     fusion_mode: intersection
     max_result_age_seconds: 2.5

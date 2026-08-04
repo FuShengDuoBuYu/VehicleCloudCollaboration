@@ -30,7 +30,8 @@ perception:
   # shrink that corridor, never enlarge it into a false-positive island.
   yolopv2:
     enabled: true
-    weights: /media/pi/FSDBY/weights/yolopv2.pt
+    backend: onnxruntime
+    weights: /media/pi/FSDBY/weights/yolopv2_drivable_fp32.onnx
     device: cpu
     img_size: 320
     fast_mask: true
@@ -41,6 +42,16 @@ perception:
     # Reserve CPU capacity for yellow-boundary fitting and the 20 Hz controller.
     torch_num_threads: 1
     torch_interop_threads: 1
+    # One inference thread gave the best semantic/LCC balance on the Pi 5.
+    onnx_intra_op_threads: 1
+    # Use fast INT8 only after the classical LCC confirms a stable straight.
+    # Any turn, weak/missing boundary, or larger steering immediately requests
+    # FP32; an in-flight INT8 result is rejected during that transition.
+    adaptive_precision: true
+    int8_weights: /media/pi/FSDBY/weights/yolopv2_drivable_int8_u8s8.onnx
+    straight_enter_frames: 8
+    straight_max_abs_steering: 0.08
+    straight_min_confidence: 0.55
     # After one stopped warm-up inference, keep the ~20 Hz boundary/control loop
     # independent from the slower semantic worker and always replace queued work
     # with the newest camera frame.
@@ -75,7 +86,7 @@ outer_loop:
   # Fresh two-boundary fits in the corrected bird's-eye image measured
   # 0.554-0.577 on the latest straight runs. Use the configured 0.70 only as
   # the one-boundary fallback; when both edges fit, their real midpoint is used.
-  expected_lane_width_ratio: 0.70
+  expected_lane_width_ratio: 0.58
   minimum_lane_width_ratio: 0.42
   maximum_lane_width_ratio: 0.72
   # The mat has a fixed calibrated width. Do not let partial corner/intersection
@@ -225,7 +236,7 @@ safety:
     # stopped it. Keep a bounded margin for entry-position variation; yellow,
     # missing-boundary and no-progress stops remain independent and immediate.
     maximum_hold_seconds: 8.00
-    progress_timeout_seconds: 1.00
+    progress_timeout_seconds: 0.50
     minimum_heading_progress: 0.015
     minimum_lateral_progress: 0.010
     # Do not count exit evidence during the forced minimum. Once consecutive
@@ -256,7 +267,7 @@ safety:
     minimum_transverse_boundary_ratio: 0.01
     # After the 30/0 apex, stale one-edge geometry may retain only a moderate
     # forward right arc (roughly 23/13), never the preceding saturated command.
-    reacquire_steering_limit: 0.35
+    reacquire_steering_limit: 0.25
     # Latest run reached roughly 2/3 of the bend, then the lateral safety stop
     # handed control to continuation and discarded the apex turn strength.
     # Once the bounded apex interval completes, continuation must move forward

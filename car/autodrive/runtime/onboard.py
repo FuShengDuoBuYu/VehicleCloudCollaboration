@@ -734,6 +734,11 @@ def build_components(config, motors_enabled, calibration_path):
     if bool(yolopv2_settings.get("enabled", False)):
         weights = repo_path(yolopv2_settings.get("weights"))
         yolopv2_settings["weights"] = "" if weights is None else str(weights)
+        if bool(yolopv2_settings.get("adaptive_precision", False)):
+            int8_weights = repo_path(yolopv2_settings.get("int8_weights"))
+            yolopv2_settings["int8_weights"] = (
+                "" if int8_weights is None else str(int8_weights)
+            )
         detector = YOLOPv2FusionDetector(
             YOLOPv2FusionConfig(**yolopv2_settings),
             output_width=mask_width,
@@ -854,7 +859,14 @@ def analyze(
                 control_lane,
                 control_yellow,
             )
+        # Publish the current raw-image safety evidence before adaptive
+        # precision selection.  In particular, a yellow-under-ego event must
+        # reject an in-flight INT8 result in this same control frame.
+        boundary_result.ego_yellow_ratio = ego_yellow_ratio
+        boundary_result.yellow_hazard = yellow_hazard
         if hasattr(detector, "fuse_corridor"):
+            if hasattr(detector, "observe_boundary"):
+                detector.observe_boundary(boundary_result)
             fused_corridor, semantic_fusion = detector.fuse_corridor(
                 boundary_result.corridor_mask,
                 control_drivable,
@@ -873,6 +885,10 @@ def analyze(
             boundary_result.semantic_inference_seconds = semantic_fusion[
                 "inference_seconds"
             ]
+            boundary_result.semantic_precision = semantic_fusion["precision"]
+            boundary_result.semantic_requested_precision = semantic_fusion[
+                "requested_precision"
+            ]
             boundary_result.confidence *= semantic_fusion["confidence_scale"]
             if not semantic_fusion["motion_allowed"]:
                 boundary_result.valid = False
@@ -881,8 +897,6 @@ def analyze(
                     "YOLOPv2 fusion required for motion: "
                     f"{semantic_fusion['source']}"
                 )
-        boundary_result.ego_yellow_ratio = ego_yellow_ratio
-        boundary_result.yellow_hazard = yellow_hazard
         control_drivable = boundary_result.corridor_mask
         display_drivable = (
             mapper.camera_mask(control_drivable)
@@ -972,6 +986,8 @@ def analyze(
             else (
                 "blue outline=YOLOPv2 green=fused LCC  "
                 f"{semantic_fusion['source']} "
+                f"{semantic_fusion['precision'] or 'none'}->"
+                f"{semantic_fusion['requested_precision']} "
                 f"overlap={float(semantic_fusion['overlap_ratio'] or 0.0):.2f} "
                 f"age={float(semantic_fusion['result_age_seconds'] or 0.0):.2f}s"
             )
@@ -1223,6 +1239,8 @@ def main():
             "semantic_inference_ms",
             "semantic_result_age_s",
             "semantic_fusion_source",
+            "semantic_precision",
+            "semantic_requested_precision",
             "semantic_overlap_ratio",
             "semantic_drivable_ratio",
             "boundary_ms",
@@ -1409,6 +1427,8 @@ def main():
                 # interval; yellow/missing boundaries still stop upstream.
                 allow_discontinuity=bool(corner_state["active"]),
             )
+            if hasattr(detector, "update_route_state"):
+                detector.update_route_state(boundary_result, command)
             gate_time = time.monotonic() - gate_started
             if command != displayed_command:
                 cv2.rectangle(
@@ -1497,6 +1517,16 @@ def main():
                     None
                     if boundary_result is None
                     else boundary_result.semantic_fusion_source
+                ),
+                "semantic_precision": (
+                    None
+                    if boundary_result is None
+                    else boundary_result.semantic_precision
+                ),
+                "semantic_requested_precision": (
+                    None
+                    if boundary_result is None
+                    else boundary_result.semantic_requested_precision
                 ),
                 "semantic_overlap_ratio": (
                     None
@@ -1673,7 +1703,8 @@ def main():
                     f"{wheel_state['rear_right_pwm']:+d}) "
                     f"inference={inference_time * 1000:.0f}ms "
                     "yolopv2="
-                    f"{boundary_result.semantic_fusion_source if boundary_result else 'off'} "
+                    f"{boundary_result.semantic_fusion_source if boundary_result else 'off'}:"
+                    f"{boundary_result.semantic_precision if boundary_result else 'none'} "
                     f"boundary_ms={boundary_time * 1000:.1f} "
                     f"hardware_ms={hardware_apply_time * 1000:.1f} "
                     f"loop_gap_ms={float(loop_start_interval or 0.0) * 1000:.1f}",

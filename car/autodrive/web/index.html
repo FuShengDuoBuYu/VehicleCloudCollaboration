@@ -15,6 +15,8 @@
       --green-soft: #e3f3ed;
       --red: #bf3b2f;
       --amber: #a96709;
+      --blue: #1769aa;
+      --purple: #6b4ca5;
       --dark: #10191d;
     }
     * { box-sizing: border-box; }
@@ -53,6 +55,8 @@
     .badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #88969c; }
     .badge.running { color: var(--green); background: var(--green-soft); }
     .badge.running::before { background: var(--green); box-shadow: 0 0 0 4px rgba(8,123,85,.12); }
+    .header-state { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .freshness { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
     .grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(360px, .85fr); gap: 12px; }
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
     .panel-title {
@@ -102,8 +106,73 @@
     .logs { height: 280px; overflow: auto; padding: 10px; background: var(--dark); color: #d7e3e7; font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
     .log { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.05); white-space: pre-wrap; overflow-wrap: anywhere; }
     .hint { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .observability { margin-top: 12px; }
+    .pipeline {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .stage {
+      position: relative;
+      min-width: 0;
+      min-height: 112px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-top: 4px solid #94a1a6;
+      border-radius: 8px;
+      background: #f8fafb;
+    }
+    .stage.good { border-top-color: var(--green); background: #f3fbf8; }
+    .stage.warn { border-top-color: var(--amber); background: #fffaf0; }
+    .stage.bad { border-top-color: var(--red); background: #fff5f3; }
+    .stage.info { border-top-color: var(--blue); background: #f4f9fd; }
+    .stage:not(:last-child)::after {
+      content: "›";
+      position: absolute;
+      z-index: 2;
+      right: -9px;
+      top: 36px;
+      color: #89979d;
+      font-size: 23px;
+      font-weight: 800;
+    }
+    .stage-name { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+    .stage-state { margin-top: 5px; font-size: 16px; font-weight: 800; overflow-wrap: anywhere; }
+    .stage-meta { margin-top: 7px; color: var(--muted); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+    .detail-grid { padding: 0 12px 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .info-card { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+    .info-title { padding: 9px 11px; background: #f5f8f9; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 800; display: flex; justify-content: space-between; gap: 8px; }
+    .info-body { padding: 10px 11px; }
+    .info-body .kv { grid-template-columns: 128px minmax(0, 1fr); font-size: 12px; }
+    .state-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 7px; background: #edf1f2; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .state-pill.good { color: var(--green); background: var(--green-soft); }
+    .state-pill.warn { color: var(--amber); background: #fff0d4; }
+    .state-pill.bad { color: var(--red); background: #ffe5e1; }
+    .state-pill.info { color: var(--blue); background: #e4f1fb; }
+    .value.good { color: var(--green); font-weight: 750; }
+    .value.warn { color: var(--amber); font-weight: 750; }
+    .value.bad { color: var(--red); font-weight: 750; }
+    .trend-grid { padding: 0 12px 12px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .trend { min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfc; }
+    .trend-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-bottom: 5px; }
+    .trend-name { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .trend-value { font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .spark { width: 100%; height: 54px; display: block; overflow: visible; }
+    .spark .gridline { stroke: #dfe6e8; stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .spark polyline { fill: none; stroke: var(--blue); stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .spark.steering polyline { stroke: var(--purple); }
+    .spark.confidence polyline { stroke: var(--green); }
+    .spark.age polyline { stroke: var(--amber); }
+    .spark.overlap polyline { stroke: #14878b; }
+    .raw-state { margin: 0 12px 12px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .raw-state summary { cursor: pointer; padding: 10px 12px; font-size: 12px; font-weight: 800; background: #f5f8f9; }
+    .raw-state pre { max-height: 360px; overflow: auto; margin: 0; padding: 12px; background: var(--dark); color: #d7e3e7; font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
     @media (max-width: 1000px) { .grid, .frames { grid-template-columns: 1fr; } }
-    @media (max-width: 620px) { .shell { width: calc(100vw - 12px); } .metrics { grid-template-columns: repeat(2, 1fr); } .buttons { grid-template-columns: 1fr; } }
+    @media (max-width: 1100px) { .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .trend-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 820px) { .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stage:nth-child(2)::after { display: none; } }
+    @media (max-width: 620px) { .shell { width: calc(100vw - 12px); } .metrics, .detail-grid, .trend-grid, .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); } .buttons { grid-template-columns: 1fr; } .stage::after { display: none; } }
+    @media (max-width: 430px) { .detail-grid, .trend-grid, .pipeline { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -113,7 +182,10 @@
         <h1>LCC 外圈控制台</h1>
         <div class="subtitle">外圈车道居中控制、实时画面与安全状态</div>
       </div>
-      <div class="badge" id="runBadge">等待状态</div>
+      <div class="header-state">
+        <div class="freshness" id="statusAge">状态数据 --</div>
+        <div class="badge" id="runBadge">等待状态</div>
+      </div>
     </header>
 
     <div class="grid">
@@ -171,22 +243,208 @@
         </section>
       </aside>
     </div>
+
+    <section class="panel observability">
+      <div class="panel-title">
+        <span>实时感知、融合与控制状态</span>
+        <span class="hint" id="sampleLabel">等待控制帧</span>
+      </div>
+
+      <div class="pipeline">
+        <div class="stage" id="lccStage">
+          <div class="stage-name">1 · 黄色边界 LCC</div>
+          <div class="stage-state" id="lccStageState">等待数据</div>
+          <div class="stage-meta" id="lccStageMeta">边界识别与几何走廊</div>
+        </div>
+        <div class="stage" id="yoloStage">
+          <div class="stage-name">2 · YOLOPv2 可行驶区域</div>
+          <div class="stage-state" id="yoloStageState">等待数据</div>
+          <div class="stage-meta" id="yoloStageMeta">FP32 / INT8 自适应推理</div>
+        </div>
+        <div class="stage" id="fusionStage">
+          <div class="stage-name">3 · 保守融合</div>
+          <div class="stage-state" id="fusionStageState">等待数据</div>
+          <div class="stage-meta" id="fusionStageMeta">YOLO 只能缩小 LCC 走廊</div>
+        </div>
+        <div class="stage" id="controlStage">
+          <div class="stage-name">4 · 安全门控与执行</div>
+          <div class="stage-state" id="controlStageState">等待数据</div>
+          <div class="stage-meta" id="controlStageMeta">运动门控、看门狗与四轮输出</div>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <article class="info-card">
+          <div class="info-title"><span>LCC 边界识别</span><span class="state-pill" id="lccPill">--</span></div>
+          <div class="info-body"><div class="kv" id="lccDetails"></div></div>
+        </article>
+        <article class="info-card">
+          <div class="info-title"><span>YOLOPv2 推理</span><span class="state-pill" id="yoloPill">--</span></div>
+          <div class="info-body"><div class="kv" id="yoloDetails"></div></div>
+        </article>
+        <article class="info-card">
+          <div class="info-title"><span>LCC × YOLO 融合</span><span class="state-pill" id="fusionPill">--</span></div>
+          <div class="info-body"><div class="kv" id="fusionDetails"></div></div>
+        </article>
+        <article class="info-card">
+          <div class="info-title"><span>控制与安全门控</span><span class="state-pill" id="safetyPill">--</span></div>
+          <div class="info-body"><div class="kv" id="safetyDetails"></div></div>
+        </article>
+        <article class="info-card">
+          <div class="info-title"><span>实时性能</span><span class="state-pill info">LIVE</span></div>
+          <div class="info-body"><div class="kv" id="timingDetails"></div></div>
+        </article>
+        <article class="info-card">
+          <div class="info-title"><span>数据与后台队列</span><span class="state-pill" id="ioPill">--</span></div>
+          <div class="info-body"><div class="kv" id="ioDetails"></div></div>
+        </article>
+      </div>
+
+      <div class="trend-grid">
+        <div class="trend"><div class="trend-head"><span class="trend-name">转向量</span><span class="trend-value" id="steeringTrendValue">--</span></div><svg class="spark steering" viewBox="0 0 240 54" preserveAspectRatio="none"><line class="gridline" x1="0" y1="27" x2="240" y2="27"></line><polyline id="steeringTrend"></polyline></svg></div>
+        <div class="trend"><div class="trend-head"><span class="trend-name">LCC 置信度</span><span class="trend-value" id="confidenceTrendValue">--</span></div><svg class="spark confidence" viewBox="0 0 240 54" preserveAspectRatio="none"><line class="gridline" x1="0" y1="27" x2="240" y2="27"></line><polyline id="confidenceTrend"></polyline></svg></div>
+        <div class="trend"><div class="trend-head"><span class="trend-name">YOLO 结果年龄</span><span class="trend-value" id="ageTrendValue">--</span></div><svg class="spark age" viewBox="0 0 240 54" preserveAspectRatio="none"><line class="gridline" x1="0" y1="27" x2="240" y2="27"></line><polyline id="ageTrend"></polyline></svg></div>
+        <div class="trend"><div class="trend-head"><span class="trend-name">融合重叠率</span><span class="trend-value" id="overlapTrendValue">--</span></div><svg class="spark overlap" viewBox="0 0 240 54" preserveAspectRatio="none"><line class="gridline" x1="0" y1="27" x2="240" y2="27"></line><polyline id="overlapTrend"></polyline></svg></div>
+        <div class="trend"><div class="trend-head"><span class="trend-name">控制循环</span><span class="trend-value" id="loopTrendValue">--</span></div><svg class="spark" viewBox="0 0 240 54" preserveAspectRatio="none"><line class="gridline" x1="0" y1="27" x2="240" y2="27"></line><polyline id="loopTrend"></polyline></svg></div>
+      </div>
+
+      <details class="raw-state">
+        <summary>查看网页收到的原始实时状态 JSON</summary>
+        <pre id="rawState">{}</pre>
+      </details>
+    </section>
   </main>
 
   <script>
     const MOTOR_CONFIRMATION = 'I_UNDERSTAND_MOTORS_WILL_MOVE';
     const nodes = Object.fromEntries([
-      'runBadge','frameAge','actionLabel','boundaryLabel','annotatedFrame','birdeyeFrame',
+      'runBadge','statusAge','frameAge','actionLabel','boundaryLabel','annotatedFrame','birdeyeFrame',
       'confidence','lateral','heading','steering','pwm','boundary','latency','hazard',
-      'runtimeInput','safetyConfirm','startButton','stopButton','message','details','logs'
+      'runtimeInput','safetyConfirm','startButton','stopButton','message','details','logs',
+      'sampleLabel','lccStage','lccStageState','lccStageMeta','yoloStage','yoloStageState',
+      'yoloStageMeta','fusionStage','fusionStageState','fusionStageMeta','controlStage',
+      'controlStageState','controlStageMeta','lccPill','yoloPill','fusionPill','safetyPill',
+      'lccDetails','yoloDetails','fusionDetails','safetyDetails','timingDetails','ioPill',
+      'ioDetails','steeringTrend','confidenceTrend','ageTrend','overlapTrend','loopTrend',
+      'steeringTrendValue','confidenceTrendValue','ageTrendValue','overlapTrendValue',
+      'loopTrendValue','rawState'
     ].map(id => [id, document.getElementById(id)]));
 
-    const text = (value, fallback = '--') => value === null || value === undefined || value === '' ? fallback : String(value);
-    const number = (value, digits = 3) => value === null || value === undefined || value === '' ? '--' : Number(value).toFixed(digits);
+    const present = value => value !== null && value !== undefined && value !== '';
+    const text = (value, fallback = '--') => present(value) ? String(value) : fallback;
+    const number = (value, digits = 3) => present(value) && Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : '--';
+    const percent = (value, digits = 1) => present(value) && Number.isFinite(Number(value)) ? `${(Number(value) * 100).toFixed(digits)}%` : '--';
+    const milliseconds = value => present(value) ? `${number(value, 1)} ms` : '--';
+    const seconds = value => present(value) ? `${number(value, 2)} s` : '--';
+    const yesNo = value => value === true ? '是' : value === false ? '否' : '--';
+    const okText = value => value === true ? '正常' : value === false ? '未通过' : '--';
+    const precisionText = value => present(value) ? String(value).toUpperCase() : '--';
     const escapeHtml = value => text(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+    const boundaryNames = {
+      'both': '双边界', 'outer+width': '外边界+宽度估计', 'inner+width': '内边界+宽度估计',
+      'visible-history': '短时历史边界', 'surface': '路面区域', 'off': '未启用'
+    };
+    const actionNames = {
+      'forward': '直行', 'turn-left': '左转', 'turn-right': '右转', 'stop': '停车'
+    };
+    const fusionNames = {
+      'fused-intersection': '已融合：交集约束',
+      'fused-validate': '已融合：一致性验证',
+      'fallback-precision-transition': '精度切换：仅使用 LCC',
+      'fallback-low-overlap': '重叠不足：仅使用 LCC',
+      'fallback-stale': 'YOLO 结果过期：仅使用 LCC',
+      'fallback-unavailable': 'YOLO 暂不可用：仅使用 LCC',
+      'fallback-empty': '融合为空：仅使用 LCC',
+      'required-precision-transition': '精度切换：禁止运动',
+      'required-low-overlap': '重叠不足：禁止运动',
+      'required-stale': 'YOLO 结果过期：禁止运动',
+      'required-unavailable': 'YOLO 不可用：禁止运动',
+      'required-empty': '融合为空：禁止运动',
+      'disabled': '未启用', 'unavailable': '等待结果'
+    };
+
+    const history = {
+      sample: null,
+      steering: [], confidence: [], age: [], overlap: [], loop: []
+    };
 
     function setDetails(rows) {
       nodes.details.innerHTML = rows.map(([key, value]) => `<div class="key">${escapeHtml(key)}</div><div class="value">${escapeHtml(value)}</div>`).join('');
+    }
+
+    function setKv(node, rows) {
+      node.innerHTML = rows.map(([key, value, tone = '']) => (
+        `<div class="key">${escapeHtml(key)}</div><div class="value ${tone}">${escapeHtml(value)}</div>`
+      )).join('');
+    }
+
+    function setPill(node, label, tone = '') {
+      node.textContent = label;
+      node.className = `state-pill ${tone}`.trim();
+    }
+
+    function setStage(node, stateNode, metaNode, state, meta, tone = '') {
+      node.className = `stage ${tone}`.trim();
+      stateNode.textContent = state;
+      metaNode.textContent = meta;
+    }
+
+    function namedBoundary(value) {
+      return present(value) ? `${boundaryNames[value] || value} (${value})` : '--';
+    }
+
+    function namedAction(value) {
+      return present(value) ? `${actionNames[value] || value} (${value})` : '--';
+    }
+
+    function namedFusion(value) {
+      return present(value) ? (fusionNames[value] || value) : '--';
+    }
+
+    function pushHistory(last) {
+      if (!present(last.sample) || last.sample === history.sample) return;
+      if (history.sample !== null && Number(last.sample) < Number(history.sample)) {
+        Object.keys(history).filter(key => key !== 'sample').forEach(key => history[key] = []);
+      }
+      history.sample = last.sample;
+      const values = {
+        steering: last.steering,
+        confidence: last.confidence,
+        age: last.semantic_result_age_s,
+        overlap: last.semantic_overlap_ratio,
+        loop: present(last.loop_start_interval_s) ? Number(last.loop_start_interval_s) * 1000 : null
+      };
+      for (const [key, value] of Object.entries(values)) {
+        history[key].push(present(value) && Number.isFinite(Number(value)) ? Number(value) : null);
+        if (history[key].length > 60) history[key].shift();
+      }
+    }
+
+    function renderSparkline(node, values, minimum, maximum) {
+      const span = Math.max(1e-9, maximum - minimum);
+      const denominator = Math.max(1, values.length - 1);
+      const points = values.map((value, index) => {
+        if (value === null || !Number.isFinite(value)) return null;
+        const x = index / denominator * 240;
+        const clamped = Math.min(maximum, Math.max(minimum, value));
+        const y = 52 - ((clamped - minimum) / span) * 50;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).filter(Boolean);
+      node.setAttribute('points', points.join(' '));
+    }
+
+    function renderTrends(last) {
+      pushHistory(last);
+      renderSparkline(nodes.steeringTrend, history.steering, -1, 1);
+      renderSparkline(nodes.confidenceTrend, history.confidence, 0, 1);
+      renderSparkline(nodes.ageTrend, history.age, 0, 2.5);
+      renderSparkline(nodes.overlapTrend, history.overlap, 0, 1);
+      renderSparkline(nodes.loopTrend, history.loop, 0, 100);
+      nodes.steeringTrendValue.textContent = number(last.steering, 3);
+      nodes.confidenceTrendValue.textContent = number(last.confidence, 3);
+      nodes.ageTrendValue.textContent = seconds(last.semantic_result_age_s);
+      nodes.overlapTrendValue.textContent = percent(last.semantic_overlap_ratio);
+      nodes.loopTrendValue.textContent = present(last.loop_start_interval_s) ? `${number(Number(last.loop_start_interval_s) * 1000, 1)} ms` : '--';
     }
 
     function render(state) {
@@ -194,17 +452,47 @@
       const runtime = state.runtime || {};
       const last = runtime.last_result || {};
       const termination = runtime.termination || {};
+      const diagnostics = runtime.diagnostics || {};
+      const yolo = diagnostics.yolopv2_fusion || {};
+      const fusion = yolo.fusion || {};
+      const motion = runtime.motion_gate || {};
+      const watchdog = runtime.watchdog || {};
+      const corner = runtime.corner_continuation || {};
+      const archive = diagnostics.archive || {};
+      const controlLog = diagnostics.control_log || {};
+      const live = diagnostics.live_publisher || {};
+      const debug = diagnostics.debug_frames || {};
+      const statusFile = state.runtime_status || {};
       const running = Boolean(process.running);
+      const precision = last.semantic_precision || fusion.precision || yolo.latest_precision;
+      const requestedPrecision = last.semantic_requested_precision || fusion.requested_precision || yolo.requested_precision;
+      const fusionSource = last.semantic_fusion_source || fusion.source;
+      const fusionActive = fusion.active === true || String(fusionSource || '').startsWith('fused-');
+      const precisionTransition = present(precision) && present(requestedPrecision) && precision !== requestedPrecision;
+      const motionReady = last.motion_gate_ready !== undefined ? last.motion_gate_ready : motion.ready;
+      const boundaryGood = last.valid === true && last.boundary_source === 'both' && Number(last.boundary_confidence || 0) >= 0.55;
+      const yellowHazard = last.yellow_hazard === true;
+      const yoloError = yolo.error;
+      const completed = yolo.completed_by_precision || {};
+      const submitted = yolo.submitted_by_precision || {};
+      const loopMs = present(last.loop_start_interval_s) ? Number(last.loop_start_interval_s) * 1000 : null;
+      const loopHz = loopMs && loopMs > 0 ? 1000 / loopMs : null;
+
       nodes.runBadge.textContent = running ? 'LCC 运行中' : text(process.state, '待机');
       nodes.runBadge.classList.toggle('running', running);
+      nodes.statusAge.textContent = !statusFile.available
+        ? '状态数据不可用'
+        : running && statusFile.current_run === false
+          ? '等待本轮状态数据'
+          : `状态数据 ${number(statusFile.age_seconds, 1)}s 前更新`;
       nodes.startButton.disabled = running;
       nodes.stopButton.disabled = !running;
       nodes.runtimeInput.disabled = running;
       nodes.safetyConfirm.disabled = running;
       nodes.message.classList.remove('error');
       nodes.message.textContent = text(process.message);
-      nodes.actionLabel.textContent = `${text(last.action)} / ${text(last.reason)}`;
-      nodes.boundaryLabel.textContent = text(last.boundary_source);
+      nodes.actionLabel.textContent = `${text(actionNames[last.action], last.action)} / ${text(last.reason)}`;
+      nodes.boundaryLabel.textContent = text(boundaryNames[last.boundary_source], last.boundary_source);
       nodes.confidence.textContent = number(last.confidence);
       nodes.lateral.textContent = number(last.lateral_error);
       nodes.heading.textContent = number(last.heading_error);
@@ -213,16 +501,159 @@
       nodes.boundary.textContent = text(last.boundary_source);
       nodes.latency.textContent = last.boundary_ms === undefined ? '--' : `${number(last.boundary_ms, 1)} ms`;
       nodes.hazard.textContent = last.yellow_hazard === undefined ? '--' : (last.yellow_hazard ? '危险 / 已停车' : '正常');
-      const age = state.frames && state.frames.annotated && state.frames.annotated.age_seconds;
-      nodes.frameAge.textContent = age === null || age === undefined ? '等待画面' : `画面 ${number(age, 1)}s 前更新`;
+      const annotatedState = state.frames && state.frames.annotated;
+      const age = annotatedState && annotatedState.age_seconds;
+      nodes.frameAge.textContent = age === null || age === undefined
+        ? '等待画面'
+        : running && annotatedState.current_run === false
+          ? `上一轮画面 · ${number(age, 1)}s 前更新`
+          : `画面 ${number(age, 1)}s 前更新`;
       setDetails([
         ['进程状态', process.state],
         ['运行时间', process.elapsed_seconds === null ? '--' : `${number(process.elapsed_seconds, 1)} / ${text(process.max_runtime_seconds)} s`],
         ['电机输出', process.motors_enabled ? '已启用' : '仅干运行'],
         ['PID', process.pid],
+        ['最新控制帧', present(last.sample) ? `#${last.sample}` : '--'],
+        ['状态新鲜度', statusFile.available ? seconds(statusFile.age_seconds) : '--'],
         ['停车原因', termination.reason],
-        ['运动门控', runtime.motion_gate && runtime.motion_gate.ready ? '已放行' : '等待/已停止']
+        ['运动门控', motionReady ? '已放行' : '等待/已停止']
       ]);
+
+      nodes.sampleLabel.textContent = present(last.sample) ? `控制帧 #${last.sample} · 时间戳 ${number(last.timestamp_s, 2)}s` : '等待控制帧';
+
+      const lccTone = !present(last.sample) ? '' : yellowHazard || last.valid === false ? 'bad' : boundaryGood ? 'good' : 'warn';
+      setStage(
+        nodes.lccStage, nodes.lccStageState, nodes.lccStageMeta,
+        !present(last.sample) ? '等待数据' : last.valid ? text(boundaryNames[last.boundary_source], last.boundary_source) : '识别无效 / 安全停车',
+        `边界置信度 ${number(last.boundary_confidence)} · 左/右观测 ${text(last.boundary_left_rows)}/${text(last.boundary_right_rows)}`,
+        lccTone
+      );
+      setPill(nodes.lccPill, !present(last.sample) ? '--' : last.valid ? 'VALID' : 'INVALID', lccTone);
+
+      const yoloTone = yoloError ? 'bad' : !yolo.enabled ? '' : precisionTransition ? 'warn' : precision === 'int8' ? 'info' : 'good';
+      const yoloState = !yolo.enabled ? '未启用' : yoloError ? '推理错误' : precisionTransition ? `${precisionText(precision)} → ${precisionText(requestedPrecision)} 切换中` : `${precisionText(precision || requestedPrecision)} 推理`;
+      setStage(
+        nodes.yoloStage, nodes.yoloStageState, nodes.yoloStageMeta,
+        yoloState,
+        `推理 ${milliseconds(last.semantic_inference_ms)} · 结果年龄 ${seconds(last.semantic_result_age_s)}`,
+        yoloTone
+      );
+      setPill(nodes.yoloPill, !yolo.enabled ? 'OFF' : precisionTransition ? 'SWITCH' : precisionText(precision || requestedPrecision), yoloTone);
+
+      const fusionRequired = String(fusionSource || '').startsWith('required-');
+      const fusionFallback = String(fusionSource || '').startsWith('fallback-');
+      const fusionTone = fusionRequired ? 'bad' : fusionActive ? 'good' : fusionFallback ? 'warn' : '';
+      setStage(
+        nodes.fusionStage, nodes.fusionStageState, nodes.fusionStageMeta,
+        namedFusion(fusionSource),
+        `重叠 ${percent(last.semantic_overlap_ratio)} · YOLO 可行驶 ${percent(last.semantic_drivable_ratio)}`,
+        fusionTone
+      );
+      setPill(nodes.fusionPill, fusionActive ? 'FUSED' : fusionRequired ? 'BLOCKED' : fusionFallback ? 'LCC ONLY' : '--', fusionTone);
+
+      const controlTone = yellowHazard ? 'bad' : !motionReady || last.action === 'stop' ? 'warn' : 'good';
+      setStage(
+        nodes.controlStage, nodes.controlStageState, nodes.controlStageMeta,
+        yellowHazard ? '黄线风险 / 已停车' : namedAction(last.action),
+        `转向 ${number(last.steering)} · PWM ${[last.front_left_pwm,last.rear_left_pwm,last.front_right_pwm,last.rear_right_pwm].map(v => text(v)).join('/')}`,
+        controlTone
+      );
+      setPill(nodes.safetyPill, yellowHazard ? 'HAZARD' : motionReady ? 'READY' : 'GATED', controlTone);
+
+      setKv(nodes.lccDetails, [
+        ['中心线估计有效', yesNo(last.valid), last.valid === false ? 'bad' : 'good'],
+        ['边界来源', namedBoundary(last.boundary_source)],
+        ['边界置信度', number(last.boundary_confidence, 4)],
+        ['融合后总置信度', number(last.confidence, 4)],
+        ['左 / 右观测行', `${text(last.boundary_left_rows)} / ${text(last.boundary_right_rows)}`],
+        ['边界可见比例', percent(last.boundary_visible_ratio, 2)],
+        ['估计车道宽度', percent(last.lane_width_ratio, 1)],
+        ['横向误差', number(last.lateral_error, 5)],
+        ['航向 / 近区航向', `${number(last.heading_error, 5)} / ${number(last.near_heading_error, 5)}`],
+        ['估计说明', text(last.estimate_reason)]
+      ]);
+
+      setKv(nodes.yoloDetails, [
+        ['后端', text(yolo.backend)],
+        ['自适应精度', yesNo(yolo.adaptive_precision)],
+        ['当前结果精度', precisionText(precision), precision === 'int8' ? 'warn' : 'good'],
+        ['当前请求精度', precisionText(requestedPrecision)],
+        ['直道确认进度', `${text(yolo.straight_valid_frames, '0')} / ${text(yolo.straight_enter_frames, '8')} 帧`],
+        ['切换原因', text(yolo.last_switch_reason)],
+        ['精度切换次数', text(yolo.precision_switches)],
+        ['本次推理耗时', milliseconds(last.semantic_inference_ms)],
+        ['语义结果年龄', seconds(last.semantic_result_age_s), Number(last.semantic_result_age_s) > 2.5 ? 'bad' : ''],
+        ['可行驶区域占比', percent(last.semantic_drivable_ratio, 2)],
+        ['完成 FP32 / INT8', `${text(completed.fp32, '0')} / ${text(completed.int8, '0')}`],
+        ['提交 FP32 / INT8', `${text(submitted.fp32, '0')} / ${text(submitted.int8, '0')}`],
+        ['完成 / 被新帧替换', `${text(yolo.completed_frames, '0')} / ${text(yolo.dropped_frames, '0')}`],
+        ['后台队列深度', text(yolo.queue_depth, '0')],
+        ['模型错误', text(yoloError, '无'), yoloError ? 'bad' : 'good']
+      ]);
+
+      setKv(nodes.fusionDetails, [
+        ['融合决策', namedFusion(fusionSource), fusionTone],
+        ['融合原始状态', text(fusionSource)],
+        ['融合是否生效', yesNo(fusionActive), fusionActive ? 'good' : 'warn'],
+        ['语义 / LCC 重叠', percent(last.semantic_overlap_ratio, 2)],
+        ['YOLO 可行驶占比', percent(last.semantic_drivable_ratio, 2)],
+        ['采用结果精度', precisionText(precision)],
+        ['目标精度', precisionText(requestedPrecision)],
+        ['融合允许运动', okText(fusion.motion_allowed), fusion.motion_allowed === false ? 'bad' : 'good'],
+        ['置信度缩放', number(fusion.confidence_scale, 4)],
+        ['融合策略', fusionSource === 'fused-intersection' ? '取 LCC 与 YOLO 交集，只缩小走廊' : fusionFallback ? '保留原 LCC 走廊' : '--']
+      ]);
+
+      setKv(nodes.safetyDetails, [
+        ['最终动作', namedAction(last.action), last.action === 'stop' ? 'warn' : 'good'],
+        ['控制原因', text(last.reason)],
+        ['转向量', number(last.steering, 5)],
+        ['紧弯因子', number(last.tight_turn_factor, 3)],
+        ['左右目标速度', `${number(last.left_speed, 4)} / ${number(last.right_speed, 4)}`],
+        ['四轮 PWM', [last.front_left_pwm,last.rear_left_pwm,last.front_right_pwm,last.rear_right_pwm].map(v => text(v)).join(' / ')],
+        ['运动门控', motionReady ? '已放行' : '未放行', motionReady ? 'good' : 'warn'],
+        ['连续有效帧', text(last.motion_gate_valid_frames, motion.consecutive_valid)],
+        ['门控停车原因', text(motion.last_stop_reason)],
+        ['黄线车底风险', yellowHazard ? '危险' : '正常', yellowHazard ? 'bad' : 'good'],
+        ['车底黄线占比', percent(last.ego_yellow_ratio, 3)],
+        ['弯道续行 / 顶点', `${yesNo(last.corner_continuation_active)} / ${yesNo(last.corner_apex_active)}`],
+        ['看门狗', watchdog.tripped ? '已触发' : watchdog.armed ? '已布防' : '未布防', watchdog.tripped ? 'bad' : 'good'],
+        ['看门狗心跳年龄', seconds(watchdog.heartbeat_age)]
+      ]);
+
+      setKv(nodes.timingDetails, [
+        ['控制循环间隔', loopMs === null ? '--' : `${number(loopMs, 1)} ms`],
+        ['控制循环频率', loopHz === null ? '--' : `${number(loopHz, 1)} Hz`, loopHz !== null && loopHz < 15 ? 'warn' : 'good'],
+        ['整帧分析', milliseconds(last.analysis_ms)],
+        ['黄色边界识别', milliseconds(last.boundary_ms)],
+        ['YOLO 后台推理', milliseconds(last.semantic_inference_ms)],
+        ['取语义缓存', milliseconds(last.inference_ms)],
+        ['安全门控', milliseconds(last.control_gate_ms)],
+        ['硬件指令应用', milliseconds(last.hardware_apply_ms)],
+        ['鸟瞰图渲染', milliseconds(last.birdeye_render_ms)],
+        ['图像源等待', milliseconds(last.source_wait_ms)],
+        ['相机帧间隔', present(last.capture_interval_s) ? `${number(Number(last.capture_interval_s) * 1000, 1)} ms` : '--'],
+        ['输入帧年龄', seconds(last.frame_age_s)]
+      ]);
+
+      const ioDrops = Number(last.archive_dropped_frames || 0) + Number(last.log_dropped_rows || 0) + Number(last.live_dropped_updates || 0) + Number(last.debug_dropped_frames || 0);
+      setPill(nodes.ioPill, ioDrops > 0 ? `${ioDrops} DROP` : 'HEALTHY', ioDrops > 0 ? 'warn' : 'good');
+      setKv(nodes.ioDetails, [
+        ['控制帧 / 时间戳', `${text(last.sample)} / ${number(last.timestamp_s, 3)} s`],
+        ['状态文件年龄', statusFile.available ? (running && statusFile.current_run === false ? '等待本轮状态' : seconds(statusFile.age_seconds)) : '不可用', running && (statusFile.current_run === false || Number(statusFile.age_seconds) > 2) ? 'bad' : ''],
+        ['标注画面年龄', state.frames && state.frames.annotated ? seconds(state.frames.annotated.age_seconds) : '--'],
+        ['鸟瞰画面年龄', state.frames && state.frames.birdeye ? seconds(state.frames.birdeye.age_seconds) : '--'],
+        ['归档队列 / 丢帧', `${text(last.archive_queue_depth, archive.queue_depth)} / ${text(last.archive_dropped_frames, archive.dropped_frames)}`],
+        ['日志队列 / 丢行', `${text(last.log_queue_depth, controlLog.queue_depth)} / ${text(last.log_dropped_rows, controlLog.dropped_rows)}`],
+        ['网页状态丢更新', text(last.live_dropped_updates, live.dropped_updates)],
+        ['调试画面丢帧', text(last.debug_dropped_frames, debug.dropped_frames)],
+        ['运行归档', text(runtime.run_archive)],
+        ['输入源', text(runtime.source)],
+        ['配置文件', text(runtime.config)]
+      ]);
+
+      renderTrends(last);
+      nodes.rawState.textContent = JSON.stringify(state, null, 2);
       const logs = process.logs || [];
       nodes.logs.innerHTML = logs.length ? logs.slice(-100).map(log => `<div class="log">[${escapeHtml(log.time)}] ${escapeHtml(log.level)} ${escapeHtml(log.message)}</div>`).join('') : '<div class="log">--</div>';
       nodes.logs.scrollTop = nodes.logs.scrollHeight;

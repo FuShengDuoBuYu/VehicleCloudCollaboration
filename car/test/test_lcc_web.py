@@ -87,9 +87,36 @@ class LCCWebTest(unittest.TestCase):
             )
             manager.start(max_runtime_seconds=5)
             try:
-                self.assertIsNone(manager.get_state()["runtime"])
+                state = manager.get_state()
+                self.assertIsNone(state["runtime"])
+                self.assertFalse(state["runtime_status"]["current_run"])
             finally:
                 manager.stop("test cleanup")
+
+    def test_state_reports_runtime_status_freshness(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "outputs"
+            output.mkdir()
+            (output / "status.json").write_text(
+                json.dumps({"last_result": {"sample": 12}}),
+                encoding="utf-8",
+            )
+            manager = LCCProcessManager(
+                repo_root=root,
+                python_executable=sys.executable,
+                runner_path=root / "unused.py",
+                config_path=root / "unused.yaml",
+                output_dir=output,
+                motors_enabled=False,
+            )
+
+            state = manager.get_state()
+
+            self.assertEqual(state["runtime"]["last_result"]["sample"], 12)
+            self.assertTrue(state["runtime_status"]["available"])
+            self.assertTrue(state["runtime_status"]["current_run"])
+            self.assertGreaterEqual(state["runtime_status"]["age_seconds"], 0.0)
 
     def test_runtime_bounds_and_motor_confirmation_are_enforced(self):
         with tempfile.TemporaryDirectory() as directory:

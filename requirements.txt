@@ -14,6 +14,7 @@ torch>=2.1.0
 torchvision>=0.16.0
 transformers>=4.49.0
 ultralytics>=8.0.0
+onnxruntime>=1.19.2
 
 # Runtime configuration
 python-dotenv>=1.0.0

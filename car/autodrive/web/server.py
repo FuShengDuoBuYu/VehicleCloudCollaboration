@@ -277,13 +277,20 @@ class LCCProcessManager:
         except (FileNotFoundError, json.JSONDecodeError, OSError):
             return None
 
-    def _file_state(self, path):
+    def _file_state(self, path, started_wall=None):
         try:
             modified = path.stat().st_mtime
         except OSError:
-            return {"available": False, "age_seconds": None}
+            return {
+                "available": False,
+                "current_run": False,
+                "age_seconds": None,
+            }
         return {
             "available": True,
+            "current_run": (
+                started_wall is None or modified >= started_wall
+            ),
             "age_seconds": round(max(0.0, time.time() - modified), 2),
         }
 
@@ -295,9 +302,16 @@ class LCCProcessManager:
         return {
             "process": process_state,
             "runtime": self._runtime_status(started_wall),
+            "runtime_status": self._file_state(
+                self.status_path, started_wall
+            ),
             "frames": {
-                "annotated": self._file_state(self.latest_frame),
-                "birdeye": self._file_state(self.latest_birdeye),
+                "annotated": self._file_state(
+                    self.latest_frame, started_wall
+                ),
+                "birdeye": self._file_state(
+                    self.latest_birdeye, started_wall
+                ),
             },
         }
 

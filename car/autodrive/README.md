@@ -36,6 +36,11 @@ cd /home/pi/Desktop/VehicleCloudCollaboration
 浏览器访问 `http://<车辆IP>:8080`，勾选安全确认后点击“启动 LCC”。网页启动后才占用
 相机；停止/急停、服务退出、运行时间到期或子进程异常都会执行四轮归零。
 
+网页的实时链路面板直接展示黄色边界 LCC、YOLOPv2 当前/目标精度、融合或安全回退、
+运动门控与四轮执行状态。下方详情同时展示边界观测行数、融合重叠率、语义结果年龄、
+FP32/INT8 完成计数、控制循环频率、看门狗和后台队列；这些值均来自当前 `status.json`，
+并显示状态文件与画面的更新时间。页面底部可展开查看网页实际收到的完整状态 JSON。
+
 ## 命令行与离线回放
 
 直接实车运行：
@@ -72,6 +77,13 @@ cd /home/pi/Desktop/VehicleCloudCollaboration
 `optimize_for_inference: true` 与 `drivable_only: true` 是无需微调的车端加速项。后者会跳过
 LCC 当前不用的目标检测和车道线输出；如果其他调用方需要这两类输出，应在该调用方的
 YOLOPv2 配置中保持 `drivable_only: false`。
+
+车端还支持 `backend: onnxruntime` 的 FP32 可行驶区域专用模型。当前树莓派 5 建议配置
+`onnx_intra_op_threads: 1`，给 LCC 和系统保留最大 CPU 余量。纯 INT8 模式只用于离线消融；
+实测严格直道上 INT8 平均 IoU 为 `0.9975`、约加速 `3.07x`，但个别连续转弯帧会产生
+假可行驶区域。因此 `adaptive_precision` 只在黄色边界 LCC 连续确认稳定直道后使用
+INT8；弯道、弱边界或较大转向立即请求 FP32，切换期间未完成的 INT8 结果不参与融合。
+完整实验条件和结果见 `YOLOPV2_ONNX_EXPERIMENT.md`。
 
 ## 标定和诊断工具
 
