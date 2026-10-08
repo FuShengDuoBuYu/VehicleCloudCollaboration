@@ -1,5 +1,8 @@
 # closed-loop data test
 
+2026-10-08：千问道路语义客户端的离线测试使用 `python -m unittest discover -s car/test -p "test_cloud_scene*.py"`，实际调用入口使用 `python -m car.cloud_client`，详见 [云客户端说明](../cloud_client/README.md)。
+下文 `closed_loop_test.py` 使用显式 `LegacyCloudClient`，只保留历史左右变道合同，不证明当前千问语义或实车闭环已接通。
+
 这个目录用于做不启动车辆硬件的闭环数据测试。默认测试图片是 `test_image.jpg`，默认云端后端会调用 `.env` 中的公网 `CAR_CLOUD_API_BASE_URL`。
 
 ## 运行

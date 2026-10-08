@@ -69,7 +69,18 @@ cd /home/pi/Desktop/VehicleCloudCollaboration
 
 详细操作见 [car/autodrive/README.md](car/autodrive/README.md)。
 
-## 软件验证
+## 千问云端语义接口
+
+云端语义客户端默认直接对接百炼 `qwen3.8-max`，支持 API Key、图像输入、结构化场景/风险/候选建议和调用记录。
+配置与独立调用见 [car/cloud_client/README.md](car/cloud_client/README.md)。本地预览不联网，也不操作硬件：
+
+```bash
+python -m car.cloud_client --dry-run --image car/test/test_image.jpg
+```
+
+此客户端尚未接入上面的 LCC 实时运行链；真实 Key、线上时延和车端异步仲裁仍需后续验证。
+
+## 车端软件验证
 
 以下命令不驱动车轮：
 

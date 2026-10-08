@@ -22,7 +22,7 @@ for path in (CAR_DIR, LONGTAIL_DIR, CONTROL_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from cloud_client import CloudClient
+from cloud_client import LegacyCloudClient as CloudClient
 from vehicle_control.controller import VehicleController
 
 
