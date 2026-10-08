@@ -11,12 +11,16 @@ from .schema import SCHEMA_VERSION
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Analyze road images with Qwen; never imports vehicle hardware")
-    parser.add_argument("--image", action="append", required=True, help="JPEG/PNG/WebP; repeat in chronological order")
+    parser.add_argument("--image", action="append", required=True, help="JPEG/PNG/WebP; Realtime one image/event; HTTP may repeat chronologically")
     parser.add_argument("--context", type=Path, help="JSON object with run ID, frame timestamps, local observations")
     parser.add_argument("--env-file", type=Path, help="Local environment file; default repository .env")
-    parser.add_argument("--provider", choices=["qwen", "openai-compatible"])
-    parser.add_argument("--url", help="Provider base URL or full chat/completions URL")
+    parser.add_argument("--provider", choices=["qwen-realtime", "qwen", "openai-compatible"])
+    parser.add_argument("--url", help="HTTP provider base URL or full chat/completions URL; Realtime uses --realtime-url")
     parser.add_argument("--model")
+    parser.add_argument('--workspace-id',help='Beijing business workspace ID for Realtime')
+    parser.add_argument('--realtime-url',help='Full WSS URL, no credentials in URL')
+    parser.add_argument('--contract',choices=['road-observation-fast-v1','road-scene-v1'])
+    parser.add_argument('--timeout',type=float,help='Network request timeout, seconds; independent of 2s speed target')
     parser.add_argument("--reasoning-effort", choices=["none", "low", "medium", "xhigh"])
     parser.add_argument("--output", type=Path, help="New JSON result file; existing files are never overwritten")
     parser.add_argument("--dry-run", action="store_true", help="Validate and preview locally; no API key or network required")
@@ -28,15 +32,18 @@ def main(argv=None):
     try:
         context = json.loads(args.context.read_text(encoding="utf-8-sig")) if args.context else {}
         client = CloudClient(env_file=args.env_file, provider=args.provider, url=args.url,
-                             model=args.model, reasoning_effort=args.reasoning_effort)
+                             model=args.model, reasoning_effort=args.reasoning_effort,
+                             workspace_id=args.workspace_id,realtime_ws_url=args.realtime_url,contract=args.contract,timeout=args.timeout)
         if args.dry_run:
-            client.build_payload(args.image, context)
+            payload=client.build_payload(args.image, context)
             record = {"mode": "dry-run", "network_called": False,
                       "provider": client.config.provider, "model": client.model,
-                      "endpoint": client.url, "schema_version": SCHEMA_VERSION,
-                      "reasoning_effort": client.config.reasoning_effort,
-                      "max_tokens": client.config.max_tokens,
-                      "response_format": client.config.response_format,
+                      "endpoint": payload.get('endpoint',client.url), "schema_version": client.config.contract,
+                      'timeout_seconds':client.config.timeout,'hard_2s_deadline':False,
+                      'http_generation_controls_applied':client.config.provider!='qwen-realtime',
+                      "reasoning_effort": client.config.reasoning_effort if client.config.provider!='qwen-realtime' else None,
+                      "max_tokens": client.config.max_tokens if client.config.provider!='qwen-realtime' else None,
+                      "response_format": client.config.response_format if client.config.provider!='qwen-realtime' else None,
                       "images": client.last_image_manifest}
         else:
             if args.output.suffix.lower() != ".json":
@@ -57,7 +64,7 @@ def main(argv=None):
             # Do not dump the full raw response to the terminal.
             record = {"mode": "completed-request", "output": str(args.output.resolve()),
                       "request_id": result.request_id, "response_model": result.response_model,
-                      "recommendation": result.scene["recommendation"],
+                      "observation": result.scene,
                       "timings_ms": result.timings_ms, "usage": result.usage}
         print(json.dumps(record, ensure_ascii=False, indent=2, allow_nan=False))
         return 0

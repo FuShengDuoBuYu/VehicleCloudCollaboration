@@ -44,7 +44,8 @@ class SceneClientContractTest(unittest.TestCase):
         self.env_file.write_text("", encoding="utf-8")
 
     def client(self, **kwargs):
-        return CloudClient(env_file=self.env_file, **kwargs)
+        settings={'provider':'qwen','model':'qwen3.8-max','contract':'road-scene-v1'};settings.update(kwargs)
+        return CloudClient(env_file=self.env_file, **settings)
 
     def test_qwen_payload_uses_vision_schema_and_no_legacy_parameters(self):
         with patch.dict(os.environ, {}, clear=True):
@@ -158,7 +159,7 @@ class SceneClientContractTest(unittest.TestCase):
 
     def test_env_file_preserves_explicit_environment_and_key_is_not_in_repr(self):
         file = Path(self.temp.name) / "cloud.env"
-        file.write_text('CAR_CLOUD_API_KEY="file-test-key"\nCAR_CLOUD_MODEL="file-model"\n', encoding="utf-8")
+        file.write_text('CAR_CLOUD_PROVIDER="qwen"\nCAR_CLOUD_API_KEY="file-test-key"\nCAR_CLOUD_MODEL="file-model"\n', encoding="utf-8")
         with patch.dict(os.environ, {"CAR_CLOUD_MODEL": "env-model"}, clear=True):
             client = CloudClient(env_file=file)
         self.assertEqual(client.model, "env-model")

@@ -1,0 +1,2 @@
+# Development only: local RFC6455 test server, not required on the car at runtime.
+websockets>=12.0

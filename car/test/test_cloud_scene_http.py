@@ -74,7 +74,8 @@ class SceneHTTPTest(unittest.TestCase):
         self.thread.join(timeout=2)
 
     def client(self, **overrides):
-        return CloudClient(env_file=self.env_file, url=self.url, api_key=self.key, **overrides)
+        settings={'provider':'qwen','model':'qwen3.8-omni-flash','contract':'road-scene-v1'};settings.update(overrides)
+        return CloudClient(env_file=self.env_file, url=self.url, api_key=self.key, **settings)
 
     def test_auth_post_scene_envelope_usage_and_image_provenance(self):
         result = self.client().request_scene(self.image, {"run_id": "offline-001", "vehicle_stopped": True})
@@ -128,7 +129,7 @@ class SceneHTTPTest(unittest.TestCase):
     def test_cli_dry_run_never_calls_network_or_shows_key(self):
         out = io.StringIO()
         with patch.dict(os.environ, {"CAR_CLOUD_API_KEY": self.key}, clear=True), redirect_stdout(out), patch("urllib.request.OpenerDirector.open") as network:
-            status = main(["--env-file", str(self.env_file), "--dry-run", "--image", str(self.image)])
+            status = main(["--env-file", str(self.env_file), "--provider","qwen", "--dry-run", "--image", str(self.image)])
         self.assertEqual(status, 0)
         network.assert_not_called()
         self.assertNotIn(self.key, out.getvalue())
@@ -136,7 +137,7 @@ class SceneHTTPTest(unittest.TestCase):
 
     def test_cli_live_creates_complete_record_and_refuses_overwrite(self):
         output = self.root / "scene.json"
-        argv = ["--env-file", str(self.env_file), "--url", self.url, "--image", str(self.image), "--output", str(output)]
+        argv = ["--env-file", str(self.env_file), "--provider","qwen", "--url", self.url, "--image", str(self.image), "--output", str(output)]
         with patch.dict(os.environ, {"CAR_CLOUD_API_KEY": self.key}, clear=True), redirect_stdout(io.StringIO()):
             self.assertEqual(main(argv), 0)
         record = json.loads(output.read_text(encoding="utf-8"))
@@ -159,7 +160,7 @@ class SceneHTTPTest(unittest.TestCase):
         self.response = self.key.encode()
         output = self.root / "failure.json"
         with patch.dict(os.environ, {"CAR_CLOUD_API_KEY": self.key}, clear=True), redirect_stderr(io.StringIO()):
-            status = main(["--env-file", str(self.env_file), "--url", self.url,
+            status = main(["--env-file", str(self.env_file), "--provider","qwen", "--url", self.url,
                            "--image", str(self.image), "--output", str(output)])
         self.assertEqual(status, 1)
         record = json.loads(output.read_text(encoding="utf-8"))
@@ -173,7 +174,7 @@ class SceneHTTPTest(unittest.TestCase):
         self.malformed_chunked = True
         output = self.root / "malformed.json"
         with patch.dict(os.environ, {"CAR_CLOUD_API_KEY": self.key}, clear=True), redirect_stderr(io.StringIO()):
-            status = main(["--env-file", str(self.env_file), "--url", self.url,
+            status = main(["--env-file", str(self.env_file), "--provider","qwen", "--url", self.url,
                            "--image", str(self.image), "--output", str(output)])
         self.assertEqual(status, 1)
         record = json.loads(output.read_text(encoding="utf-8"))
