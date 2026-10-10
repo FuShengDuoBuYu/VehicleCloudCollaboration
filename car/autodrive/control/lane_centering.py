@@ -1,5 +1,7 @@
 """Road-center estimation and lane-centering control without hardware dependencies."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -128,11 +130,12 @@ class RoadCenterlineEstimator:
         ]
 
     @staticmethod
-    def _select_component(mask: np.ndarray) -> tuple[np.ndarray, float]:
+    def _select_component(mask: np.ndarray, preserve_exclusions: bool = False) -> tuple[np.ndarray, float]:
         binary = (mask > 0).astype(np.uint8)
         h, w = binary.shape
         kernel = np.ones((3, 3), dtype=np.uint8)
-        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+        if not preserve_exclusions:
+            binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
         count, labels, stats, _ = cv2.connectedComponentsWithStats(binary, 8)
         if count <= 1:
             return binary, 0.0
@@ -284,11 +287,110 @@ class RoadCenterlineEstimator:
             reason="ok (tracked boundary curves)",
         )
 
+    def _contained_bend_path(self, road, anchor_ratio, preview_point=None, reference_x=None):
+        """Find a local path when a global polynomial cuts an exterior bend.
+
+        Operates only on the current already-selected semantic corridor. It
+        cannot fill holes or jump a missing road row. Erosion provides room
+        for every adjacent-row transition; it is image-space clearance only.
+        The path ends at the requested preview, not beyond the observed road.
+        """
+        h, w = road.shape
+        bottom = min(h - 1, int(h * self.bottom_ratio))
+        goal = int(h * self.lookahead_ratio)
+        near = int(h * .88)
+        tight = int(h * self.tight_turn_lookahead_ratio)
+        if preview_point is not None:
+            target = np.asarray(preview_point)
+            if (target.shape != (2,) or not np.isfinite(target).all()
+                    or np.any(target != target.astype(int))):
+                return None
+            target_x, goal = map(int,target)
+            if not (0 <= target_x < w and int(h*.5) < goal < near):
+                return None
+            tight = min(near-1, max(goal+1,tight))
+            # Do not turn this local road planner into an obstacle bypass:
+            # a closed exclusion on the direct target ray remains a veto.
+            _, bg = cv2.connectedComponents((road==0).astype(np.uint8),8)
+            exterior = set(np.concatenate((bg[0],bg[-1],bg[:,0],bg[:,-1])))
+            ray_y = np.arange(goal,bottom+1)
+            ray_x = np.rint(np.linspace(target_x,w*.5,len(ray_y))).astype(int)
+            for i in range(len(ray_y)-1):
+                crossed = bg[ray_y[i]:ray_y[i+1]+1,
+                             min(ray_x[i],ray_x[i+1]):max(ray_x[i],ray_x[i+1])+1]
+                if any(label and label not in exterior for label in np.unique(crossed)):
+                    return None
+        if not goal < tight <= near <= bottom:
+            return None
+        step = max(1, int(w * .02))
+        allowed = cv2.erode(road, np.ones((3, 2 * step + 1), np.uint8),
+                            borderType=cv2.BORDER_CONSTANT, borderValue=0) > 0
+        clearance = cv2.distanceTransform(road, cv2.DIST_L2, 3)
+        x = np.arange(w)
+        cost = np.full(w, np.inf)
+        start = allowed[bottom] & (np.abs(x - w * .5) <= max(2, w * .08))
+        cost[start] = 5 * ((x[start] - w * .5) / max(1, w * .08)) ** 2
+        if not np.isfinite(cost).any():
+            return None
+        parents = []
+        offsets = np.arange(-step, step + 1)
+        parent_x = x[None, :] - offsets[:, None]
+        parent_valid = (parent_x >= 0) & (parent_x < w)
+        parent_index = np.clip(parent_x, 0, w-1)
+        turn_cost = .12 * (offsets[:, None] / step) ** 2
+        for y in range(bottom - 1, goal - 1, -1):
+            row_allowed = allowed[y].copy()
+            wide = np.zeros(w, bool)
+            for left, right in self._segments(road[y], max(3, int(w * self.minimum_width_ratio))):
+                wide[left:right + 1] = True
+            row_allowed &= wide
+            if preview_point is not None and y == goal:
+                row_allowed &= np.abs(x-target_x) <= max(2,int(w*.025))
+            # Same adjacent-row choices/costs; build the indices once instead
+            # of allocating one shifted width-sized array for every offset.
+            candidates = cost[parent_index] + turn_cost
+            candidates[~parent_valid] = np.inf
+            choice = candidates.argmin(axis=0)
+            cost = candidates[choice, x] + 2. / (clearance[y] + 1.)
+            if reference_x is not None:
+                # Keep the same geometric reference across polynomial/contained
+                # path transitions. This is a soft cost only: the current road
+                # mask, erosion and final transition checks remain mandatory.
+                cost += .04 * ((x-reference_x[y]) / max(1,w*.05))**2
+            cost[~row_allowed] = np.inf
+            if not np.isfinite(cost).any():
+                return None
+            parents.append(x - offsets[choice])
+        chosen = int(cost.argmin())
+        path = [(chosen, goal)]
+        for index in range(len(parents) - 1, -1, -1):
+            chosen = int(parents[index][chosen])
+            path.append((chosen, bottom - index))
+        points = np.asarray(path[::-1], dtype=np.int32)
+        # Explicitly validate every transition in the ORIGINAL current mask.
+        for (x0, y0), (x1, y1) in zip(points[:-1], points[1:]):
+            if not np.all(road[y1:y0 + 1, min(x0,x1):max(x0,x1) + 1]):
+                return None
+        by_y = {int(y): int(px) for px, y in points}
+        near_x, goal_x, tight_x = by_y[near], by_y[goal], by_y[tight]
+        confidence = float(min(.9, .7 + .2 * min(1., anchor_ratio / .45)))
+        return LaneEstimate(
+            True, confidence,
+            lateral_error=float(np.clip((near_x-w*.5)/(w*.5), -1, 1)),
+            heading_error=float(np.clip((goal_x-near_x)/(w*.5), -1, 1)),
+            near_heading_error=float(np.clip((tight_x-near_x)/(w*.5), -1, 1)),
+            lookahead_point=(goal_x, goal), centerline=points,
+            reason=('current-semantic front-corner path' if preview_point is not None
+                    else 'contained current-semantic bend path'),
+        )
+
     def estimate(
         self,
         drivable_mask: np.ndarray,
         lane_mask: Optional[np.ndarray] = None,
         route_hint: str = "center",
+        preserve_exclusions: bool = False,
+        semantic_preview_point=None,
     ) -> LaneEstimate:
         if route_hint not in {"left", "center", "right"}:
             raise ValueError("route_hint must be left, center, or right")
@@ -300,7 +402,15 @@ class RoadCenterlineEstimator:
         if h < 16 or w < 16 or not np.any(raw_mask):
             return LaneEstimate(False, 0.0, reason="drivable area is empty")
 
-        road, anchor_ratio = self._select_component(raw_mask)
+        if preserve_exclusions and lane_mask is not None:
+            raw_mask &= (np.asarray(lane_mask) == 0).astype(np.uint8)
+        road, anchor_ratio = self._select_component(raw_mask, preserve_exclusions)
+        if semantic_preview_point is not None:
+            if not preserve_exclusions:
+                return LaneEstimate(False,0.,reason='semantic preview requires current exclusions')
+            contained = self._contained_bend_path(road,anchor_ratio,semantic_preview_point)
+            return contained if contained is not None else LaneEstimate(
+                False,0.,reason='current-semantic corner target has no contained path')
         minimum_width = max(3, int(w * self.minimum_width_ratio))
         y_values = np.linspace(
             int(h * self.bottom_ratio),
@@ -312,7 +422,8 @@ class RoadCenterlineEstimator:
         samples = []
         for y in y_values:
             y0, y1 = max(0, int(y) - 1), min(h, int(y) + 2)
-            band = np.any(road[y0:y1] > 0, axis=0).astype(np.uint8)
+            band = (road[int(y)].copy() if preserve_exclusions else
+                    np.any(road[y0:y1] > 0, axis=0).astype(np.uint8))
             segments = self._segments(band, minimum_width)
             if not segments:
                 continue
@@ -386,6 +497,33 @@ class RoadCenterlineEstimator:
                 1.0,
             )
         )
+
+        if preserve_exclusions:
+            # A polynomial can cut across a bend or excluded line even when
+            # every sampled row midpoint was inside the selected component.
+            check_y = np.arange(
+                min(int(ys.min()), near_y, lookahead_y, tight_turn_y),
+                max(int(ys.max()), near_y, lookahead_y, tight_turn_y) + 1,
+            )
+            check_x = np.polyval(coefficients, (h - check_y) / float(h))
+            if (not np.isfinite(check_x).all() or np.any(check_x < 0)
+                    or np.any(check_x >= w)
+                    or np.any(road[check_y, np.clip(check_x, 0, w - 1).astype(int)] == 0)):
+                # Internal holes on the proposed route remain an unconditional
+                # veto; this fallback only corrects exterior-boundary cutting.
+                if np.isfinite(check_x).all():
+                    clipped = np.clip(check_x, 0, w - 1).astype(int)
+                    bad = road[check_y, clipped] == 0
+                    _, background = cv2.connectedComponents((road == 0).astype(np.uint8), 8)
+                    exterior = set(np.concatenate((background[0], background[-1],
+                                                   background[:,0], background[:,-1])))
+                    if all(label in exterior for label in background[check_y[bad], clipped[bad]]):
+                        reference_x = np.polyval(coefficients, (h-np.arange(h))/float(h))
+                        contained = self._contained_bend_path(road, anchor_ratio,
+                                                              reference_x=reference_x)
+                        if contained is not None:
+                            return contained
+                return LaneEstimate(False, 0.0, reason="fitted centerline leaves semantic corridor")
 
         fitted_int = np.column_stack(
             [np.clip(fitted_centers, 0, w - 1), ys]

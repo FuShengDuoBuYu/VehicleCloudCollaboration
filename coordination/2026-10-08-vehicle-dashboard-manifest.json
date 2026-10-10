@@ -1,0 +1,493 @@
+{
+  "task_id": "vehicle-dashboard-20261008",
+  "status": "reported",
+  "date_asia_shanghai": "2026-10-08T21:05:27.219042+08:00",
+  "head": "fce828b89b084eda293e83b99c8861f522858d8e",
+  "branch": "main",
+  "new_commit": null,
+  "source_worktree": "/home/jetson/.codex/worktrees/vehicle-dashboard/VehicleCloudCollaboration",
+  "url": "http://10.20.30.132:8080/",
+  "scope": "read-only UI and authorized static GPU/sensor monitoring; no wheel/gimbal commands by this task",
+  "code_and_config": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/runtime/onboard.py",
+      "bytes": 75855,
+      "sha256": "505dee3b4d39f3137f9eae25c98cecd813529f8adcd7cd43c9cfc528aedc2d38"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/yolopv2_fusion.py",
+      "bytes": 26072,
+      "sha256": "d0c07050ea49113f0432d38cc1a113a389b58a7418e459d963dfcfc724f8556e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/platforms/rosmaster_transport.py",
+      "bytes": 10539,
+      "sha256": "89f9fd9f95df2f99e14b156ebe91d5b44157260148c99efcdd39eb68c1b0d3ea"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/dashboard.py",
+      "bytes": 21021,
+      "sha256": "67a90dca3f658b7a4bf41657366f1e3789064f5a6a04d922baab13cceca45c5c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/dashboard.html",
+      "bytes": 4050,
+      "sha256": "ce3f359639b4805931c86866eb6c44e2d3e7f31c05ceafe95e1a1a7f7508db98"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/dashboard.js",
+      "bytes": 11457,
+      "sha256": "3951740242f671b5e6cb602389c9c9999f9901170838a6ae959d484db4d24fb0"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/dashboard.css",
+      "bytes": 5327,
+      "sha256": "5873785cba7648118d02aaff2cbadce5896e192804b836d998624af34a0c1aff"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/sensor_publishers.py",
+      "bytes": 10126,
+      "sha256": "51994af02443c8b5c76db0dff19b041553f64f52e1511c4985298d6b40f2e3bf"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/perception_monitor.py",
+      "bytes": 1299,
+      "sha256": "825b9079f84dbf858b6743764217c701294a90e14f5e57d6b1861aca3d2cdc75"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_vehicle_dashboard.py",
+      "bytes": 7569,
+      "sha256": "d5a52fc2efeb4e984669d4092e60e201beac7220d7de646900cf1893f914e6eb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_dashboard_sensors.py",
+      "bytes": 2856,
+      "sha256": "ea5127659606a7478a3e9c2708199a1c47ebef2b53d8e5e1f821237907c40e90"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_dashboard_launcher.py",
+      "bytes": 1726,
+      "sha256": "bb8612c34e472de7288eec338ad8d581163c3dcf379accefdf49bcbad1972883"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_vehicle_dashboard.sh",
+      "bytes": 1842,
+      "sha256": "00b8dd8e4325b7aba20b5803aad1960a57104dc920b17b0856ac25f90dbc6c1e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_vehicle_experiment.sh",
+      "bytes": 1402,
+      "sha256": "28b11c7f99a8cb04b338e5d1ea0d211d771d4e6e7c5afe837d6a3d8a99835cd5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/docs/vehicle-dashboard.md",
+      "bytes": 4795,
+      "sha256": "4c573e023873ebf8672f432e8b849a5ecc1e16050450fcabcb7c6d39078153e7"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/deploy/vehicle-dashboard.service",
+      "bytes": 391,
+      "sha256": "bbc78f9526c4131e13c80a03d01b88b1daac15da367f010c0dcb1019c0516959"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/deploy/vehicle-perception-monitor.service",
+      "bytes": 447,
+      "sha256": "12d8a2ba21cdbf09a75e462fccd5307a48f0e7fbaee0caec936220934cd3d201"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/deploy/vehicle-serial-monitor.service",
+      "bytes": 434,
+      "sha256": "47ad627009c512b6d1ebeb65a855a81030e1510a4bebaf7fea893fe1c41f2e35"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/deploy/vehicle-sensors.service",
+      "bytes": 482,
+      "sha256": "c361e3edc933c1ee7c37c255135a34254d219f6650eb57fb7677132081b88129"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/deploy/install-vehicle-dashboard.sh",
+      "bytes": 1515,
+      "sha256": "f073c78cbb3b4807eb52f7eb64791ac0a68bcaeff9eb6f1474c69184b93654c4"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/PROJECT_INDEX.md",
+      "bytes": 17561,
+      "sha256": "8145455af4fd050febb1833311f6a1bb80ac63fa3fb68d4a576923140540c0c4"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/coordination/2026-10-08-vehicle-dashboard.md",
+      "bytes": 10279,
+      "sha256": "c3262ae336377b4f2b7e27ae6389a853c90d2d21624c9a2f25aebc3effe2d336"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2.yaml",
+      "bytes": 2794,
+      "sha256": "0b199c6196b56212fb0d39df9984690ff46edeee35d01b65dfede98691afd081"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/config/onboard_runtime.yaml",
+      "bytes": 14136,
+      "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/cloud_worker.py",
+      "bytes": 6383,
+      "sha256": "946b8ac9416eb2e322044e85c04e3871896e0c8c9f1d19ecb08f2c7d73d3b7f5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/cloud_arbitration.py",
+      "bytes": 6670,
+      "sha256": "cfd3bc2f6ecb22e218570acb422558c2d7bef67132a9a095b23f5fa06f853aa1"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/baseline-files.json",
+      "bytes": 270606,
+      "sha256": "47d2d3695b6a17f962f3e1faccc4c40a987f1b65df9578c38f13dd66afc73e81"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/baseline.patch",
+      "bytes": 85183,
+      "sha256": "f4f67c0a340c255247eaf8e31b7b9d4e46a9a5599ced96b57724d14f2d4c99cd"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/browser-marionette.log",
+      "bytes": 936,
+      "sha256": "bf7fd8df77e4d6b39fe6ae71f22421afae5b8de86430b7d6d9d258656b223212"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/browser-software.log",
+      "bytes": 425,
+      "sha256": "cbcf6b316c802766ed18b617fa74e75d5816f11913805104798d5f2083b939ad"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/browser-validation.json",
+      "bytes": 148,
+      "sha256": "2edc56387e250434c64b56983d4bd4c0a4fd47ecd2d80c27c487d77c5f777c67"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/browser.log",
+      "bytes": 756,
+      "sha256": "16682af214f28af54f7a1f476d910be893bca76c010b1cee6347b009fc633625"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/dashboard-baseline.png",
+      "bytes": 168976,
+      "sha256": "75817237f531c1e085c63f193b33b3c79a045381233030093d05ca5b1ea31d95"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/dashboard-browser-check.py",
+      "bytes": 3807,
+      "sha256": "42e9784a0fde7c24525d94ef0700d43ab474b2a18c77936ffbf98e8c9eeeb303"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/dashboard-browser.png",
+      "bytes": 743674,
+      "sha256": "5564918e8b366d9ef0f5e13d0e662094998a2e99bbf0df988c0953b6ce987235"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/dashboard-live-browser.py",
+      "bytes": 3751,
+      "sha256": "5ff6d0c6a06d828b78cb25510f2cd359d9722a2d95e6908ed1e6d9a80cf7f10e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/dashboard-live.png",
+      "bytes": 983562,
+      "sha256": "66cf1aaa72a5387c9331ef9096c3388da87157f81b280eadeee0dfa588674aca"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/dashboard-mobile.png",
+      "bytes": 610135,
+      "sha256": "a523ef5f296e91741dd1cee2815a761594369f8e846c654e07b4df666df1f4ce"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/deployed-browser-validation.json",
+      "bytes": 201,
+      "sha256": "30003fa6ea7ef9a4dfc425ef8bb75fafd83ac9da0cbf7d03ae224d2a07d7ba48"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/deployed-samples.json",
+      "bytes": 342387,
+      "sha256": "8ee568851adb2fbd847ad00048159eb962f91d6cc1d098b07101285835019a29"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-health.json",
+      "bytes": 309,
+      "sha256": "a185bea0951ea1221d8153e7a3851b783af5aed8b8b2271bb093fa8115305727"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/autodrive/perception/yolopv2_fusion.py",
+      "bytes": 26072,
+      "sha256": "d0c07050ea49113f0432d38cc1a113a389b58a7418e459d963dfcfc724f8556e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/autodrive/runtime/onboard.py",
+      "bytes": 75855,
+      "sha256": "505dee3b4d39f3137f9eae25c98cecd813529f8adcd7cd43c9cfc528aedc2d38"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/autodrive/web/dashboard.css",
+      "bytes": 5327,
+      "sha256": "5873785cba7648118d02aaff2cbadce5896e192804b836d998624af34a0c1aff"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/autodrive/web/dashboard.html",
+      "bytes": 4050,
+      "sha256": "ce3f359639b4805931c86866eb6c44e2d3e7f31c05ceafe95e1a1a7f7508db98"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/autodrive/web/dashboard.js",
+      "bytes": 11457,
+      "sha256": "3951740242f671b5e6cb602389c9c9999f9901170838a6ae959d484db4d24fb0"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/autodrive/web/dashboard.py",
+      "bytes": 21021,
+      "sha256": "67a90dca3f658b7a4bf41657366f1e3789064f5a6a04d922baab13cceca45c5c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/autodrive/web/perception_monitor.py",
+      "bytes": 1299,
+      "sha256": "825b9079f84dbf858b6743764217c701294a90e14f5e57d6b1861aca3d2cdc75"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/autodrive/web/sensor_publishers.py",
+      "bytes": 10126,
+      "sha256": "51994af02443c8b5c76db0dff19b041553f64f52e1511c4985298d6b40f2e3bf"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/control/vehicle_control/platforms/rosmaster_transport.py",
+      "bytes": 10539,
+      "sha256": "89f9fd9f95df2f99e14b156ebe91d5b44157260148c99efcdd39eb68c1b0d3ea"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/test/test_dashboard_launcher.py",
+      "bytes": 1726,
+      "sha256": "bb8612c34e472de7288eec338ad8d581163c3dcf379accefdf49bcbad1972883"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/test/test_dashboard_sensors.py",
+      "bytes": 2856,
+      "sha256": "ea5127659606a7478a3e9c2708199a1c47ebef2b53d8e5e1f821237907c40e90"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/car/test/test_vehicle_dashboard.py",
+      "bytes": 7569,
+      "sha256": "d5a52fc2efeb4e984669d4092e60e201beac7220d7de646900cf1893f914e6eb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/deploy/install-vehicle-dashboard.sh",
+      "bytes": 1515,
+      "sha256": "f073c78cbb3b4807eb52f7eb64791ac0a68bcaeff9eb6f1474c69184b93654c4"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/deploy/vehicle-dashboard.service",
+      "bytes": 391,
+      "sha256": "bbc78f9526c4131e13c80a03d01b88b1daac15da367f010c0dcb1019c0516959"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/deploy/vehicle-perception-monitor.service",
+      "bytes": 447,
+      "sha256": "12d8a2ba21cdbf09a75e462fccd5307a48f0e7fbaee0caec936220934cd3d201"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/deploy/vehicle-sensors.service",
+      "bytes": 482,
+      "sha256": "c361e3edc933c1ee7c37c255135a34254d219f6650eb57fb7677132081b88129"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/deploy/vehicle-serial-monitor.service",
+      "bytes": 434,
+      "sha256": "47ad627009c512b6d1ebeb65a855a81030e1510a4bebaf7fea893fe1c41f2e35"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/docs/vehicle-dashboard.md",
+      "bytes": 4795,
+      "sha256": "4c573e023873ebf8672f432e8b849a5ecc1e16050450fcabcb7c6d39078153e7"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/run_vehicle_dashboard.sh",
+      "bytes": 1842,
+      "sha256": "00b8dd8e4325b7aba20b5803aad1960a57104dc920b17b0856ac25f90dbc6c1e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-source/run_vehicle_experiment.sh",
+      "bytes": 1402,
+      "sha256": "28b11c7f99a8cb04b338e5d1ea0d211d771d4e6e7c5afe837d6a3d8a99835cd5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-state.json",
+      "bytes": 31058,
+      "sha256": "796a73c62c037aa247c4f09a5a9d43cc057c7b2a9e477bc35b28f2bcee7bbdb6"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/final-worktree.patch",
+      "bytes": 95722,
+      "sha256": "271984e5e37aeb0cf7901ee5f67ac65eef5d137b187acf9b485b4a10792b17ba"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/git-status.txt",
+      "bytes": 2275,
+      "sha256": "5f9b70e0f2127ae3de9dc0012490b3f8b5fb5a081c300fb4a746665e3d3897a3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/implementation-incremental.patch",
+      "bytes": 82332,
+      "sha256": "84920e91fada4e10c1d9b7017f64c59f58e5bf7e4063268e36c3776eb14bcccc"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/integration-before/car/autodrive/perception/yolopv2_fusion.py",
+      "bytes": 25994,
+      "sha256": "e8233d57989d86c0e697c8285d91f6ab80d1aa3b4d655ce8d2f437a2c19eb2c1"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/integration-before/car/autodrive/runtime/onboard.py",
+      "bytes": 75315,
+      "sha256": "e53d475bdc75c1195257a9a1d3575afcb213a0363625f079c05d789b7bbc5615"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/integration-before/car/control/vehicle_control/platforms/rosmaster_transport.py",
+      "bytes": 10014,
+      "sha256": "9b74468da6aaca33d93584c75580aaf565c6464a94a8e7b4bcadd95d4f24f6fe"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/integration-record.json",
+      "bytes": 4097,
+      "sha256": "b966700f0eb5f4bd45eceb74605b93e74c7059ccad700fd84f3e96099ddfdf95"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/main-host-regression.log",
+      "bytes": 300,
+      "sha256": "40998e92059422e151f6bcbef8446dbc5ee3b6197b95b19f1064bb73ee890113"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/main-regression.log",
+      "bytes": 1248,
+      "sha256": "0848a9175d35a3d61394d7d0f1aac7ebc0a42aba626618f45bf7bd8b7b64dde5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/merged-regression.log",
+      "bytes": 171,
+      "sha256": "4725df63e6bc43e362f2bd3df2372aea8304a27f10c49c22f9046c559ea355c6"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/perception-test.log",
+      "bytes": 22505,
+      "sha256": "9fd3a9bdfa427afe32bd3c60ded7aefd730c94d0f817f1bf590368a38d8c6265"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/pre-integration-files.json",
+      "bytes": 272160,
+      "sha256": "429d28eaa9847bb61b73ac47cff5bf9d50b600a73fe1d63c44769a9aacd25460"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/predeploy-regression.log",
+      "bytes": 938,
+      "sha256": "73bf793ebaeac4e937698a650a6963ff3f34b8de1fd005da68669430d4b0a795"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/predeploy-venv-regression.log",
+      "bytes": 299,
+      "sha256": "c34db8777cc195484afbfacf35c898e1f10f3024cc9c6704a1fa8ad7a05097c0"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/sensors-retest.log",
+      "bytes": 2640,
+      "sha256": "46bf132a2370a4e6bea3881ecf355d3ca85b5ab01baa4a0325a5c188fd2a643a"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/sensors-test.log",
+      "bytes": 1356,
+      "sha256": "10cc290cb2ab60666f569623be6a70ec2e38a0c88f4ef1c50b5e336f1029df4c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/serial-test.log",
+      "bytes": 36,
+      "sha256": "8710cd9b66bb10353e0dd3cdf331a9c010736226b4b1a47b36960b2afb1befee"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/service-status.txt",
+      "bytes": 539,
+      "sha256": "1b6a0eb7f17d839f0f6948d344836e6e29c548306cfe5219ab00e2f5ad554941"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/static-probe/monitor/latest.jpg",
+      "bytes": 122095,
+      "sha256": "2e4ca8fbbb5d90099b27de77383683de61b360de5cd675ac6198d2ffb6cfe113"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/static-probe/monitor/latest_birdeye.jpg",
+      "bytes": 7144,
+      "sha256": "51ed39269741d471ed9ea5cbc9881b4a21136f9943e9653fe06e8e176c9e5f6e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/static-probe/monitor/onboard_log.csv",
+      "bytes": 257860,
+      "sha256": "7ffeeabadf43467380a8364f121070f39b9e6819c89ffabbd0b60680ecc7a679"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/static-probe/monitor/status.json",
+      "bytes": 6806,
+      "sha256": "5aadfa7f5a738c1fc8c17088879710a059b2911ab5d3070febfd1cddbe32b88f"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/static-probe/sensors/depth.jpg",
+      "bytes": 13297,
+      "sha256": "762f149d755076ddbfc0d334abbfb453d2b38fbd9f56af2e8ac8f7a453cef3bf"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/static-probe/sensors/ros.json",
+      "bytes": 5817,
+      "sha256": "35cd577884f773314924c229d8dcba8c5040e5dfab7920ca9b657b4eb06f5862"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/static-probe/sensors/serial.json",
+      "bytes": 1067,
+      "sha256": "d37b6ddf982ccfdc21eb1b4f72ee361306536bfe2e01675bfa9b715bc8f41d99"
+    }
+  ],
+  "checks": {
+    "unit_tests": 200,
+    "unit_log": "/home/jetson/VehicleCloudCollaboration/outputs/vehicle_dashboard/20261008/main-host-regression.log",
+    "all_services_enabled_active": true,
+    "actual_vehicle_reboot": false,
+    "browser": {
+      "rendered": {
+        "rows": 7,
+        "connection": "在线",
+        "raw": 30722
+      },
+      "visible_control_buttons": [],
+      "mobile": {
+        "viewport": 450,
+        "width": 438,
+        "connection": "在线"
+      }
+    },
+    "final_health": {
+      "service_alive": true,
+      "schema_version": 1,
+      "read_only": true,
+      "all_sensors_online": true,
+      "sensors": {
+        "battery": "online",
+        "camera": "online",
+        "lidar": "online",
+        "depth": "online",
+        "imu": "online",
+        "attitude": "online",
+        "encoder": "online"
+      },
+      "autonomy": "live"
+    }
+  },
+  "limits": [
+    "Battery SOC uncalibrated; voltage only",
+    "Cloud currently disabled; no real request in this task",
+    "Final destination navigation not integrated",
+    "Shared load reduces depth receiving rate; independent 30Hz not joint performance",
+    "Paused collector ownership is required before other direct hardware tools",
+    "Static sensor/GPU tests do not prove driving safety or stopping distance"
+  ]
+}

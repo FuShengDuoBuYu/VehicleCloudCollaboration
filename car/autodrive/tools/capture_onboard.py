@@ -7,15 +7,18 @@ import sys
 import time
 
 import cv2
-import yaml
 
 AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
 CAR_DIR = AUTODRIVE_DIR.parent
+CONTROL_DIR = CAR_DIR / "control"
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
+if str(CONTROL_DIR) not in sys.path:
+    sys.path.insert(0, str(CONTROL_DIR))
 
 from autodrive.camera.gimbal import initialize_configured_gimbal
 from autodrive.camera.transform import CameraTransformConfig, transform_frame
+from vehicle_control.profile import load_runtime_config
 
 
 REPO_ROOT = CAR_DIR.parent
@@ -24,6 +27,13 @@ GIMBAL_CONFIRMATION = "CAMERA_GIMBAL_IS_CLEAR"
 
 def build_parser():
     parser = argparse.ArgumentParser(description="Capture onboard-camera calibration data")
+    parser.add_argument(
+        "--vehicle-profile",
+        help=(
+            "Vehicle profile ID or YAML path; overrides vehicle.profile when "
+            "--config is provided"
+        ),
+    )
     parser.add_argument(
         "--config",
         help=(
@@ -74,12 +84,10 @@ def main():
         "flip_vertical": args.flip_vertical,
     }
     if args.config:
-        config_path = Path(args.config).expanduser().resolve()
-        runtime_config = yaml.safe_load(
-            config_path.read_text(encoding="utf-8")
-        ) or {}
-        if runtime_config.get("version") != 1:
-            raise ValueError("runtime config version must be 1")
+        _, runtime_config = load_runtime_config(
+            args.config,
+            vehicle_selector=args.vehicle_profile,
+        )
         camera_config = dict(runtime_config.get("camera", {}))
         gimbal = camera_config.get("gimbal") or {}
         if bool(gimbal.get("initialize_on_startup", False)):
@@ -88,7 +96,10 @@ def main():
                     "configured gimbal initialization requires "
                     "--confirm-camera-gimbal-clear " + GIMBAL_CONFIRMATION
                 )
-            commands = initialize_configured_gimbal(camera_config)
+            commands = initialize_configured_gimbal(
+                camera_config,
+                vehicle_config=runtime_config.get("vehicle", {}),
+            )
             print(f"Initialized camera gimbal: {commands}", flush=True)
 
     output_dir = Path(args.output_dir).expanduser().resolve()

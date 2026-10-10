@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小车运行回放</title><link rel="stylesheet" href="/dashboard.css"><script src="/replay.js" defer></script></head>
+<body><main><header><div><span class="eyebrow">RUN REPLAY</span><h1>小车运行回放</h1><p id="run">正在读取本次记录…</p></div><a href="/">返回实时面板</a></header>
+<div id="notice" class="notice">历史录像和当时传感器数据；改变控制参数不会改变已经发生的轨迹。</div>
+<section class="drive-controls"><button id="play" disabled>播放</button><button id="previous" disabled>上一帧</button><button id="next" disabled>下一帧</button><span id="time">—</span><input id="scrub" type="range" min="0" max="0" value="0" aria-label="回放帧" style="flex:1;min-width:150px"><span id="sample">—</span></section>
+<div class="workspace">
+<section class="card"><div class="card-title"><h2>原始 RGB</h2></div><div class="picture"><img id="raw" alt="本次运行原始相机帧"></div></section>
+<section class="card"><div class="card-title"><h2>当时的 YOLOPv2 与控制</h2></div><div class="picture"><img id="annotated" alt="当时模型叠加帧"></div></section>
+<section class="card"><div class="card-title"><h2>动作与传感器</h2></div><dl id="readings"></dl><div class="radar"><canvas id="radar" width="360" height="250"></canvas><p id="radarHint">正在读取同步扫描</p></div></section>
+<section class="card"><div class="card-title"><h2>原始深度的可视化</h2></div><div class="picture"><img id="depth" alt="同一时间的深度帧可视化"></div><p class="footnote" id="depthHint">零值保持缺失；显示色图由已保存的 16 位原始深度生成。</p></section>
+</div><details><summary>本帧原始控制日志</summary><pre id="row">{}</pre></details></main></body></html>

@@ -1,0 +1,202 @@
+{
+  "task": "jetson-vehicle-bringup",
+  "created_at": "2026-10-08T15:47:45.655708+08:00",
+  "head": "33a5a712b97af15feadc11f4751e60edaa05dc08",
+  "tracked_diff_sha256": "9523bed7dabd72270b53dd79c2dae73d6c4895097486e95d7139b39903b51478",
+  "software_test": {
+    "command": "python3 -B -m unittest car.test.test_lane_centering car.test.test_camera_transform car.test.test_camera_gimbal car.test.test_hardware_mapping car.test.test_lcc_web",
+    "exit_code": 0,
+    "tests": 103,
+    "seconds": 1.786,
+    "scope": "existing mock and synthetic-input tests"
+  },
+  "camera_selfcheck": {
+    "artifact": "/home/jetson/VehicleCloudCollaboration/coordination/2026-10-08-jetson-bringup-camera-selfcheck.json",
+    "exit_code": 0,
+    "rgb_size": [
+      640,
+      480
+    ],
+    "strict_ok": false
+  },
+  "live_motor_disabled_development_run": {
+    "command": "python3 -B car/autodrive/run_onboard.py --vehicle-profile rosmaster_jetson --max-runtime-seconds 5 --output-dir outputs/onboard_runtime/rosmaster_jetson_bringup",
+    "exit_code": 0,
+    "run_id": "20261008_034402_061387_dryrun",
+    "run_path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_bringup/runs/20261008_034402_061387_dryrun",
+    "run_name_timezone": "America/New_York",
+    "mode": "dry-run",
+    "source": "camera:0",
+    "csv_rows": 100,
+    "termination": {
+      "reason": "maximum runtime reached (5.000s)",
+      "stopped": true,
+      "completed_at": 1791445447.4341037
+    },
+    "final_wheel_driver": {
+      "mode": "dry-run",
+      "action": "stopped",
+      "left_pwm": 0,
+      "right_pwm": 0,
+      "front_left_pwm": 0,
+      "rear_left_pwm": 0,
+      "front_right_pwm": 0,
+      "rear_right_pwm": 0,
+      "reason": "maximum runtime reached (5.000s)",
+      "updated_at": 5924.237280281,
+      "mapping": {
+        "drive_mode": "four-wheel-trim",
+        "pwm_limit": 20,
+        "minimum_moving_pwm": 5,
+        "front_left_base_pwm": 10,
+        "rear_left_base_pwm": 10,
+        "front_right_base_pwm": 10,
+        "rear_right_base_pwm": 10,
+        "front_steering_delta_pwm": 10,
+        "maximum_steering_delta_pwm": 5,
+        "tight_turn_start_steering": 0.5,
+        "tight_turn_full_steering": 0.7,
+        "tight_turn_outside_pwm": 15,
+        "tight_turn_inside_pwm": 0,
+        "transition_time": 0.25
+      }
+    },
+    "diagnostics": {
+      "archive": {
+        "enabled": true,
+        "queue_capacity": 32,
+        "queue_depth": 0,
+        "enqueued_frames": 100,
+        "written_frames": 100,
+        "dropped_frames": 0,
+        "error": null
+      },
+      "control_log": {
+        "queue_capacity": 256,
+        "queue_depth": 0,
+        "enqueued_rows": 100,
+        "written_rows": 100,
+        "dropped_rows": 0,
+        "error": null
+      },
+      "live_publisher": {
+        "queue_depth": 0,
+        "published_updates": 22,
+        "dropped_updates": 0,
+        "error": null
+      },
+      "debug_frames": {
+        "enabled": false,
+        "queue_depth": 0,
+        "written_frames": 0,
+        "dropped_frames": 0,
+        "error": null
+      },
+      "yolopv2_fusion": {
+        "enabled": false
+      }
+    },
+    "scene": "desk and green objects, not a validated road",
+    "physical_motor_output_enabled": false,
+    "gimbal_startup_enabled": false,
+    "yolopv2_enabled": false,
+    "calibration": null,
+    "artifacts": [
+      {
+        "name": "annotated.mp4",
+        "size": 1988441,
+        "sha256": "f2ac0baee3e724952b3fe45b086644f3241c2ab43b1788c94e4a8cb98221324e"
+      },
+      {
+        "name": "birdeye.mp4",
+        "size": 598957,
+        "sha256": "7888d3fe4e6860467e83fb5fe46e132f5369899ba0a89ea5a8d86bcf6ac42b5f"
+      },
+      {
+        "name": "onboard_log.csv",
+        "size": 34826,
+        "sha256": "368a17c720e8f0beeb1e3700dd5c79514d8f7500237c412912c51db25d192a64"
+      },
+      {
+        "name": "raw.mp4",
+        "size": 1026952,
+        "sha256": "d31ead51a43c0aca66c34dea80e0377199624315b4bf0633b217211883f6e686"
+      },
+      {
+        "name": "resolved_runtime_config.yaml",
+        "size": 4975,
+        "sha256": "790439866822061debf36d00db77f05f6e889ebf47d495f635fd03067b63e0e4"
+      },
+      {
+        "name": "runtime_config.yaml",
+        "size": 14136,
+        "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+      },
+      {
+        "name": "status.json",
+        "size": 5551,
+        "sha256": "3dcace6aa0be55ce1ef6d3038fb22a5e43f4e46d4845b2be0a4aad4245370024"
+      },
+      {
+        "name": "vehicle_profile.yaml",
+        "size": 1858,
+        "sha256": "96689b019e3ddbaa584ac5ca9fe8484967318fd86511f6bcd46d9caa240a7cba"
+      }
+    ]
+  },
+  "no_hardware_probes": [
+    {
+      "case": "invalid_combined_gimbal_pose",
+      "input": {
+        "pan_angle": 20,
+        "tilt_angle": 150,
+        "tilt_limits": [
+          0,
+          100
+        ]
+      },
+      "observed": "ValueError after pan command",
+      "writes_before_rejection": [
+        [
+          1,
+          20
+        ]
+      ],
+      "hardware_connections": 0
+    },
+    {
+      "case": "invalid_motor_order",
+      "input": [
+        0,
+        0,
+        2,
+        3
+      ],
+      "observed": "connection factory called before ValueError",
+      "events": [
+        "connected"
+      ],
+      "hardware_connections": 0
+    },
+    {
+      "case": "string_false_calibration",
+      "input": {
+        "motion_calibrated": "false"
+      },
+      "observed": "validate_motion_configuration accepted",
+      "hardware_connections": 0
+    }
+  ],
+  "unfinished": [
+    "actual chassis communication and telemetry",
+    "strict driver and API implementation",
+    "depth and lidar data",
+    "vehicle calibration",
+    "physical motion and closed-course runs",
+    "deployable upper-layer API acceptance"
+  ],
+  "pending_user_input": [
+    "design review",
+    "wheels lifted and available operator"
+  ]
+}

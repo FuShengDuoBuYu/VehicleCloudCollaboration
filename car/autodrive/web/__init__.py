@@ -1,5 +1,1 @@
-"""Dedicated LCC web console."""
-
-from .server import LCCProcessManager, LCCWebServer
-
-__all__ = ["LCCProcessManager", "LCCWebServer"]
+"""Read-only vehicle dashboard and telemetry publishers."""

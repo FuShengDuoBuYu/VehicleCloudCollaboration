@@ -1,5 +1,7 @@
 """Visualization helpers for the onboard outer-loop LCC."""
 
+from __future__ import annotations
+
 import cv2
 import numpy as np
 
@@ -50,6 +52,7 @@ def render_debug_frame(
     boundary_source: str = "both",
     semantic_mask: np.ndarray = None,
     semantic_label: str = "",
+    control_label: str = "LCC",
 ) -> np.ndarray:
     output = frame.copy()
     frame_h, frame_w = output.shape[:2]
@@ -72,16 +75,18 @@ def render_debug_frame(
             interpolation=cv2.INTER_NEAREST,
         )
 
-    color_layer = np.zeros_like(output)
-    color_layer[drivable > 0] = (30, 150, 30)
+    # Only visible pixels are copied below, so a constant green background
+    # gives exactly the same overlay without gathering a broad road mask.
+    color_layer = np.empty_like(output)
+    color_layer[:] = (30, 150, 30)
     color_layer[lane > 0] = (20, 20, 230)
-    visible = (drivable > 0) | (lane > 0)
+    visible = cv2.bitwise_or(drivable, lane)
     if np.any(visible):
         # OpenCV performs the full-frame blend in optimized native code. This
         # is materially faster than float-converting a broad YOLO mask through
         # NumPy fancy indexing on the Raspberry Pi.
         blended = cv2.addWeighted(output, 0.55, color_layer, 0.45, 0)
-        output[visible] = blended[visible]
+        cv2.copyTo(blended, visible, output)
     if semantic is not None:
         # Drawing only the proposal outline keeps the broad semantic mask
         # interpretable without alpha-blending most of every camera frame.
@@ -125,7 +130,7 @@ def render_debug_frame(
     )
     left_pwm, right_pwm = command.as_pwm()
     lines = [
-        f"LCC: {command.action}  steer={command.steering:+.3f}",
+        f"{control_label}: {command.action}  steer={command.steering:+.3f}",
         (
             f"error: lateral={estimate.lateral_error:+.3f}  "
             f"heading={estimate.heading_error:+.3f}  "
@@ -137,13 +142,19 @@ def render_debug_frame(
             f"{latency_label}={inference_ms:.0f}ms"
         ),
     ]
+    if boundary_source == "yolopv2":
+        # These normalized proposals have not passed the physical wheel mapper.
+        lines[2] = (f"normalized proposal: L={command.left_speed:+.2f} "
+                    f"R={command.right_speed:+.2f}  YOLOPv2={inference_ms:.0f}ms")
     for index, line in enumerate(lines):
+        text_width = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, 0.72, 2)[0][0]
+        font_scale = min(0.72, 0.72 * (frame_w - 28) / max(1, text_width))
         cv2.putText(
             output,
             line,
             (14, 30 + index * 34),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.72,
+            font_scale,
             (255, 255, 255),
             2,
             cv2.LINE_AA,

@@ -1,0 +1,347 @@
+{
+  "recorded_at": "2026-10-08T21:29:57.084464+08:00",
+  "head": "fce828b89b084eda293e83b99c8861f522858d8e",
+  "worktree": "dirty; prior changes retained",
+  "operator_report": {
+    "pwm": 30,
+    "duration_seconds": 1,
+    "observation": "用户确认30 PWM、1秒：落地，车身前进且能停住",
+    "setup": "grounded",
+    "all_wheels_normal": null,
+    "physical_stop_confirmed": true
+  },
+  "interpretation": "Operator-confirmed grounded forward motion and stopping at 30 PWM / 1 s, backed by console run records. Not an exact minimum output, speed, stopping distance, turning or autonomous-lap calibration.",
+  "runs": [
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132228Z-EKmYqa",
+      "pwm": 20,
+      "duration_seconds": 0.3,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132228Z-EKmYqa/command.txt",
+          "sha256": "f95b0a8be23bfa9b6b80e0fe3e97c171ed31582824c5d1e3649d4abe667c2325"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132228Z-EKmYqa/console.log",
+          "sha256": "dadc035fa586e830117ce72f59a33e7260667c9548cd3f75c3554603e157c085"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132228Z-EKmYqa/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132231Z-j7vLih",
+      "pwm": 20,
+      "duration_seconds": 0.3,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132231Z-j7vLih/command.txt",
+          "sha256": "f95b0a8be23bfa9b6b80e0fe3e97c171ed31582824c5d1e3649d4abe667c2325"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132231Z-j7vLih/console.log",
+          "sha256": "dadc035fa586e830117ce72f59a33e7260667c9548cd3f75c3554603e157c085"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132231Z-j7vLih/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132237Z-09lwZo",
+      "pwm": 20,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132237Z-09lwZo/command.txt",
+          "sha256": "a712a49c2699cf2c6c9fbe7d82c7a3cbcf37cf894367af5f4ba4989a46b82eef"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132237Z-09lwZo/console.log",
+          "sha256": "3435079f843d7ade3c73b54c2ccb17a8d43af5b6c0ffc0a9b5e3218adf5608f7"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132237Z-09lwZo/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132240Z-VIc3g8",
+      "pwm": 20,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132240Z-VIc3g8/command.txt",
+          "sha256": "a712a49c2699cf2c6c9fbe7d82c7a3cbcf37cf894367af5f4ba4989a46b82eef"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132240Z-VIc3g8/console.log",
+          "sha256": "3435079f843d7ade3c73b54c2ccb17a8d43af5b6c0ffc0a9b5e3218adf5608f7"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132240Z-VIc3g8/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132243Z-ero3Ka",
+      "pwm": 20,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132243Z-ero3Ka/command.txt",
+          "sha256": "a712a49c2699cf2c6c9fbe7d82c7a3cbcf37cf894367af5f4ba4989a46b82eef"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132243Z-ero3Ka/console.log",
+          "sha256": "3435079f843d7ade3c73b54c2ccb17a8d43af5b6c0ffc0a9b5e3218adf5608f7"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132243Z-ero3Ka/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132245Z-tGBEe7",
+      "pwm": 20,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132245Z-tGBEe7/command.txt",
+          "sha256": "a712a49c2699cf2c6c9fbe7d82c7a3cbcf37cf894367af5f4ba4989a46b82eef"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132245Z-tGBEe7/console.log",
+          "sha256": "3435079f843d7ade3c73b54c2ccb17a8d43af5b6c0ffc0a9b5e3218adf5608f7"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132245Z-tGBEe7/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132247Z-cAdUfa",
+      "pwm": 20,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132247Z-cAdUfa/command.txt",
+          "sha256": "a712a49c2699cf2c6c9fbe7d82c7a3cbcf37cf894367af5f4ba4989a46b82eef"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132247Z-cAdUfa/console.log",
+          "sha256": "3435079f843d7ade3c73b54c2ccb17a8d43af5b6c0ffc0a9b5e3218adf5608f7"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132247Z-cAdUfa/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132249Z-K7ujYa",
+      "pwm": 20,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132249Z-K7ujYa/command.txt",
+          "sha256": "a712a49c2699cf2c6c9fbe7d82c7a3cbcf37cf894367af5f4ba4989a46b82eef"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132249Z-K7ujYa/console.log",
+          "sha256": "3435079f843d7ade3c73b54c2ccb17a8d43af5b6c0ffc0a9b5e3218adf5608f7"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132249Z-K7ujYa/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132304Z-Re7VuV",
+      "pwm": 30,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132304Z-Re7VuV/command.txt",
+          "sha256": "d6790bebf22a0d368452c724ab2573ac2f6d112272c5c88a0e1a50e3c5000e2f"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132304Z-Re7VuV/console.log",
+          "sha256": "1f523548df617911decc79ed3ec9bbd94df94c07fb5f400f6155b1dda547884d"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132304Z-Re7VuV/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132311Z-4jgA2s",
+      "pwm": 40,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132311Z-4jgA2s/command.txt",
+          "sha256": "f59970dc4cb2364002bbbd194c24d2215bb2dd57278bed33d009c78b047ad825"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132311Z-4jgA2s/console.log",
+          "sha256": "aebf19a727b4b1d7ece80d9369542d15261c209dca91c5a272aec2932235434d"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132311Z-4jgA2s/exit-code.txt",
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        }
+      ],
+      "exit_code": 1,
+      "stop_message_present": false,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132317Z-HJi0HW",
+      "pwm": 30,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132317Z-HJi0HW/command.txt",
+          "sha256": "d6790bebf22a0d368452c724ab2573ac2f6d112272c5c88a0e1a50e3c5000e2f"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132317Z-HJi0HW/console.log",
+          "sha256": "1f523548df617911decc79ed3ec9bbd94df94c07fb5f400f6155b1dda547884d"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132317Z-HJi0HW/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132332Z-tqzkD4",
+      "pwm": 30,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132332Z-tqzkD4/command.txt",
+          "sha256": "d6790bebf22a0d368452c724ab2573ac2f6d112272c5c88a0e1a50e3c5000e2f"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132332Z-tqzkD4/console.log",
+          "sha256": "1f523548df617911decc79ed3ec9bbd94df94c07fb5f400f6155b1dda547884d"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132332Z-tqzkD4/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    },
+    {
+      "run_path": "outputs/manual_wheel_check/20261008T132336Z-to3T2D",
+      "pwm": 30,
+      "duration_seconds": 1.0,
+      "artifacts": [
+        {
+          "path": "outputs/manual_wheel_check/20261008T132336Z-to3T2D/command.txt",
+          "sha256": "d6790bebf22a0d368452c724ab2573ac2f6d112272c5c88a0e1a50e3c5000e2f"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132336Z-to3T2D/console.log",
+          "sha256": "1f523548df617911decc79ed3ec9bbd94df94c07fb5f400f6155b1dda547884d"
+        },
+        {
+          "path": "outputs/manual_wheel_check/20261008T132336Z-to3T2D/exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        }
+      ],
+      "exit_code": 0,
+      "stop_message_present": true,
+      "monitor_restoration_message_present": true
+    }
+  ],
+  "motor_commands_sent_by_assistant_this_followup": 0,
+  "operator_policy": "以后按30 PWM测试和运行；作为直行/起步基准，停车0，转弯差速且不超过30；不再安排低于30的逐档起步试验。",
+  "previous_runtime_config": {
+    "base_pwm_all_four": 10,
+    "pwm_limit": 20,
+    "minimum_moving_pwm": 5,
+    "motion_calibrated": false
+  },
+  "current_runtime_config": {
+    "base_pwm_all_four": 30,
+    "pwm_limit": 30,
+    "tight_turn_outside_pwm": 30,
+    "minimum_moving_pwm": 5,
+    "minimum_moving_pwm_status": "retained interpolation floor, not verified as a grounded starting threshold",
+    "motion_calibrated": false
+  },
+  "verification": {
+    "command": "outputs/field_yolopv2/venv/bin/python -B -m unittest car.test.test_pwm30_defaults car.test.test_wheel_check_launcher car.test.test_lane_centering car.test.test_hardware_mapping car.test.test_hardware_safety car.test.test_rosmaster_transport",
+    "tests": 128,
+    "result": "PASS",
+    "hardware": "mock only; assistant did not actuate",
+    "limitations": "inner-wheel running below30 and physical turning remain unverified"
+  },
+  "changed_artifacts": [
+    {
+      "path": "car/autodrive/control/drive_runtime.py",
+      "sha256": "df920a3f8ac92ad4486a09af5feb744a1b3bfe9f7dd25479faad80869de34a67"
+    },
+    {
+      "path": "car/autodrive/tools/check_wheel_directions.py",
+      "sha256": "aae0deb0367c50de0333b28b47c17094f9184b9bb4f0e8b9f7a94e6ee6e627e9"
+    },
+    {
+      "path": "car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2.yaml",
+      "sha256": "1a19fd77c89ea8c3755913cef8e576b8093ff902e51462c5b16033e94698331e"
+    },
+    {
+      "path": "car/test/test_pwm30_defaults.py",
+      "sha256": "32b67e251a70c6063af1abeaad39c3a549f98267cd9d00992e43e17eb805ae65"
+    },
+    {
+      "path": "docs/manual-wheel-check.md",
+      "sha256": "580f1f614a613a76e86c1b02c6a5a8e54f5d795292b112ad7c05aa50b6f38e4b"
+    }
+  ]
+}

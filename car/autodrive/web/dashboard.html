@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>车云协同 · 实时面板</title><link rel="stylesheet" href="/dashboard.css"><script src="/dashboard.js" defer></script></head>
+<body><main>
+<header><div><span class="eyebrow">VEHICLE / CLOUD</span><h1>小车实时面板</h1><p id="host">正在连接车端服务…</p></div><div class="connection"><span id="connection" class="badge waiting">连接中</span><span id="clock">—</span></div></header>
+<div id="notice" class="notice">只读监控 · 车辆运动由现场车端程序启动</div>
+<section class="drive-controls" aria-label="自动驾驶启停">
+<button id="startDrive" type="button" disabled>开始自动驾驶</button>
+<button id="stopDrive" type="button" disabled>结束自动驾驶</button>
+<a id="replayDrive" hidden target="_blank" rel="noopener">回放本次运行</a>
+<label>历史运行 <select id="driveHistory"><option value="">选择一次运行回放</option></select></label>
+<span id="driveControlHint" role="status">正在检查车端启停程序…</span>
+</section>
+<section class="summary" aria-label="车辆概况">
+<article><label>电池电量（估算）</label><strong id="batteryPercentage">— <small>%</small></strong><span id="voltage">— V</span><span id="batteryHint">等待底盘遥测</span></article>
+<article><label>自动驾驶状态</label><strong id="drive">待机</strong><span id="driveHint">尚无运行数据</span></article>
+<article><label>YOLOPv2 感知</label><strong id="yolo">未运行</strong><span id="yoloHint">等待模型结果</span></article>
+<article><label>传感器</label><strong id="sensorCount">0 / 7</strong><span id="sensorHint">正在读取状态</span></article>
+<article><label>云端协同</label><strong id="cloudState">未接入</strong><span id="cloudHint">等待事件发布</span></article>
+</section>
+<div class="workspace">
+<section class="card vision"><div class="card-title"><h2>相机与模型画面</h2><span id="frameStatus" class="badge">等待画面</span></div><div class="picture"><img id="camera" alt="相机与 YOLOPv2 检测叠加画面"><div id="frameCover">等待实时相机与感知数据</div></div><div class="metrics"><div><label>LCC 置信度</label><b id="confidence">—</b></div><div><label>YOLO 结果年龄</label><b id="modelAge">—</b></div><div><label>转向提案</label><b id="steering">—</b></div><div><label>当前动作</label><b id="action">—</b></div></div><div class="caption" id="reason">—</div></section>
+<section class="card"><div class="card-title"><h2>传感器状态</h2><span class="muted">按采样时间判断</span></div><div class="table-scroll"><table><thead><tr><th>设备</th><th>状态</th><th>读数 / 说明</th></tr></thead><tbody id="sensorRows"></tbody></table></div><div class="radar"><canvas id="radar" width="360" height="200" aria-label="雷达平面点云"></canvas><p id="radarHint">雷达等待实时扫描 · 点云为传感器坐标，未经车身外参标定</p></div></section>
+<section class="card"><div class="card-title"><h2>云端触发与结果</h2><span id="cloudBadge" class="badge">未接入</span></div><dl id="cloudDetails"></dl><p class="footnote">云端返回场景与候选建议，实际执行由车端安全仲裁决定。</p></section>
+<section class="card"><div class="card-title"><h2>任务与驾驶决策</h2><span id="goalBadge" class="badge">未接入</span></div><dl id="goalDetails"></dl><div class="subheading">运动门禁与输出</div><dl id="controlDetails"></dl></section>
+<section class="card"><div class="card-title"><h2>YOLOPv2 检测目标</h2><span id="objectsBadge" class="badge">等待模型</span></div><div id="objects" class="objects muted">尚无模型结果</div><div class="subheading">鸟瞰与中心线</div><div class="mini-picture"><img id="birdeye" alt="鸟瞰感知与中心线"><span id="birdHint">等待鸟瞰图</span></div></section>
+<section class="card"><div class="card-title"><h2>主机与深度相机</h2><span id="systemBadge" class="badge">JETSON</span></div><dl id="systemDetails"></dl><div class="mini-picture"><img id="depth" alt="深度相机有效距离可视化"><span id="depthHint">等待深度图</span></div></section>
+</div>
+<footer><span id="source">数据源 —</span><span>状态 2 Hz · 电量按 10–12 V 线性估算</span></footer>
+<details><summary>查看实时状态 JSON</summary><pre id="raw">{}</pre></details>
+</main></body></html>

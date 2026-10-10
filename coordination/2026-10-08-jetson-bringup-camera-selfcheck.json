@@ -1,0 +1,83 @@
+{
+  "ok": true,
+  "strict_ok": false,
+  "platform": {
+    "vehicle_profile": "rosmaster_jetson",
+    "vehicle_backend": "rosmaster",
+    "machine": "aarch64",
+    "system": "Linux-5.10.104-tegra-aarch64-with-glibc2.29",
+    "python": "3.8.10"
+  },
+  "checks": [
+    {
+      "name": "runtime_config",
+      "status": "pass",
+      "detail": "/home/jetson/VehicleCloudCollaboration/car/autodrive/config/onboard_runtime.yaml; vehicle=rosmaster_jetson"
+    },
+    {
+      "name": "python_version",
+      "status": "pass",
+      "detail": "3.8.10; supported: >=3.8,<3.12"
+    },
+    {
+      "name": "architecture",
+      "status": "pass",
+      "detail": "aarch64; ARM is expected on both supported vehicles"
+    },
+    {
+      "name": "python_import:numpy",
+      "status": "pass",
+      "detail": "1.24.3"
+    },
+    {
+      "name": "python_import:cv2",
+      "status": "pass",
+      "detail": "4.7.0"
+    },
+    {
+      "name": "python_import:yaml",
+      "status": "pass",
+      "detail": "5.3.1"
+    },
+    {
+      "name": "python_import:serial",
+      "status": "pass",
+      "detail": "3.5"
+    },
+    {
+      "name": "perception_mode",
+      "status": "pass",
+      "detail": "yellow boundaries plus HSV/Lab road surface"
+    },
+    {
+      "name": "perspective_calibration",
+      "status": "warn",
+      "detail": "not configured; dry-run only"
+    },
+    {
+      "name": "hardware_device",
+      "status": "pass",
+      "detail": "/dev/myserial, read/write=True"
+    },
+    {
+      "name": "motion_calibration",
+      "status": "warn",
+      "detail": "dry-run only"
+    },
+    {
+      "name": "gimbal_calibration",
+      "status": "warn",
+      "detail": "startup disabled"
+    },
+    {
+      "name": "free_disk",
+      "status": "pass",
+      "detail": "80.48 GiB"
+    },
+    {
+      "name": "camera",
+      "status": "pass",
+      "detail": "index=0, resolution=640x480"
+    }
+  ]
+}

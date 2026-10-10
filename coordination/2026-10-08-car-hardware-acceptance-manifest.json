@@ -1,0 +1,1330 @@
+{
+  "task_id": "2026-10-08-car-hardware-acceptance",
+  "state": "reported",
+  "created_utc": "2026-10-08T10:02:35.631390+00:00",
+  "created_asia_shanghai": "2026-10-08T18:02:35.631390+08:00",
+  "host": "jetson-desktop-car-2",
+  "project_root": "/home/jetson/VehicleCloudCollaboration",
+  "head": "33a5a712b97af15feadc11f4751e60edaa05dc08",
+  "branch": "main",
+  "new_commit": null,
+  "isolated_worktree": "/home/jetson/.codex/worktrees/car-hardware-acceptance/VehicleCloudCollaboration",
+  "isolated_branch": "codex/car-hardware-acceptance",
+  "report_path": "/home/jetson/VehicleCloudCollaboration/coordination/2026-10-08-car-hardware-acceptance-report.md",
+  "evidence_root": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008",
+  "prior_tracked_diff_sha256": "9523bed7dabd72270b53dd79c2dae73d6c4895097486e95d7139b39903b51478",
+  "tracked_diff_unchanged": true,
+  "dirty_preservation": [
+    {
+      "path": "AGENTS.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "PROJECT_INDEX.md",
+      "original_prefix_preserved": true
+    },
+    {
+      "path": "car/control/vehicle_control/platforms/__init__.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/control/vehicle_control/platforms/raspbot.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/control/vehicle_control/profile.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/control/vehicle_control/profiles/raspbot_pi5.yaml",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/control/vehicle_control/profiles/rosmaster_jetson.yaml",
+      "original_content_preserved": true
+    },
+    {
+      "path": "coordination/2026-10-08-bootstrap-manifest.json",
+      "original_content_preserved": true
+    },
+    {
+      "path": "coordination/2026-10-08-car-baseline-report.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "coordination/2026-10-08-car-baseline.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "coordination/2026-10-08-jetson-bringup-camera-selfcheck.json",
+      "original_content_preserved": true
+    },
+    {
+      "path": "coordination/2026-10-08-jetson-bringup-progress.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "coordination/2026-10-08-jetson-bringup-validation.json",
+      "original_content_preserved": true
+    },
+    {
+      "path": "coordination/2026-10-08-role-allocation.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-08-jetson-vehicle-bringup-design.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "skills/thesis-handoff/SKILL.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "skills/thesis-handoff/agents/openai.yaml",
+      "original_content_preserved": true
+    },
+    {
+      "path": "skills/vehicle-cloud-thesis/SKILL.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "skills/vehicle-cloud-thesis/agents/openai.yaml",
+      "original_content_preserved": true
+    },
+    {
+      "path": "README.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/README.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/camera/gimbal.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/config/onboard_runtime.example.yaml",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/config/onboard_runtime.yaml",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/control/drive_runtime.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/control/lane_centering.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/perception/outer_loop.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/perception/visualization.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/perception/yolopv2_fusion.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/perception/yolopv2_onnx.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/runtime/onboard.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/tools/align_camera_gimbal.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/tools/calibrate_perspective.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/tools/capture_onboard.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/tools/check_wheel_directions.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/tools/pi_self_check.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/web/cli.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/autodrive/web/server.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/control/README.md",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/control/vehicle_control/__init__.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/control/vehicle_control/hardware.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/test/test_camera_gimbal.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/test/test_hardware_mapping.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "car/test/test_lcc_web.py",
+      "original_content_preserved": true
+    },
+    {
+      "path": "run.sh",
+      "original_content_preserved": true
+    }
+  ],
+  "integration": {
+    "head": "33a5a712b97af15feadc11f4751e60edaa05dc08",
+    "source_branch": "codex/car-hardware-acceptance",
+    "source_worktree": "/home/jetson/.codex/worktrees/car-hardware-acceptance/VehicleCloudCollaboration",
+    "initial_dirty_files_checked": 48,
+    "files": [
+      {
+        "path": "car/control/vehicle_control/base.py",
+        "before_sha256": "8196163956c3936611c61a676f6daf0c185c94d5ec9ae9e259bcc9b74eb6c9e1",
+        "after_sha256": "2c9b4d97fdb115467e4c9cd6a02f2eaff5f6635bfa65d1ecf9a8e5fb1fb6a85e",
+        "bytes": 9872
+      },
+      {
+        "path": "car/control/vehicle_control/factory.py",
+        "before_sha256": "d4657a51e4ab857024b3f033a05d696260b36923749bb700e2171397754ae851",
+        "after_sha256": "347515a0544ee16baed58215baf16857912908196bc980e8a974455e2a052c28",
+        "bytes": 4720
+      },
+      {
+        "path": "car/control/vehicle_control/platforms/rosmaster.py",
+        "before_sha256": "20d35f09b625ab77dde16d0bbaa5ec8a23dc0ba9cbf497be2555ab7557a6ce4c",
+        "after_sha256": "4fbde98a8662bf230550cbbc49f63d24006a2f9ff06866ffd7091ca7bfaa2af2",
+        "bytes": 3404
+      },
+      {
+        "path": "car/control/vehicle_control/platforms/rosmaster_transport.py",
+        "before_sha256": null,
+        "after_sha256": "9b74468da6aaca33d93584c75580aaf565c6464a94a8e7b4bcadd95d4f24f6fe",
+        "bytes": 10014
+      },
+      {
+        "path": "car/test/test_hardware_safety.py",
+        "before_sha256": null,
+        "after_sha256": "a0065a362a457c7927e7a465f326bf318423f61cbf6bbf8632217f12817634ea",
+        "bytes": 7930
+      },
+      {
+        "path": "car/test/test_rosmaster_transport.py",
+        "before_sha256": null,
+        "after_sha256": "0d2da19d1ee60489d9a4b70588fd9b4bd9f5a5eff7e27fe5b211b2876cd1d9c9",
+        "bytes": 8378
+      }
+    ],
+    "commit_created": false
+  },
+  "scope": "hardware inventory, safety/serial repair, independent live sensor capture and user-authorized lifted bench tests; no ground driving/cloud/SLAM/thesis algorithm",
+  "authorization_source": "Human replies in this chat permit bench actuator tests and confirm all wheels lifted, secured, operator can stop; no automatic messages to other chats sent",
+  "code_and_configuration": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/base.py",
+      "bytes": 9872,
+      "sha256": "2c9b4d97fdb115467e4c9cd6a02f2eaff5f6635bfa65d1ecf9a8e5fb1fb6a85e",
+      "mtime_utc": "2026-10-08T09:47:57.319837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/factory.py",
+      "bytes": 4720,
+      "sha256": "347515a0544ee16baed58215baf16857912908196bc980e8a974455e2a052c28",
+      "mtime_utc": "2026-10-08T09:47:57.319837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/platforms/rosmaster.py",
+      "bytes": 3404,
+      "sha256": "4fbde98a8662bf230550cbbc49f63d24006a2f9ff06866ffd7091ca7bfaa2af2",
+      "mtime_utc": "2026-10-08T09:47:57.319837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/platforms/rosmaster_transport.py",
+      "bytes": 10014,
+      "sha256": "9b74468da6aaca33d93584c75580aaf565c6464a94a8e7b4bcadd95d4f24f6fe",
+      "mtime_utc": "2026-10-08T09:47:57.319837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_hardware_safety.py",
+      "bytes": 7930,
+      "sha256": "a0065a362a457c7927e7a465f326bf318423f61cbf6bbf8632217f12817634ea",
+      "mtime_utc": "2026-10-08T09:47:57.319837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_rosmaster_transport.py",
+      "bytes": 8378,
+      "sha256": "0d2da19d1ee60489d9a4b70588fd9b4bd9f5a5eff7e27fe5b211b2876cd1d9c9",
+      "mtime_utc": "2026-10-08T09:47:57.319837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/AGENTS.md",
+      "bytes": 3331,
+      "sha256": "00b072dbf6b1201c5e78a88143ec4b6e35961aa2095df991e98d3a271f3663fc",
+      "mtime_utc": "2026-10-08T07:04:07.989995+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/PROJECT_INDEX.md",
+      "bytes": 10955,
+      "sha256": "0f35a568ca183dd954a4e696623dad721f8313e8cdce1c356d106961418e3d8b",
+      "mtime_utc": "2026-10-08T09:58:44.310546+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profiles/rosmaster_jetson.yaml",
+      "bytes": 1858,
+      "sha256": "96689b019e3ddbaa584ac5ca9fe8484967318fd86511f6bcd46d9caa240a7cba",
+      "mtime_utc": "2026-09-05T12:27:17.338115+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/config/onboard_runtime.yaml",
+      "bytes": 14136,
+      "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435",
+      "mtime_utc": "2026-09-05T12:36:27.207999+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run.sh",
+      "bytes": 807,
+      "sha256": "f2841ff7e579337e34604ed474fc00007449a73c3e34887d7faeb13412e3d2dc",
+      "mtime_utc": "2026-09-05T12:37:47.930463+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/coordination/2026-10-08-car-baseline-report.md",
+      "bytes": 35798,
+      "sha256": "ee9e73ee85c5a4c8c69e812f9d036cd62593b654fae5c4c73e8f51e4007ead50",
+      "mtime_utc": "2026-10-08T07:32:42.684686+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/coordination/2026-10-08-car-hardware-acceptance-report.md",
+      "bytes": 18145,
+      "sha256": "46c4823f7e45e80be4ba110d947c05bf00348800e3f29e922b0946e6b27d9abd",
+      "mtime_utc": "2026-10-08T09:56:16.250588+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/coordination/2026-10-08-car-hardware-acceptance-progress.md",
+      "bytes": 6043,
+      "sha256": "5c6048ffbd3856df4c4184aed2b04a5e3a8aa0c6ee563792ff43afc80be3f91f",
+      "mtime_utc": "2026-10-08T09:58:44.310546+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/docs/superpowers/plans/2026-10-08-car-hardware-acceptance.md",
+      "bytes": 7773,
+      "sha256": "02f865c1abd3a0195e6e50d976a9589438d36c4f2bfebd4752640128633aa89f",
+      "mtime_utc": "2026-10-08T09:58:44.310546+00:00"
+    }
+  ],
+  "evidence_files": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/Rosmaster_Lib-3.3.1-source.py",
+      "bytes": 58863,
+      "sha256": "02b8decb5a8b0659e978734cb17e4d9956b9664b13703d34d5a9a03214167519",
+      "mtime_utc": "2026-10-08T08:13:35.404024+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/acceptance-incremental.patch",
+      "bytes": 40721,
+      "sha256": "add510d63798c5b1b5b63be7be2f31c8c63283fd0f3a7454ddde8be757367084",
+      "mtime_utc": "2026-10-08T09:47:57.319837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/actuator-bench.py",
+      "bytes": 2577,
+      "sha256": "a75c9d93e3f34d156b1be318184e459384d7e7b5ac7ef9162d16c6d44f367e1d",
+      "mtime_utc": "2026-10-08T08:40:38.510948+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-after-replug/command.json",
+      "bytes": 474,
+      "sha256": "886e12907703ad154865d2af48fd534f20ad9fdbec8a05c50e1569e32078baa2",
+      "mtime_utc": "2026-10-08T08:58:01.477104+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-after-replug/depth.raw",
+      "bytes": 339763200,
+      "sha256": "b44d807e6473f88b240da1cbdfc3a9bd8cf1424c16b06558553d38aef24b91fd",
+      "mtime_utc": "2026-10-08T08:58:21.568034+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-after-replug/driver.log",
+      "bytes": 1937,
+      "sha256": "82d0f23a176cabaebc58e3de669e48bc578e701f8008be7147f9227bcf830843",
+      "mtime_utc": "2026-10-08T08:58:21.864019+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-after-replug/first_depth.npy",
+      "bytes": 614528,
+      "sha256": "98c9ca0e9bd81eea4503c3a452cb11162d60586f21708f4556ba3f20c32e0b23",
+      "mtime_utc": "2026-10-08T08:58:02.745035+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-after-replug/samples.jsonl",
+      "bytes": 196050,
+      "sha256": "b32f8f02cb6eb4bd67bf7e4e85d8125ddd53279e8dbe32e11193f063de03c593",
+      "mtime_utc": "2026-10-08T08:58:21.932015+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-after-replug/summary.json",
+      "bytes": 1041,
+      "sha256": "40d89731c6d0d5733c6fda3b7850122b4ddb46f6bef642b52d32e2fd316fc234",
+      "mtime_utc": "2026-10-08T08:58:21.944015+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-after-replug-console.txt",
+      "bytes": 1063,
+      "sha256": "4a9457c7cc1ea7cf37ed32c59a9f6106ce9c43baeed8561d7508fe79656357ad",
+      "mtime_utc": "2026-10-08T08:58:21.944015+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-capture-console-retry.txt",
+      "bytes": 1019,
+      "sha256": "f14cdc4088651eb47593798a22f782748d05a46c645f639448433c9c77258a46",
+      "mtime_utc": "2026-10-08T08:37:25.005279+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-capture-console.txt",
+      "bytes": 595,
+      "sha256": "14a14d942a292033d4d915aca029b2792c11b50d03f493bf993e31f323065f6a",
+      "mtime_utc": "2026-10-08T08:34:37.948491+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-continuous/command.json",
+      "bytes": 474,
+      "sha256": "886e12907703ad154865d2af48fd534f20ad9fdbec8a05c50e1569e32078baa2",
+      "mtime_utc": "2026-10-08T08:37:04.388682+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-continuous/depth.raw",
+      "bytes": 340377600,
+      "sha256": "2ad0b9022ae1bfda98908501e9fdbcc6e730dde83594bdcd6081f761bca30bb4",
+      "mtime_utc": "2026-10-08T08:37:24.581267+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-continuous/driver.log",
+      "bytes": 1936,
+      "sha256": "221328ce4476ef04d7bff3f3fba9eeca70f54a3d0563390144c6aa945b4374f1",
+      "mtime_utc": "2026-10-08T08:37:24.921277+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-continuous/first_depth.npy",
+      "bytes": 614528,
+      "sha256": "d8243ba52a733488f86afdf4fe1403b2acfde30a2701835c0a98ef51ca543deb",
+      "mtime_utc": "2026-10-08T08:37:05.780723+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-continuous/samples.jsonl",
+      "bytes": 188279,
+      "sha256": "edfea4d52ff409af844ff2f1c7e280c819f2f11ca782017ff21bfb78a0ee1b73",
+      "mtime_utc": "2026-10-08T08:37:24.997279+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-continuous/summary.json",
+      "bytes": 1019,
+      "sha256": "f14cdc4088651eb47593798a22f782748d05a46c645f639448433c9c77258a46",
+      "mtime_utc": "2026-10-08T08:37:25.005279+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-device-list.txt",
+      "bytes": 221,
+      "sha256": "6e04974f9a72e9e19c4849b19b680502cfcb0c8ba4acb890f17829a639e3fe6c",
+      "mtime_utc": "2026-10-08T08:32:08.744329+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-driver-parameters.txt",
+      "bytes": 12108,
+      "sha256": "c94645ec54bfa5b8b94c11c0b17c26ddb8c38ac3b92402c29de6247fe2558c57",
+      "mtime_utc": "2026-10-08T08:39:27.848866+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-image-publication-source.txt",
+      "bytes": 3689,
+      "sha256": "360749de10647fc1247a62f2372a020bdb68493c67fe6a5b645bd0f92a2ca763",
+      "mtime_utc": "2026-10-08T08:50:43.573141+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream/command.json",
+      "bytes": 474,
+      "sha256": "886e12907703ad154865d2af48fd534f20ad9fdbec8a05c50e1569e32078baa2",
+      "mtime_utc": "2026-10-08T08:47:51.163910+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream/depth.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mtime_utc": "2026-10-08T08:47:51.235912+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream/driver.log",
+      "bytes": 45606,
+      "sha256": "f16beb76c97a20489605a189abee70fd0d001f44c93ada74ebf97a98422ac7db",
+      "mtime_utc": "2026-10-08T08:48:11.528527+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream/ir-stats.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "mtime_utc": "2026-10-08T08:48:11.600529+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream/laser-result.json",
+      "bytes": 67,
+      "sha256": "9dfc85590aba416113e0a938d7d6d4bb23489b053946257b0d1d7d6eac667268",
+      "mtime_utc": "2026-10-08T08:48:11.600529+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream/samples.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mtime_utc": "2026-10-08T08:47:51.235912+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream/summary.json",
+      "bytes": 192,
+      "sha256": "f423aea4ef18c9151560ea7e631103944a5e6ac2f89cccafb9c398ed7ca53243",
+      "mtime_utc": "2026-10-08T08:48:11.600529+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream-console.txt",
+      "bytes": 212,
+      "sha256": "2fe79c79ccea2706d1dd27b8759468972e554df85e130c370583225dd536ea59",
+      "mtime_utc": "2026-10-08T08:48:11.600529+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-preview.png",
+      "bytes": 89346,
+      "sha256": "b9a70f0badc4098b299f95b9bcaeadfc2e286bcf73cf98b591cfb354d688ad6b",
+      "mtime_utc": "2026-10-08T09:30:01.743002+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen/command.json",
+      "bytes": 474,
+      "sha256": "886e12907703ad154865d2af48fd534f20ad9fdbec8a05c50e1569e32078baa2",
+      "mtime_utc": "2026-10-08T09:43:37.470583+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-console.txt",
+      "bytes": 600,
+      "sha256": "cbeb654fdee07235e682b124ba7a3e931d3d3b417427682a4aee5c9c21e3edc5",
+      "mtime_utc": "2026-10-08T09:43:37.714592+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-with-tmp-logs/command.json",
+      "bytes": 474,
+      "sha256": "886e12907703ad154865d2af48fd534f20ad9fdbec8a05c50e1569e32078baa2",
+      "mtime_utc": "2026-10-08T09:46:48.745540+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-with-tmp-logs/depth.raw",
+      "bytes": 160972800,
+      "sha256": "b329503c2af3c5a9b6cf7749cc0056ac738938f036c595b4ae6bd5b511e5b2a6",
+      "mtime_utc": "2026-10-08T09:46:58.829884+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-with-tmp-logs/driver.log",
+      "bytes": 1937,
+      "sha256": "025f994d7ab1e6eef1963e5b67d4979bea7f695e9375942e2e79cf51fe814044",
+      "mtime_utc": "2026-10-08T09:46:59.105893+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-with-tmp-logs/first_depth.npy",
+      "bytes": 614528,
+      "sha256": "c65a45f91dbc5a12b375780caab62e1780d32c8f01db236f1e8cccd9b1fbea7f",
+      "mtime_utc": "2026-10-08T09:46:50.001583+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-with-tmp-logs/samples.jsonl",
+      "bytes": 92698,
+      "sha256": "b604069d93c761f65702fad39cd4afa141aa1923c2c71f00ad0a8ed2436cf7ce",
+      "mtime_utc": "2026-10-08T09:46:59.197896+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-with-tmp-logs/summary.json",
+      "bytes": 1053,
+      "sha256": "2992ac8468626e1d36af2ed326aa2fe1477cbdce3bfb8038d54763a6029c89d1",
+      "mtime_utc": "2026-10-08T09:46:59.205896+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-with-tmp-logs-console.txt",
+      "bytes": 1075,
+      "sha256": "1e4c340efb8be3a4146bb154d54a2eb34e8766c3a337ba1f2a35982bbce8e2bb",
+      "mtime_utc": "2026-10-08T09:46:59.205896+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir/command.json",
+      "bytes": 473,
+      "sha256": "caabbfcafd344e886b707a4c9ce4f40c6e40cbb78fb2d8867dc53fff14130037",
+      "mtime_utc": "2026-10-08T08:43:54.440780+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir/depth.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mtime_utc": "2026-10-08T08:43:54.516783+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir/driver.log",
+      "bytes": 2230,
+      "sha256": "ac571d177268657359a94c939a2e5aed8b2a2390068b080727e8983f64688b06",
+      "mtime_utc": "2026-10-08T08:44:16.829451+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir/ir-stats.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "mtime_utc": "2026-10-08T08:44:16.901453+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir/laser-result.json",
+      "bytes": 66,
+      "sha256": "c4153f03e99d92317ff21c3b47f84a3027691a874622164e7554c0f27c2db25d",
+      "mtime_utc": "2026-10-08T08:44:16.901453+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir/samples.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mtime_utc": "2026-10-08T08:43:54.512782+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir/summary.json",
+      "bytes": 191,
+      "sha256": "85e3695838dec35889297c9e9751ab9f13f1f69fda31b66c4ad46fd3328c3b33",
+      "mtime_utc": "2026-10-08T08:44:16.901453+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir-console.txt",
+      "bytes": 211,
+      "sha256": "9e844031f5aa84c2d72fb93d2c18a46230651fee4a15d08f57185591e6b20456",
+      "mtime_utc": "2026-10-08T08:44:16.901453+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/final-cleanup.json",
+      "bytes": 190,
+      "sha256": "19f23a5dc3d4dcb1ae927f733109c790d2ba37e2302bd1e8a3142dd45c871f9c",
+      "mtime_utc": "2026-10-08T09:59:02.107013+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/final-serial-check-console.txt",
+      "bytes": 1525,
+      "sha256": "285c965645660f07a1766af10a9fa8303b6711fc4e9ab2e79cd9d283596d9253",
+      "mtime_utc": "2026-10-08T09:50:36.828873+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/final-serial-check.py",
+      "bytes": 2343,
+      "sha256": "faae892a3c91f8f99b0228b08b9b3beaf7bba04280a6d8d1d453cb7a6530b278",
+      "mtime_utc": "2026-10-08T09:50:17.484282+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/frames.jsonl",
+      "bytes": 19838,
+      "sha256": "70e4702f02cd99a8b361034780ffcd64cd81374123151cf5e11670ad41005cfe",
+      "mtime_utc": "2026-10-08T08:50:33.368831+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/image-motion-analysis.json",
+      "bytes": 2276,
+      "sha256": "3bb797bb263a58cbdecec2dd4b072a9dba19d6c9bbd0740585148f2e20660e00",
+      "mtime_utc": "2026-10-08T08:52:31.124416+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/pose_0.png",
+      "bytes": 440170,
+      "sha256": "3821d265eef990eb9729160a8173615b0a12dd7fbbf0229e80f53a666b5e7801",
+      "mtime_utc": "2026-10-08T08:50:27.556654+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/pose_1.png",
+      "bytes": 536661,
+      "sha256": "f57d7079632c3a2e611cb992ed31b3179ebe9c8d0d811c720e6e41577de0af59",
+      "mtime_utc": "2026-10-08T08:50:28.496683+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/pose_2.png",
+      "bytes": 536528,
+      "sha256": "a08fe7488a7315000bc45422f84d141f414e31e776d158676904a2bf6cfa8b26",
+      "mtime_utc": "2026-10-08T08:50:29.480713+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/pose_3.png",
+      "bytes": 536349,
+      "sha256": "c60bfb2c4864d0e1d41b8b97e863931859b346a2f0decda81fcb9f7473d65689",
+      "mtime_utc": "2026-10-08T08:50:30.428742+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/pose_4.png",
+      "bytes": 536084,
+      "sha256": "3fd0aa2d250e66fa0d85be2d08aa90bd71727bd92b6991e9b1ed1fc9010da900",
+      "mtime_utc": "2026-10-08T08:50:31.360770+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/pose_5.png",
+      "bytes": 536331,
+      "sha256": "1a99769e017be9080bb33b6a7ea85b0ed813424d75df31dc98b22ce6ecc039c8",
+      "mtime_utc": "2026-10-08T08:50:32.296798+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/pose_6.png",
+      "bytes": 536544,
+      "sha256": "d662dbb08f277fad3cd8152d4337d45da5a9cce59c811f955827beee5609547c",
+      "mtime_utc": "2026-10-08T08:50:33.260828+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/raw.mp4",
+      "bytes": 2206844,
+      "sha256": "7dfb0a1e454228d84137d7a6a8db6bd1197eaaec9f4a71e92f4068afff03d006",
+      "mtime_utc": "2026-10-08T08:50:33.428833+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/summary.json",
+      "bytes": 4373,
+      "sha256": "427f12d49c68cdedd90235dd62471bcfbdc4abcb68197d26388b2dc8c33c337c",
+      "mtime_utc": "2026-10-08T08:50:33.368831+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-console.txt",
+      "bytes": 103,
+      "sha256": "f1604489c627543a45524c6ed393a123add1557f64f9c9bb26cd4c2ef313f77b",
+      "mtime_utc": "2026-10-08T08:50:32.300799+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/frames.jsonl",
+      "bytes": 46531,
+      "sha256": "6d83c623528f90e8f0133fb465c013a66692f4f72002656f0c7ee8c1de90fac5",
+      "mtime_utc": "2026-10-08T08:57:13.275901+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/pose_0.png",
+      "bytes": 538722,
+      "sha256": "f8e5ddeae14d6d2bf3be33d3bdf52ea5d8cebd26b8234ea51af9c20ab5504be1",
+      "mtime_utc": "2026-10-08T08:57:00.832678+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/pose_1.png",
+      "bytes": 538221,
+      "sha256": "aa61a0bc4fee0630b24f7b086c78415cf53bc50a16795fd2d18d6a8327f74a3a",
+      "mtime_utc": "2026-10-08T08:57:02.896547+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/pose_2.png",
+      "bytes": 538355,
+      "sha256": "9b1ef7d136ec0f55006071e4e4520553efbe7c7bac69c88b155c310ca1f87b66",
+      "mtime_utc": "2026-10-08T08:57:04.940419+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/pose_3.png",
+      "bytes": 538420,
+      "sha256": "6b48b5994289c88ec1d581b2262ac0d13894027d649233331798d6a88d54da23",
+      "mtime_utc": "2026-10-08T08:57:06.996290+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/pose_4.png",
+      "bytes": 538627,
+      "sha256": "735d125ede0726a9befe0bee3afcd47b9d71d79f17cb7155e8e83b6b270e9d98",
+      "mtime_utc": "2026-10-08T08:57:09.068161+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/pose_5.png",
+      "bytes": 537970,
+      "sha256": "25ff696b921564a2acbd2490001d59f7ab855b3264225a2718fe8dcd6051160c",
+      "mtime_utc": "2026-10-08T08:57:11.128033+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/pose_6.png",
+      "bytes": 538214,
+      "sha256": "d5b9264a1ada5cdd7bba0e2d1cfedb9bdd52f9e0d4147bed9d85671031348221",
+      "mtime_utc": "2026-10-08T08:57:13.167907+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/raw.mp4",
+      "bytes": 5488968,
+      "sha256": "72056c27b3eb26089d163534dcb3edc7edfa4a27a16131011df7a2a26b3dfdc4",
+      "mtime_utc": "2026-10-08T08:57:13.327898+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/summary.json",
+      "bytes": 4388,
+      "sha256": "729cdac4c05db7077b14f807b30797b0aa91a4a61effd1e548df8620cb996534",
+      "mtime_utc": "2026-10-08T08:57:13.275901+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat-console.txt",
+      "bytes": 103,
+      "sha256": "f1604489c627543a45524c6ed393a123add1557f64f9c9bb26cd4c2ef313f77b",
+      "mtime_utc": "2026-10-08T08:57:11.132033+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat.py",
+      "bytes": 2086,
+      "sha256": "16c81415c848f055b6f4c612d7eee90ee394ede5c088e3bc00ee059faaa45270",
+      "mtime_utc": "2026-10-08T08:56:51.513275+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/frames.jsonl",
+      "bytes": 46313,
+      "sha256": "7594d9b51a787cd8453c0ecbf8c14d51f45c54fa8dd76948af5c2dc0f7e804d2",
+      "mtime_utc": "2026-10-08T08:58:07.528776+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/pose_0.png",
+      "bytes": 536025,
+      "sha256": "43e2761d40e868ae5cd6bc963e1487dee6d1ae48beb98d329166cc46450fdbdb",
+      "mtime_utc": "2026-10-08T08:57:55.125454+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/pose_1.png",
+      "bytes": 536277,
+      "sha256": "50178b48ed2d2e80189ca752b09a2a8dc159ad8420dfac1761476e57656f1397",
+      "mtime_utc": "2026-10-08T08:57:57.193340+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/pose_2.png",
+      "bytes": 535877,
+      "sha256": "48eb8947e6acd11faf1cc976036a67ce609c76813808a67b33648ffb998b5c19",
+      "mtime_utc": "2026-10-08T08:57:59.253226+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/pose_3.png",
+      "bytes": 536057,
+      "sha256": "3c24bcbe81719c9effc9307d2128eae937c3649a93c7cdcde6fb54d011bb5716",
+      "mtime_utc": "2026-10-08T08:58:01.289115+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/pose_4.png",
+      "bytes": 535875,
+      "sha256": "cbc4071749d555eb5140fe74e3b67b97b47f4544447822be48817d297f11ba7c",
+      "mtime_utc": "2026-10-08T08:58:03.353002+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/pose_5.png",
+      "bytes": 535671,
+      "sha256": "dcdd15cf31161ba0cbd21f349a5d7098ffd4604811f689d90f518add9a0bbc20",
+      "mtime_utc": "2026-10-08T08:58:05.384892+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/pose_6.png",
+      "bytes": 536066,
+      "sha256": "5a145d889d45323c5f3ecab66360cd463a5128b560cc61de6569c405aceb17a2",
+      "mtime_utc": "2026-10-08T08:58:07.420782+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/raw.mp4",
+      "bytes": 5537791,
+      "sha256": "9e001a519f4c12c558a474523d32de36ad7b713dc4463c8b3c04cc2abc884985",
+      "mtime_utc": "2026-10-08T08:58:07.584773+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/summary.json",
+      "bytes": 4389,
+      "sha256": "cb79f87f57c1c31764ce971b995e62ba2c050a6735cdb09e6c4182e556ae38e8",
+      "mtime_utc": "2026-10-08T08:58:07.528776+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2-console.txt",
+      "bytes": 103,
+      "sha256": "f1604489c627543a45524c6ed393a123add1557f64f9c9bb26cd4c2ef313f77b",
+      "mtime_utc": "2026-10-08T08:58:05.388892+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2.py",
+      "bytes": 2087,
+      "sha256": "e9af0bf5cbc478f6845b0a3215ad9ffde9b686decc7e356427c98ca5e01b77fd",
+      "mtime_utc": "2026-10-08T08:57:46.165957+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench.py",
+      "bytes": 2080,
+      "sha256": "90b1da9994d6e8fbb70b12feef98810ffb10c10a81b8be7b8c1d8b90199b8e80",
+      "mtime_utc": "2026-10-08T08:48:52.761776+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/identity-red.log",
+      "bytes": 700,
+      "sha256": "7562f1395499ca22b1b3cef9b4b225f38d9da3308b3214dfa09a5415a2a11faa",
+      "mtime_utc": "2026-10-08T08:38:21.534924+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/integration-record.json",
+      "bytes": 1752,
+      "sha256": "ee8fe0d2ebf71a146f52ee253f46cd1f58b1156b7e9bfbb32f509d5e246a0a32",
+      "mtime_utc": "2026-10-08T09:47:57.319837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-capture-console.txt",
+      "bytes": 1284,
+      "sha256": "5499b4ee2c6dc7e4cd831bb4392b660e39179bfaa831b461067ff43b11c09354",
+      "mtime_utc": "2026-10-08T08:37:33.101514+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-config-source.txt",
+      "bytes": 9063,
+      "sha256": "e7d8ad3cf04204a93d89771d94abcb4a3715535e4280736f873ca7897b8e6db6",
+      "mtime_utc": "2026-10-08T08:47:42.627652+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-continuous/command.json",
+      "bytes": 280,
+      "sha256": "432d2c7abca57990ac82212f5813c8688862cb21eccd099ce717e4ad06b9287a",
+      "mtime_utc": "2026-10-08T08:37:12.788925+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-continuous/driver.log",
+      "bytes": 704,
+      "sha256": "a48c85f4c762c8baea872da2ced5f1a32a647a9ea48458fb3a32cfa06139efac",
+      "mtime_utc": "2026-10-08T08:37:33.017512+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-continuous/samples.jsonl",
+      "bytes": 12801677,
+      "sha256": "77ad5406983ba89abe8dfc8f697ed910d4c952b50b586209b7b62db0922e3ae5",
+      "mtime_utc": "2026-10-08T08:37:32.825506+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-continuous/summary.json",
+      "bytes": 1284,
+      "sha256": "5499b4ee2c6dc7e4cd831bb4392b660e39179bfaa831b461067ff43b11c09354",
+      "mtime_utc": "2026-10-08T08:37:33.101514+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-identity/raw.bin",
+      "bytes": 27,
+      "sha256": "e8bffe9e1850837d3a60a78793a62ad8f8bfb6e7a61606e86ca2300bbf96b7cd",
+      "mtime_utc": "2026-10-08T08:40:46.715190+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-identity/summary.json",
+      "bytes": 274,
+      "sha256": "3e04dd43484f90432a55d636a6598dc0f5f99524452ef60d68d73274cce818f2",
+      "mtime_utc": "2026-10-08T08:40:46.715190+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-model-decoder.txt",
+      "bytes": 3021,
+      "sha256": "c456836a7567df84cbe715f903867617f573dc1a66a751d76f1370c89807499c",
+      "mtime_utc": "2026-10-08T08:44:58.154692+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-model-mapping.txt",
+      "bytes": 420,
+      "sha256": "975c7e06985620786fffabec6e1d23cb35cfeb3345842d6cd453e7cc3e5c7545",
+      "mtime_utc": "2026-10-08T08:42:56.095036+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-model-source.txt",
+      "bytes": 151,
+      "sha256": "e609748f998368ad358ee10e32df6677f0b8521a04f6e23110342344316a1d9b",
+      "mtime_utc": "2026-10-08T08:41:50.513082+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/main-regression.log",
+      "bytes": 234,
+      "sha256": "2271954a7ed834d2049dce29c26e1a2508219e8501f9e82bd6de4414b209d7a7",
+      "mtime_utc": "2026-10-08T09:47:59.667914+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/preexisting-tracked.patch",
+      "bytes": 64129,
+      "sha256": "9523bed7dabd72270b53dd79c2dae73d6c4895097486e95d7139b39903b51478",
+      "mtime_utc": "2026-10-08T08:13:35.376023+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/preexisting-worktree.json",
+      "bytes": 8463,
+      "sha256": "ace2b6d59fccc33d548fd8d5f4d3e84b660afa4e6de7f3e44625a618bb2fe369",
+      "mtime_utc": "2026-10-08T08:13:35.400024+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/ramp-stop-red.log",
+      "bytes": 1430,
+      "sha256": "56d5db1f9cb074474c4c62ef9cf3a66722fc98f041a8d46ef19012d37ec78a37",
+      "mtime_utc": "2026-10-08T08:55:42.110248+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/regression-after-ramp-stop.log",
+      "bytes": 230,
+      "sha256": "29237c1c455290b315d95f121f10dc6dace17d6a5d81f8c9c13aae4c4d1fc9bd",
+      "mtime_utc": "2026-10-08T08:55:51.758543+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/regression-after-transport.log",
+      "bytes": 227,
+      "sha256": "a16d521a36bfdd050330678bed3033eda71337b44ab26b55fbd999d60649ddb2",
+      "mtime_utc": "2026-10-08T08:30:24.257499+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/review-green.log",
+      "bytes": 234,
+      "sha256": "4b635db45bd388ebe596f43f357903bdc25dce3dd70e878243dac5963b722f2b",
+      "mtime_utc": "2026-10-08T09:19:34.803658+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/review-record.md",
+      "bytes": 2332,
+      "sha256": "ed731b06edae81dbdd857eb87af73398afdfb1c792a0d07e4e6275e22e9231b4",
+      "mtime_utc": "2026-10-08T09:23:21.258020+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/review-red.log",
+      "bytes": 3983,
+      "sha256": "98ecda56db6ea37b9830b490a12adc4d048be48aa05192be789be6079a52492f",
+      "mtime_utc": "2026-10-08T09:17:39.526657+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/rgb-continuous/first.png",
+      "bytes": 546430,
+      "sha256": "3eafb5eba9ae71401860d5f6baf4b942b492fce8053619771781a15e57d09ff6",
+      "mtime_utc": "2026-10-08T08:33:04.849879+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/rgb-continuous/frames.jsonl",
+      "bytes": 127518,
+      "sha256": "0e5f77cea7785715f8b657f72cd2c8c06858687882ac5186fbe55cd2fbfe22f5",
+      "mtime_utc": "2026-10-08T08:33:33.926690+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/rgb-continuous/raw.mp4",
+      "bytes": 11588561,
+      "sha256": "11ff488ca6eb87b261ac3d65e383e0cf222fae9f3703688c87e886466e8c118a",
+      "mtime_utc": "2026-10-08T08:33:33.986691+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/rgb-continuous/summary.json",
+      "bytes": 288,
+      "sha256": "501d141c918645e755d0bd0f031b5fa1b8acdd1a4af8ec9a59b954dbc5a8accc",
+      "mtime_utc": "2026-10-08T08:33:33.990691+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/ros-capture-ir.py",
+      "bytes": 5617,
+      "sha256": "9ff10be769f5426e207153d636c985ed7424ef26db90a69975d0fce17405607e",
+      "mtime_utc": "2026-10-08T08:43:46.428540+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/ros-capture-laser.py",
+      "bytes": 5636,
+      "sha256": "d957087af5f3c1c45c4af05afb4e909cd03a39896baedd50af6b8905901b6013",
+      "mtime_utc": "2026-10-08T08:47:42.815657+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/ros-capture.py",
+      "bytes": 4529,
+      "sha256": "743bc9152bfcdf7afd4382e7f4db1a75eeebd67443ae9555a8a1f1001655a567",
+      "mtime_utc": "2026-10-08T08:39:19.852631+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/ros-driver-inspection.txt",
+      "bytes": 16820,
+      "sha256": "21239d5aab4da5f776e2c2a14e7adf47ade42d2965d796a6ce553f975a4c6cab",
+      "mtime_utc": "2026-10-08T08:27:08.212441+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/safety-green.log",
+      "bytes": 122,
+      "sha256": "2232b358fe3602f059cd4dc41a4b781102520c42d51d349757cf391d5f9ef022",
+      "mtime_utc": "2026-10-08T08:25:07.493542+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/safety-red.log",
+      "bytes": 17637,
+      "sha256": "d784eab83c68876f9acbb461954ae44d29a78f6e49198c3ff0b3bc330cc9f2a3",
+      "mtime_utc": "2026-10-08T08:22:11.581723+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-identity/raw.bin",
+      "bytes": 3275,
+      "sha256": "2432d454f94e7a018cf6e8b00b59a1625b18a5d0e9047ed61b7a356c57343c21",
+      "mtime_utc": "2026-10-08T08:35:35.042114+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-identity/summary.json",
+      "bytes": 2619,
+      "sha256": "1e0c3759735e8994031d796314aef2a41b9a0d3c94e14f0a7fd77cead2a7237f",
+      "mtime_utc": "2026-10-08T08:35:35.042114+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-main-verified/raw.bin",
+      "bytes": 9674,
+      "sha256": "796faf747706ee87747c048d082a9f0263524542cd1af54de3048d719c63f386",
+      "mtime_utc": "2026-10-08T09:50:36.824873+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-main-verified/summary.json",
+      "bytes": 9087,
+      "sha256": "46921a4c4c208e96e039dea33293e03c8a79b3a4305cff8ae1d9a200f06b4d3c",
+      "mtime_utc": "2026-10-08T09:50:36.828873+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-main-verified/telemetry.jsonl",
+      "bytes": 1303971,
+      "sha256": "10c476a56721ea4f06e84720fec3571e79f1d62f3dc282ebee0fcb79434d9c66",
+      "mtime_utc": "2026-10-08T09:50:36.824873+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-passive/raw.bin",
+      "bytes": 32650,
+      "sha256": "8899ad6dc2ab227d6053b7c1f66c4df15a1c31a1a760e903060cd0b6ed63b131",
+      "mtime_utc": "2026-10-08T08:30:50.966214+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-passive/summary.json",
+      "bytes": 2467,
+      "sha256": "b8b51e567819c2cc08d73311b333642549c76cb618fd7f4ac0ff3cc25eb8bce4",
+      "mtime_utc": "2026-10-08T08:30:50.966214+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-passive/telemetry.jsonl",
+      "bytes": 1291501,
+      "sha256": "b7d4f0cf8b766e8cfb452bf0fd4cfafa701f39a122a2a8b61e1c1c1a6071eb54",
+      "mtime_utc": "2026-10-08T08:30:50.966214+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/transport-green.log",
+      "bytes": 115,
+      "sha256": "9b448e3d8e0c3b882df939f5a3fe4a5fdb1c9675ac6121c9e25b76f76153b0ba",
+      "mtime_utc": "2026-10-08T08:38:30.275179+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/transport-red.log",
+      "bytes": 885,
+      "sha256": "1d3514a4372f5036c618a87477a530c0a2a9016fce8cbb6e3cc83ba8d2b7d564",
+      "mtime_utc": "2026-10-08T08:27:15.992634+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/wheels-bench-console.txt",
+      "bytes": 3579,
+      "sha256": "078c32b1671867a2865b1de71f7a1c5b5297aa2e41e7fd7e1bd29c493f8bceb8",
+      "mtime_utc": "2026-10-08T08:43:55.308806+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/wheels-lifted/raw.bin",
+      "bytes": 18057,
+      "sha256": "068a27bae753b130646813f0154d2e462ae717e514b6365e4b998aec2c8203af",
+      "mtime_utc": "2026-10-08T08:43:56.328837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/wheels-lifted/samples.jsonl",
+      "bytes": 2663523,
+      "sha256": "40e32b58bb325c75760141d5cbc69beaf88de4484d1e2de52dbb42a74fc3903a",
+      "mtime_utc": "2026-10-08T08:43:56.328837+00:00"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/wheels-lifted/summary.json",
+      "bytes": 9272,
+      "sha256": "f4e801e88be05e79270565a87ec2b5b34ae076de764e48646ab5c80188abb513",
+      "mtime_utc": "2026-10-08T08:43:56.328837+00:00"
+    }
+  ],
+  "external_user_photos": [
+    {
+      "path": "/home/jetson/.codex/attachments/a8503cf5-8e7a-407d-b298-7c0059c51a58/665282b6165a73f623a71ace93ca5734.jpg",
+      "bytes": 424552,
+      "sha256": "725ac3c0fd5cad5cd6b734ce699c6b56162e7805b092915c10dd39197c700928",
+      "mtime_utc": "2026-10-08T08:42:29.178233+00:00"
+    },
+    {
+      "path": "/home/jetson/.codex/attachments/f721c900-d7a6-48dc-a2ed-991caf8de48e/10ffde02be5b9338cc4586b230b120b0.jpg",
+      "bytes": 549720,
+      "sha256": "7b53ae004cac1cac2577b4b52bae2550fa5a41ef70611090f74bdab350b551b5",
+      "mtime_utc": "2026-10-08T08:42:48.030795+00:00"
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "depth-after-replug",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-after-replug/summary.json",
+      "summary_sha256": "40d89731c6d0d5733c6fda3b7850122b4ddb46f6bef642b52d32e2fd316fc234",
+      "assessment": "passed",
+      "duration_s": 20.386008723000486,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "depth-continuous",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-continuous/summary.json",
+      "summary_sha256": "f14cdc4088651eb47593798a22f782748d05a46c645f639448433c9c77258a46",
+      "assessment": "failed",
+      "duration_s": 20.453019815000516,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "depth-laser-after-stream",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-laser-after-stream/summary.json",
+      "summary_sha256": "f423aea4ef18c9151560ea7e631103944a5e6ac2f89cccafb9c398ed7ca53243",
+      "assessment": "failed",
+      "duration_s": 20.365551247999974,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "depth-reopen-with-tmp-logs",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-reopen-with-tmp-logs/summary.json",
+      "summary_sha256": "2992ac8468626e1d36af2ed326aa2fe1477cbdce3bfb8038d54763a6029c89d1",
+      "assessment": "passed",
+      "duration_s": 10.38607988900003,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "depth-with-ir",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/depth-with-ir/summary.json",
+      "summary_sha256": "85e3695838dec35889297c9e9751ab9f13f1f69fda31b66c4ad46fd3328c3b33",
+      "assessment": "failed",
+      "duration_s": 22.38682183399942,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "gimbal-bench",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench/summary.json",
+      "summary_sha256": "427f12d49c68cdedd90235dd62471bcfbdc4abcb68197d26388b2dc8c33c337c",
+      "assessment": "camera_motion_failed_hardware_presence_unverified",
+      "duration_s": 6.874116102999324,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "gimbal-bench-repeat",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat/summary.json",
+      "summary_sha256": "729cdac4c05db7077b14f807b30797b0aa91a4a61effd1e548df8620cb996534",
+      "assessment": "camera_motion_failed_hardware_presence_unverified",
+      "duration_s": 14.608205001999522,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "gimbal-bench-repeat2",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/gimbal-bench-repeat2/summary.json",
+      "summary_sha256": "cb79f87f57c1c31764ce971b995e62ba2c050a6735cdb09e6c4182e556ae38e8",
+      "assessment": "camera_motion_failed_hardware_presence_unverified",
+      "duration_s": 14.573126700999637,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "lidar-continuous",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-continuous/summary.json",
+      "summary_sha256": "5499b4ee2c6dc7e4cd831bb4392b660e39179bfaa831b461067ff43b11c09354",
+      "assessment": "passed",
+      "duration_s": 20.235789379999915,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "lidar-identity",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/lidar-identity/summary.json",
+      "summary_sha256": "3e04dd43484f90432a55d636a6598dc0f5f99524452ef60d68d73274cce818f2",
+      "assessment": "passed",
+      "duration_s": null,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "rgb-continuous",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/rgb-continuous/summary.json",
+      "summary_sha256": "501d141c918645e755d0bd0f031b5fa1b8acdd1a4af8ec9a59b954dbc5a8accc",
+      "assessment": "passed",
+      "duration_s": 30.07181997099906,
+      "summary_timestamp_utc": "2026-10-08T08:33:33.992794+00:00",
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "serial-identity",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-identity/summary.json",
+      "summary_sha256": "1e0c3759735e8994031d796314aef2a41b9a0d3c94e14f0a7fd77cead2a7237f",
+      "assessment": "partial_initial_parser_length_error_fixed_in_serial-main-verified",
+      "duration_s": null,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "serial-main-verified",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-main-verified/summary.json",
+      "summary_sha256": "46921a4c4c208e96e039dea33293e03c8a79b3a4305cff8ae1d9a200f06b4d3c",
+      "assessment": "passed",
+      "duration_s": null,
+      "summary_timestamp_utc": "2026-10-08T09:50:36.834108+00:00",
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "serial-passive",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-passive/summary.json",
+      "summary_sha256": "b8b51e567819c2cc08d73311b333642549c76cb618fd7f4ac0ff3cc25eb8bce4",
+      "assessment": "passed",
+      "duration_s": 20.00328612500016,
+      "summary_timestamp_utc": "2026-10-08T08:30:50.969672+00:00",
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    },
+    {
+      "run_id": "wheels-lifted",
+      "summary": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/wheels-lifted/summary.json",
+      "summary_sha256": "f4e801e88be05e79270565a87ec2b5b34ae076de764e48646ab5c80188abb513",
+      "assessment": "passed",
+      "duration_s": 11.069934532000843,
+      "summary_timestamp_utc": null,
+      "timestamp_notes": "ROS runs retain header Unix timestamps in samples.jsonl; monotonic timing measures duration. Where no absolute timestamp was archived, mtime is auxiliary and not proof of experiment start."
+    }
+  ],
+  "temporary_image": {
+    "name": "yahboomtechnology/ros-foxy:4.0.5",
+    "architecture": "arm64",
+    "image_id": "sha256:0e2a3a0c7df2a41235bb9e8c760f993795313cddd6f3992f73a817ec8ef4763c",
+    "image_pulled": false,
+    "chassis_device_mounted": false,
+    "network": "none"
+  },
+  "verification": {
+    "unit_test_command": "python3 -B -m unittest car.test.test_lane_centering car.test.test_camera_transform car.test.test_camera_gimbal car.test.test_hardware_mapping car.test.test_lcc_web car.test.test_hardware_safety car.test.test_rosmaster_transport",
+    "test_count": 134,
+    "test_exit_code": 0,
+    "log": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/main-regression.log",
+    "final_serial_log": "/home/jetson/VehicleCloudCollaboration/outputs/hardware_acceptance/20261008/serial-main-verified/summary.json",
+    "final_cleanup": {
+      "utc": "2026-10-08T09:59:02.111557+00:00",
+      "active_containers": [],
+      "device_holders": [],
+      "services_changed": false,
+      "scope": "read-only final check of known hardware devices"
+    },
+    "model_search_command": "rg --files --hidden --no-ignore -g '*.pt' -g '*.pth' -g '*.onnx' -g '*.engine' -g '!.git/**' -g '!outputs/hardware_acceptance/**'",
+    "model_search_matches": 0
+  },
+  "source_references": [
+    {
+      "url": "https://www.orbbec.com/products/structured-light-camera/astra-series/",
+      "use": "Astra series identification example only; exact physical variant not inferred"
+    }
+  ],
+  "limitations": [
+    "No real commercial SKU confirmation for RPLIDAR or exact motor/MCU/IMU/servo labels",
+    "No wheel position or direction/distance calibration, ground braking, lost-process protection, simultaneous sensor or navigation integration acceptance",
+    "Depth initial zero and startup failures retained; post-replug one continuous run and one restart passed, long-term reliability unknown",
+    "No confirmed motorized gimbal; physical camera motion failed observational acceptance",
+    "RGB MP4 header 20fps differs from actual ~30fps; frames.jsonl is timing basis",
+    "Raw lidar samples contain Infinity for invalid distances; apply finite/range filtering",
+    "No remote backup or cross-chat dispatch performed; raw evidence is ignored by Git",
+    "Unified product diagnostic CLI deferred; bounded collectors archived here"
+  ],
+  "hash_notes": "SHA256 of exact bytes; evidence snapshots in stage/before excluded to avoid duplicate bulk. Manifest itself excluded from its own hash list."
+}

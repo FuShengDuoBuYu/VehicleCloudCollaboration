@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小车离线回放与转弯模拟</title>
+<style>
+:root{color-scheme:dark;--bg:#0b111b;--panel:#141e2c;--line:#2b3a50;--muted:#a6b5c8;--text:#edf3fb;--cyan:#64dbdf;--gold:#ffd279;--red:#ff9090;--green:#86e2ac}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1480px;margin:auto;padding:22px}h1{font-size:25px;margin:0 0 8px}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0 0 8px;color:var(--muted)}p{margin:6px 0}button,select{font:inherit;color:var(--text);background:#213148;border:1px solid #415573;border-radius:7px;padding:7px 13px}button{cursor:pointer}button:hover{background:#2a405b}button:disabled{cursor:default;opacity:.5}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}label{display:flex;align-items:center;gap:9px}.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.toolbar{margin:18px 0;padding:13px;background:var(--panel);border:1px solid var(--line);border-radius:10px}.badge{padding:3px 9px;border-radius:5px;font-size:12px;letter-spacing:.04em;background:#20384c;color:var(--cyan)}.synthetic{background:#3b3020;color:var(--gold)}.muted,.note{color:var(--muted)}.note{font-size:13px}.alert{padding:12px 15px;border:1px solid #635334;background:#272316;color:#ffe0a1;border-radius:9px}.grid{display:grid;gap:16px}.videos{grid-template-columns:1fr 1fr}.lower{grid-template-columns:1.05fr 1fr}.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:16px;min-width:0}video{width:100%;max-height:440px;display:block;background:#05080d;border-radius:6px;object-fit:contain}.empty{padding:65px 12px;text-align:center;color:var(--muted)}.timeline{margin:16px 0}.timeline input{width:100%;accent-color:var(--cyan);margin:10px 0}.time-labels{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.stat{padding:13px;background:var(--panel);border:1px solid var(--line);border-radius:9px}.stat strong{display:block;font-size:20px;word-break:break-word}.stat span{color:var(--muted);font-size:12px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}.command{padding:12px;border:1px solid var(--line);border-radius:8px}.command strong{font-size:20px}.wheels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.wheel{background:#0b1420;padding:8px;border-radius:6px;font-variant-numeric:tabular-nums}.wheel span{color:var(--muted);font-size:12px}.wheel b{float:right;color:var(--cyan)}.candidate .wheel b{color:var(--gold)}.reason{min-height:3em;color:var(--muted);font-size:13px;overflow-wrap:anywhere}.details{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px}.details b{font-weight:500;color:var(--muted)}canvas{display:block;width:100%;height:145px;background:#0c1522;border-radius:6px}.chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:7px}.chart-legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px}.course{width:100%;max-height:320px;object-fit:contain;background:#090e16;border-radius:6px}.trace{margin-top:16px}.trace p{overflow-wrap:anywhere}.checks{margin:8px 0 0;padding-left:20px;font-size:13px;color:var(--muted)}.checks .pass{color:var(--green)}.checks .fail{color:var(--red)}[hidden]{display:none!important}footer{margin:20px 0;color:var(--muted);font-size:12px}@media(max-width:850px){.videos,.lower,.compare{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:14px}.details{grid-template-columns:1fr}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main>
+  <div class="bar"><h1 id="title">小车离线回放与转弯模拟</h1><span id="evidence" class="badge">离线 · 禁用电机</span></div>
+  <p class="muted">真实录制回放、日志轮控对照与 SYNTHETIC 状态机检查</p>
+  <p class="note">本页面只读本地归档，没有硬件控制接口。候选指令不会改变历史视频中的车辆运动。</p>
+  <div class="toolbar bar">
+    <label>模式 <select id="mode"><option value="real">真实录制回放</option><option value="synthetic">SYNTHETIC 合成检查</option></select></label>
+    <label id="runLabel">录制 <select id="run"></select></label>
+    <button id="play" type="button">播放</button>
+    <button id="previous" type="button" aria-label="上一帧">← 上一帧</button>
+    <button id="next" type="button" aria-label="下一帧">下一帧 →</button>
+    <span id="playStatus" class="note" role="status" aria-live="polite">已暂停</span>
+  </div>
+  <div id="warning" class="alert" role="status"></div>
+  <div class="grid videos" id="videoPanels" style="margin-top:16px">
+    <section class="panel"><h2>原始车载画面</h2><video id="raw" preload="metadata" playsinline muted></video><p id="rawError" class="note" hidden></p></section>
+    <section class="panel"><h2>当时归档的感知叠加画面</h2><video id="annotated" preload="metadata" playsinline muted></video><div id="annotatedEmpty" class="empty" hidden>本 run 没有同步叠加视频</div><p id="annotatedError" class="note" hidden></p></section>
+  </div>
+  <div class="panel timeline">
+    <div class="time-labels"><span id="sampleTime">帧 —</span><span id="captureTime">采集时间 —</span></div>
+    <input id="seek" type="range" min="0" max="0" value="0" step="1" aria-label="定位日志帧">
+    <p id="timeNote" class="note">video_t 是视频编码时间；capture_t 是原始采集时间，两者不可等同。</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><span>当前阶段 phase</span><strong id="phase">—</strong></div>
+    <div class="stat"><span>前边界 y / 图像高</span><strong id="front">—</strong></div>
+    <div class="stat"><span>右出口确认</span><strong id="exit">—</strong></div>
+    <div class="stat"><span>IMU yaw（原始 / 合成）</span><strong id="yaw">—</strong></div>
+  </div>
+  <div class="grid lower">
+    <section class="panel">
+      <h2>轮控对照</h2>
+      <div class="compare">
+        <div class="command"><h3 id="originalHeading">原始日志指令</h3><strong id="originalAction">—</strong><p id="originalReason" class="reason">—</p><div id="originalWheels" class="wheels"></div></div>
+        <div class="command candidate"><h3>当前算法回放候选（虚拟）</h3><strong id="candidateAction">—</strong><p id="candidateReason" class="reason">—</p><div id="candidateWheels" class="wheels"></div></div>
+      </div>
+      <p id="wheelNote" class="note">M1左前 / M2左后 / M3右前 / M4右后。原始日志指令是否实际执行，以源 run 配置与证据为准。</p>
+      <div class="details" style="margin-top:15px">
+        <div><b>置信度：</b><span id="confidence">—</span></div><div><b>heading：</b><span id="heading">—</span></div>
+        <div><b>语义年龄：</b><span id="semanticAge">—</span></div><div><b>语义序号：</b><span id="sequence">—</span></div>
+        <div><b>IMU年龄：</b><span id="imuAge">—</span></div><div><b>编码器：</b><span id="encoders">—</span></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>指令 / 姿态时间图</h2>
+      <div class="chart-legend"><span><i style="background:var(--cyan)"></i>原始 / 合成 左PWM</span><span><i style="background:#8ba5ff"></i>右PWM</span><span><i style="background:var(--gold)"></i>候选左PWM</span><span><i style="background:#ff9abe"></i>候选右PWM</span></div>
+      <canvas id="pwmChart" aria-label="左右PWM时间图"></canvas>
+      <p class="note">左右值分别为该侧两轮的平均指令；单轮数值见左侧。</p>
+      <div class="chart-legend"><span><i style="background:var(--green)"></i>yaw °（缺失区间不连线）</span></div>
+      <canvas id="yawChart" aria-label="IMU yaw 时间图"></canvas>
+    </section>
+    <section class="panel">
+      <h2 id="mapHeading">场地图</h2>
+      <img id="course" class="course" alt="用户提供的实际场地图">
+      <div id="courseEmpty" class="empty" hidden>未提供场地图</div>
+      <canvas id="syntheticMap" style="height:280px" aria-label="合成四角状态示意" hidden></canvas>
+      <p id="mapNote" class="note">该图尚未与车辆位姿标定。本页面不从 PWM 或未同步编码器推算实车轨迹。</p>
+    </section>
+    <section class="panel">
+      <h2>来源与验证边界</h2>
+      <p id="source" class="note"></p>
+      <p id="summary" class="note"></p>
+      <ul id="limitations" class="checks"></ul>
+      <ul id="checks" class="checks" hidden></ul>
+    </section>
+  </div>
+  <div id="tracePanel" class="panel trace" hidden><h2>合成输入当前步骤</h2><p id="traceTag"></p><p class="note">矩形图仅示意四个角的状态顺序；合成 yaw 来自脚本供给的 IMU 输入，没有建立车辆位移模型。</p></div>
+  <footer id="footer">加载本地 data.js…</footer>
+</main>
+<script src="data.js"></script>
+<script>
+'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  const data = window.VEHICLE_SIM_DATA;
+  const ids = ['title','evidence','mode','run','runLabel','play','previous','next','playStatus','warning','videoPanels','raw','annotated','rawError','annotatedError','annotatedEmpty','sampleTime','captureTime','seek','timeNote','phase','front','exit','yaw','originalHeading','originalAction','originalReason','candidateAction','candidateReason','wheelNote','confidence','heading','semanticAge','sequence','imuAge','encoders','course','courseEmpty','syntheticMap','mapHeading','mapNote','source','summary','limitations','checks','tracePanel','traceTag','footer','pwmChart','yawChart'];
+  const el = Object.fromEntries(ids.map(id => [id,$(id)]));
+  const set = (id,text) => { el[id].textContent = String(text ?? '—'); };
+  const num = value => typeof value === 'number' && Number.isFinite(value);
+  const fmt = (value,digits=3) => num(value) ? value.toFixed(digits) : '未知';
+  const boolean = value => value === true ? '已确认' : value === false ? '未确认' : '未知';
+  let run = null, frames = [], index = 0, playing = false, raf = 0, syntheticStart = 0, syntheticOrigin = 0;
+  let chartsDirty = true;
+  const wheelFields = [];
+  ['original','candidate'].forEach(kind => {
+    const container = $(kind+'Wheels');
+    const list = [];
+    ['M1 左前','M3 右前','M2 左后','M4 右后'].forEach((name,i) => {
+      const box = document.createElement('div'); box.className='wheel';
+      const label = document.createElement('span');label.textContent=name;
+      const value = document.createElement('b');value.textContent='—';
+      box.append(label,value);container.append(box);list.push(value);
+    });
+    wheelFields.push(list);
+  });
+  const synthetic = () => el.mode.value === 'synthetic';
+  function paused() {
+    playing=false;cancelAnimationFrame(raf);el.raw.pause();el.annotated.pause();
+    set('play','播放');set('playStatus','已暂停');
+  }
+  function wheelValues(slot,pwm) {
+    const order=[0,2,1,3];
+    wheelFields[slot].forEach((item,i) => {item.textContent=Array.isArray(pwm)&&num(pwm[order[i]])?String(pwm[order[i]]):'—';});
+  }
+  function frameAt(time) {
+    let lo=0,hi=frames.length-1;
+    while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(frames[mid].video_t<=time+1e-6)lo=mid;else hi=mid-1;}
+    return lo;
+  }
+  function listItems(id,items) {
+    el[id].replaceChildren();
+    (items||[]).forEach(text => {const li=document.createElement('li');li.textContent=String(text);el[id].append(li);});
+  }
+  function populate() {
+    paused();index=0;chartsDirty=true;
+    run = synthetic() ? data.synthetic : data.runs.find(item => item.id===el.run.value);
+    frames=run&&Array.isArray(run.frames)?run.frames:[];
+    el.seek.max=String(Math.max(0,frames.length-1));el.seek.value='0';
+    el.play.disabled=frames.length<2;el.previous.disabled=frames.length===0;el.next.disabled=frames.length===0;
+    el.runLabel.hidden=synthetic();el.videoPanels.hidden=synthetic();el.tracePanel.hidden=!synthetic();
+    el.syntheticMap.hidden=!synthetic();el.course.hidden=synthetic()||!data.course_image;
+    el.courseEmpty.hidden=synthetic()||Boolean(data.course_image);el.checks.hidden=!synthetic();
+    el.evidence.classList.toggle('synthetic',synthetic());
+    set('evidence',synthetic()?'SYNTHETIC · 虚拟PWM':'真实录制 · 离线回放');
+    set('originalHeading',synthetic()?'正式运行时合成指令（虚拟）':'原始日志指令');
+    set('mapHeading',synthetic()?'四角状态示意 · SYNTHETIC':'用户提供的场地图');
+    set('mapNote',synthetic()?'矩形角点只表示当前角的编号。yaw为供给的合成输入，车辆平移未建模。':'该图尚未与车辆位姿标定。本页面不从 PWM 或未同步编码器推算实车轨迹。');
+    set('wheelNote',synthetic()?'M1左前 / M2左后 / M3右前 / M4右后。所有输出均为 motors_enabled=False 的虚拟PWM。':'M1左前 / M2左后 / M3右前 / M4右后。原始日志指令是否实际执行，以源 run 配置与证据为准。');
+    el.raw.removeAttribute('src');el.annotated.removeAttribute('src');el.rawError.hidden=true;el.annotatedError.hidden=true;
+    if(synthetic()){
+      set('warning',run?run.label:'没有可用的合成检查数据');
+      set('timeNote','合成模式的 video_t / capture_t 都是脚本供给的虚拟时间，没有相机采集或物理运动。');
+      set('source','来源：实际 StationaryCornerRuntime + SafeWheelDriver；所有道路 / 出口 / IMU 观测由脚本供给。');
+      const summary=run&&run.summary;
+      set('summary',summary?`脚本结果：${summary.passed?'全部断言通过':'存在失败断言'} · ${summary.frame_count??frames.length} 个合成帧。详见归档 summary.json。`:'没有合成结果摘要');
+      listItems('limitations',summary&&summary.limitations);
+      el.checks.replaceChildren();
+      ((summary&&summary.checks)||[]).forEach(check=>{const li=document.createElement('li');li.className=check.passed?'pass':'fail';li.textContent=(check.passed?'✓ ':'✗ ')+String(check.name)+(check.error?' — '+check.error:'');el.checks.append(li);});
+    }else{
+      set('warning','历史视频用于核对感知与控制状态。虚拟候选不会改变下一历史帧，回放不能证明新算法的实车绕圈结果。');
+      set('timeNote',`video_t 按帧索引 / ${fmt(run&&run.video_fps,2)} fps 定位。固定fps编码时长不是实际采集时长；原始 capture_t 单独显示。`);
+      set('source',run?'源 run：'+run.source_run:'没有可用的录制数据');
+      set('summary',`${frames.length} 帧 · 原始 / 叠加视频按 video_t 同步 · IMU、编码器缺失时保持未知。`);
+      listItems('limitations',run&&run.limitations);
+      if(run){el.raw.src=run.raw_video;el.annotated.hidden=!run.annotated_video;el.annotatedEmpty.hidden=Boolean(run.annotated_video);if(run.annotated_video)el.annotated.src=run.annotated_video;}
+    }
+    if(data.course_image)el.course.src=data.course_image;
+    render();
+  }
+  function render() {
+    const frame=frames[index];if(!frame)return;
+    el.seek.value=String(index);
+    set('sampleTime',`帧 ${frame.sample??index} / ${frames.length-1} · video_t ${fmt(frame.video_t,3)} s`);
+    set('captureTime',`capture_t ${fmt(frame.capture_t,6)} s${synthetic()?'（合成）':''}`);
+    const candidate=frame.candidate||null;
+    set('phase',candidate&&candidate.phase||frame.phase||'未记录');
+    const front=candidate?candidate.front_ratio:frame.front_ratio;
+    set('front',front===null||front===undefined?'未观测':fmt(front,3));
+    set('exit',boolean(candidate?candidate.right_exit:frame.right_exit));
+    set('yaw',num(frame.yaw_rad)?(frame.yaw_rad*180/Math.PI).toFixed(1)+'°':'未知');
+    set('originalAction',frame.action||'未记录');set('originalReason',frame.reason||'未记录');wheelValues(0,frame.pwm);
+    set('candidateAction',candidate?candidate.action:'无候选');
+    set('candidateReason',candidate?candidate.reason:synthetic()?'合成直接运行正式适配器，无独立历史候选。':'本 run 未配置候选回放。');wheelValues(1,candidate&&candidate.pwm);
+    set('confidence',fmt(frame.confidence));set('heading',fmt(frame.heading));
+    set('semanticAge',num(frame.semantic_age)?fmt(frame.semantic_age)+' s':'未知');
+    set('sequence',frame.semantic_sequence??'未知');set('imuAge',num(frame.imu_age)?fmt(frame.imu_age)+' s':'未知');
+    const enc=frame.encoder4||frame.encoder;set('encoders',Array.isArray(enc)?enc.map(v=>num(v)?String(v):'?').join(' / '):'未知');
+    set('traceTag',synthetic()?`角 ${frame.corner_index??'—'} · ${frame.tag||'—'} · 累计供给 yaw ${num(frame.yaw_unwrapped_rad)?(frame.yaw_unwrapped_rad*180/Math.PI).toFixed(1)+'°':'未知'} · 该角 yaw 进度 ${num(frame.yaw_progress_rad)?(frame.yaw_progress_rad*180/Math.PI).toFixed(1)+'°':'未知'}`:'');
+    drawCharts();if(synthetic())drawSynthetic(frame);
+  }
+  function seek(i) {
+    index=Math.max(0,Math.min(frames.length-1,i));if(!frames.length)return;
+    if(!synthetic()){
+      const time=frames[index].video_t;if(num(time)){el.raw.currentTime=time;if(run.annotated_video)el.annotated.currentTime=time;}
+    }else if(playing){syntheticStart=performance.now();syntheticOrigin=frames[index].video_t;}
+    render();
+  }
+  function canvasContext(canvas) {
+    const rect=canvas.getBoundingClientRect(),ratio=window.devicePixelRatio||1;
+    const w=Math.max(240,Math.round(rect.width)),h=Math.max(100,Math.round(rect.height));
+    canvas.width=w*ratio;canvas.height=h*ratio;
+    const ctx=canvas.getContext('2d');ctx.scale(ratio,ratio);return {ctx,w,h};
+  }
+  const avgSide=(frame,side,candidate=false)=>{const item=candidate?frame.candidate:frame;const p=item&&item.pwm;const a=side===0?0:2;return Array.isArray(p)&&num(p[a])&&num(p[a+1])?(p[a]+p[a+1])/2:null;};
+  function plot(canvas,series,unit,bounds) {
+    const {ctx,w,h}=canvasContext(canvas),left=43,right=w-13,top=12,bottom=h-25;
+    const start=frames[0].video_t,end=frames[frames.length-1].video_t,span=Math.max(.01,end-start);
+    let min=bounds[0],max=bounds[1];
+    const x=t=>left+(t-start)/span*(right-left),y=v=>bottom-(v-min)/(max-min)*(bottom-top);
+    ctx.font='11px system-ui';ctx.lineWidth=1;
+    [min,(min+max)/2,max].forEach(v=>{ctx.strokeStyle='#28384d';ctx.beginPath();ctx.moveTo(left,y(v));ctx.lineTo(right,y(v));ctx.stroke();ctx.fillStyle='#a6b5c8';ctx.fillText(Math.round(v)+unit,3,y(v)+4);});
+    ctx.fillStyle='#a6b5c8';ctx.fillText(fmt(start,1)+'s',left,bottom+18);ctx.fillText(fmt(end,1)+'s',Math.max(left,right-38),bottom+18);
+    series.forEach(s=>{
+      ctx.strokeStyle=s.color;ctx.lineWidth=1.6;ctx.beginPath();let connected=false;
+      frames.forEach(frame=>{const value=s.value(frame);if(!num(value)){connected=false;return;}const px=x(frame.video_t),py=y(value);if(connected)ctx.lineTo(px,py);else ctx.moveTo(px,py);connected=true;});ctx.stroke();
+    });
+    const cursor=x(frames[index].video_t);ctx.strokeStyle='#ffffff';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cursor,top);ctx.lineTo(cursor,bottom);ctx.stroke();
+  }
+  function drawCharts(){
+    if(!frames.length)return;
+    plot(el.pwmChart,[{color:'#64dbdf',value:f=>avgSide(f,0)},{color:'#8ba5ff',value:f=>avgSide(f,1)},{color:'#ffd279',value:f=>avgSide(f,0,true)},{color:'#ff9abe',value:f=>avgSide(f,1,true)}],'',[-35,35]);
+    plot(el.yawChart,[{color:'#86e2ac',value:f=>num(f.yaw_rad)?f.yaw_rad*180/Math.PI:null}],'°',[-180,180]);chartsDirty=false;
+  }
+  function drawSynthetic(frame){
+    const {ctx,w,h}=canvasContext(el.syntheticMap),x0=55,y0=45,x1=w-55,y1=h-45;
+    ctx.strokeStyle='#59687b';ctx.lineWidth=9;ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+    ctx.strokeStyle='#253c52';ctx.lineWidth=3;ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+    const points=[[x1,y0],[x1,y1],[x0,y1],[x0,y0]],active=(frame.corner_index||0)-1;
+    ctx.font='13px system-ui';ctx.textAlign='center';
+    points.forEach(([x,y],i)=>{ctx.fillStyle=i===active?'#ffd279':'#6e8197';ctx.beginPath();ctx.arc(x,y,i===active?11:7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#edf3fb';ctx.fillText('角 '+(i+1),x,y+(i===0||i===3?-19:27));});
+    if(active>=0&&num(frame.yaw_rad)){
+      const [x,y]=points[active],a=-frame.yaw_rad;
+      ctx.strokeStyle='#86e2ac';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*27,y+Math.sin(a)*27);ctx.stroke();
+    }
+    ctx.fillStyle='#a6b5c8';ctx.fillText('SYNTHETIC · 位移未建模',w/2,h/2-8);
+    ctx.fillText('四个顺时针角的状态编号示意',w/2,h/2+14);
+  }
+  function animate(now){
+    if(!playing||!synthetic()||!frames.length)return;
+    const t=syntheticOrigin+(now-syntheticStart)/1000;
+    index=frameAt(t);render();
+    if(t>=frames[frames.length-1].video_t){paused();return;}raf=requestAnimationFrame(animate);
+  }
+  async function play(){
+    if(playing){paused();return;}if(!frames.length)return;
+    if(index>=frames.length-1)seek(0);
+    playing=true;set('play','暂停');set('playStatus','正在播放');
+    if(synthetic()){syntheticOrigin=frames[index].video_t;syntheticStart=performance.now();raf=requestAnimationFrame(animate);}
+    else{try{await el.raw.play();if(run.annotated_video){el.annotated.currentTime=el.raw.currentTime;await el.annotated.play();}}catch(error){paused();set('playStatus','播放失败；请检查本地媒体路径或用浏览器打开导出目录。');}}
+  }
+  el.play.addEventListener('click',play);el.mode.addEventListener('change',populate);el.run.addEventListener('change',populate);
+  el.seek.addEventListener('input',()=>{paused();seek(Number(el.seek.value));});
+  el.previous.addEventListener('click',()=>{paused();seek(index-1);});el.next.addEventListener('click',()=>{paused();seek(index+1);});
+  el.raw.addEventListener('timeupdate',()=>{if(synthetic()||!frames.length)return;index=frameAt(el.raw.currentTime);if(run.annotated_video&&Math.abs(el.annotated.currentTime-el.raw.currentTime)>.12)el.annotated.currentTime=el.raw.currentTime;render();});
+  el.raw.addEventListener('ended',paused);
+  ['raw','annotated'].forEach(id=>el[id].addEventListener('error',()=>{el[id+'Error'].hidden=false;set(id+'Error','媒体无法读取。请确认 media 链接仍指向原始归档，并使用支持 MP4 的浏览器。');if(id==='raw')paused();}));
+  el.course.addEventListener('error',()=>{el.course.hidden=true;el.courseEmpty.hidden=synthetic();el.courseEmpty.textContent='场地图无法读取；车辆位姿仍未标定。';});
+  window.addEventListener('resize',()=>{chartsDirty=true;render();});document.addEventListener('visibilitychange',()=>{if(document.hidden)paused();});
+  if(!data||data.schema_version!==1){set('warning','没有有效 data.js。请使用 export_bundle.py 导出页面、数据和媒体链接后打开 index.html。');el.play.disabled=true;set('footer','本地数据未加载');return;}
+  data.runs=Array.isArray(data.runs)?data.runs:[];
+  set('title',data.title||'小车离线回放与转弯模拟');set('footer','本地只读页面 · 生成时间 '+String(data.generated_at||'未知'));
+  data.runs.forEach(item=>{const option=document.createElement('option');option.value=item.id;option.textContent=item.label||item.id;el.run.append(option);});
+  el.mode.options[0].disabled=data.runs.length===0;el.mode.options[1].disabled=!data.synthetic;
+  if(data.runs.length===0&&data.synthetic)el.mode.value='synthetic';populate();
+})();
+</script>
+</body>
+</html>

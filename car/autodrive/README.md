@@ -1,9 +1,10 @@
 # 外圈 LCC
 
-此包只维护当前树莓派实车使用的外圈车道居中控制。它直接处理车载相机中的黄色道路
-边界和绿色岛区，不依赖 DonkeyCar、云端变道或旧网页。
+此包维护两辆实车共用的外圈车道居中控制。它直接处理车载相机中的黄色道路边界和绿色
+岛区，不依赖 DonkeyCar、云端变道或旧网页；硬件协议和实车标定通过 vehicle profile
+切换，不复制算法代码。
 
-当前实车配置还会在独立后台线程运行 YOLOPv2，并把其可行驶区域与黄色边界 LCC 的
+Raspbot 实车配置还会在独立后台线程运行 YOLOPv2，并把其可行驶区域与黄色边界 LCC 的
 最终走廊做保守融合。YOLOPv2 只能验证或缩小当前走廊，不能把走廊扩大到绿色岛区；
 结果过旧、缺失或与当前走廊重叠不足时，默认回退到传统 LCC。这样同一份原始语义 mask
 可继续供长尾突变检测使用，而后台语义推理不会阻塞控制循环。LCC 专用配置会冻结并融合
@@ -19,27 +20,25 @@ autodrive/
 ├── perception/   # 外圈边界、透视映射和可视化
 ├── runtime/      # 相机到四轮输出的实时闭环
 ├── tools/        # 标定、采集、自检和架空轮测试
-├── web/          # LCC 网页服务与前端
-├── run_onboard.py
-└── run_lcc_web.py
+├── web/          # 只读实时综合面板与遥测发布器
+└── run_onboard.py
 ```
 
-根目录的两个 Python 文件只是稳定命令行入口，具体实现放在对应子包中。
+`run_onboard.py` 是驾驶运行时的命令行入口，具体实现放在对应子包中。
 
 ## 日常启动
 
 ```bash
-cd /home/pi/Desktop/VehicleCloudCollaboration
+cd /path/to/VehicleCloudCollaboration
 ./run.sh
 ```
 
-浏览器访问 `http://<车辆IP>:8080`，勾选安全确认后点击“启动 LCC”。网页启动后才占用
-相机；停止/急停、服务退出、运行时间到期或子进程异常都会执行四轮归零。
+`run.sh` 仅启动只读实时综合面板，不打开设备或运行驾驶程序。已有开机HTTP服务时，直接
+访问 `http://<车辆IP>:8080/`。旧 LCC 详细诊断页和网页启动/急停代码已删除；状态 JSON、
+图像、传感器和驾驶状态统一在综合面板查看，说明见 [实时面板文档](../../docs/vehicle-dashboard.md)。
 
-网页的实时链路面板直接展示黄色边界 LCC、YOLOPv2 当前/目标精度、融合或安全回退、
-运动门控与四轮执行状态。下方详情同时展示边界观测行数、融合重叠率、语义结果年龄、
-FP32/INT8 完成计数、控制循环频率、看门狗和后台队列；这些值均来自当前 `status.json`，
-并显示状态文件与画面的更新时间。页面底部可展开查看网页实际收到的完整状态 JSON。
+Jetson 实验使用 `./run_vehicle_experiment.sh --max-runtime-seconds 30` 协调相机/串口占用，
+默认禁用电机。真实运动仍由现场实验安排、确认参数和标定门禁决定。
 
 ## 命令行与离线回放
 
@@ -48,6 +47,7 @@ FP32/INT8 完成计数、控制循环频率、看门狗和后台队列；这些�
 ```bash
 /home/pi/miniconda3/envs/car/bin/python car/autodrive/run_onboard.py \
   --config car/autodrive/config/onboard_runtime.yaml \
+  --vehicle-profile raspbot_pi5 \
   --enable-motors \
   --confirm-motor-motion I_UNDERSTAND_MOTORS_WILL_MOVE \
   --max-runtime-seconds 60
@@ -58,6 +58,7 @@ FP32/INT8 完成计数、控制循环频率、看门狗和后台队列；这些�
 ```bash
 /home/pi/miniconda3/envs/car/bin/python car/autodrive/run_onboard.py \
   --config car/autodrive/config/onboard_runtime.yaml \
+  --vehicle-profile raspbot_pi5 \
   --video outputs/onboard_runtime/runs/<当次目录>/raw.mp4 \
   --sample-every 1 \
   --output-dir /tmp/lcc_replay \
@@ -85,9 +86,13 @@ YOLOPv2 配置中保持 `drivable_only: false`。
 INT8；弯道、弱边界或较大转向立即请求 FP32，切换期间未完成的 INT8 结果不参与融合。
 完整实验条件和结果见 `YOLOPV2_ONNX_EXPERIMENT.md`。
 
-## 标定和诊断工具
+## 车型选择与标定工具
 
-- `tools/pi_self_check.py`：只读检查依赖、配置、相机和 I2C。
+内置 profile 是 `raspbot_pi5` 和 `rosmaster_jetson`。profile 会覆盖公共配置中的相机、
+透视、轮速和输出目录，但不复制 LCC/边界跟踪算法。完整接口和 Jetson 标定门禁说明见
+[`car/control/README.md`](../control/README.md)。
+
+- `tools/pi_self_check.py`：按 profile 只读检查依赖、配置、相机和 I2C/串口。
 - `tools/align_camera_gimbal.py`：安全确认后调整云台。
 - `tools/capture_onboard.py`：按运行配置采集标定图和视频。
 - `tools/calibrate_perspective.py`：生成四点鸟瞰标定。
@@ -98,23 +103,25 @@ INT8；弯道、弱边界或较大转向立即请求 FP32，切换期间未完�
 ```bash
 /home/pi/miniconda3/envs/car/bin/python car/autodrive/tools/capture_onboard.py \
   --config car/autodrive/config/onboard_runtime.yaml \
+  --vehicle-profile raspbot_pi5 \
   --confirm-camera-gimbal-clear CAMERA_GIMBAL_IS_CLEAR \
   --seconds 10
 
 /home/pi/miniconda3/envs/car/bin/python car/autodrive/tools/calibrate_perspective.py \
   outputs/onboard_capture/onboard_calibration_frame.jpg \
   --runtime-config car/autodrive/config/onboard_runtime.yaml \
+  --vehicle-profile raspbot_pi5 \
   --output car/autodrive/config/onboard_calibration.yaml \
   --force
 ```
 
-相机机械位置、S1 角度、分辨率或图像旋转改变后必须重新标定。当前水平云台正前方为
+相机机械位置、S1 角度、分辨率或图像旋转改变后必须重新标定。Raspbot 水平云台正前方为
 `25°`。当前标定下最新直道双边界拟合宽度为 `0.554–0.577`，单边界回退宽度配置为
 `0.70`。双边界可用时控制器始终采用两条真实曲线的中点，不用固定宽度覆盖右边界。
 
 ## 输出和安全
 
-每次网页或命令行实车运行都会在 `outputs/onboard_runtime/runs/` 保存原始、标注、鸟瞰
+启用归档的命令行实车运行会在配置输出目录下的 `runs/` 保存原始、标注、鸟瞰
 视频、逐帧 CSV、最终状态、配置与标定快照。`outputs/onboard_runtime/latest.jpg`、
 `latest_birdeye.jpg`和`status.json`供网页实时显示。
 
@@ -132,7 +139,7 @@ INT8；弯道、弱边界或较大转向立即请求 FP32，切换期间未完�
 不会混合计数。车底黄线仍在任何阶段立即停车。CSV 的
 `corner_apex_both_valid_count` 记录当前连续双边界确认帧数。
 
-当前底盘映射为：
+当前 Raspbot 底盘映射为：
 
 - `0=左前、1=左后、2=右前、3=右后`
 - 直行 `16/16/20/20`

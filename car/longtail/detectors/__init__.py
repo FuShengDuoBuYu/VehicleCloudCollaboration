@@ -3,9 +3,18 @@ Long-tail scene detection modules
 """
 
 from .base_detector import BaseDetector
-from .clip_detector import CLIPDetector
-from .yolov8_detector import YOLOv8Detector
-from .yolopv2_detector import YOLOPv2Detector
+
+
+def __getattr__(name):
+    # Import only the selected model; a YOLOPv2 deployment needs no CLIP/YOLOv8.
+    from importlib import import_module
+    modules = {"CLIPDetector": "clip_detector", "YOLOv8Detector": "yolov8_detector",
+               "YOLOPv2Detector": "yolopv2_detector"}
+    if name not in modules:
+        raise AttributeError(name)
+    value = getattr(import_module("." + modules[name], __name__), name)
+    globals()[name] = value
+    return value
 
 __all__ = [
     'BaseDetector',

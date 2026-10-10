@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-08",
+  "head": "fce828b89b084eda293e83b99c8861f522858d8e",
+  "worktree": "dirty; pre-existing edits retained; no commit",
+  "verification": "bash -n; --help; 7 mocked launcher tests pass",
+  "physical_motor_commands_in_this_handoff": 0,
+  "artifacts": [
+    {
+      "path": "run_wheel_check.sh",
+      "sha256": "8d9bc889320740f994190ffbf3021fb2f8407bcf016136c6de748879e39a1b11"
+    },
+    {
+      "path": "car/test/test_wheel_check_launcher.py",
+      "sha256": "8956c298e16268af7cb5e57dc8f4c86a446c450d23fc8da5ae64f5e41c1a8296"
+    },
+    {
+      "path": "docs/manual-wheel-check.md",
+      "sha256": "11662e25bab07e452e73a7630038421825a2dd133274dd08cbbb2485f432cdd8"
+    }
+  ]
+}

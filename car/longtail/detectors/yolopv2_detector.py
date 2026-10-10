@@ -30,12 +30,25 @@ class YOLOPv2Detector(BaseDetector):
         self.conf_threshold = self.config.get('conf_threshold', 0.3)
         self.use_full_model = self.config.get('use_full_model', False)
         self.device = torch.device(self.config.get('device', 'cpu'))
+        self.half = self.config.get('half', False)
+        self.preserve_aspect_ratio = self.config.get('preserve_aspect_ratio', False)
+        self.detect_objects = self.config.get('detect_objects', False)
+        for key in ('half', 'preserve_aspect_ratio', 'detect_objects'):
+            if not isinstance(getattr(self, key), bool):
+                raise ValueError(key + ' must be boolean')
+        if self.half and self.device.type != 'cuda':
+            raise ValueError('half precision requires CUDA')
+        self.last_detections = []
         self.geometry_mode = self.config.get('geometry_mode', 'weighted')
         self.fast_mask = self.config.get('fast_mask', True)
+        if self.preserve_aspect_ratio and self.fast_mask is not True:
+            raise ValueError('preserve_aspect_ratio requires padding-aware fast_mask')
         self.optimize_for_inference = bool(
             self.config.get('optimize_for_inference', False)
         )
         self.drivable_only = bool(self.config.get('drivable_only', False))
+        if self.drivable_only and self.detect_objects:
+            raise ValueError('object detection requires the full model')
         self.geometry_weights = self.config.get('geometry_weights', {})
         self.linear_coefficients = self.config.get('linear_coefficients', [])
         self.linear_intercept = float(self.config.get('linear_intercept', 0.0))
@@ -44,6 +57,7 @@ class YOLOPv2Detector(BaseDetector):
         if self.use_full_model:
             self.model = torch.jit.load(self.weights_path, map_location=self.device)
             self.model.to(self.device).eval()
+            self.model.half() if self.half else self.model.float()
             self._prepare_inference_graph()
 
     def _prepare_inference_graph(self) -> None:
@@ -125,11 +139,13 @@ class YOLOPv2Detector(BaseDetector):
             raise ValueError("image must be an OpenCV numpy array")
         if img.ndim == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        img = cv2.resize(img, (1280, 720), interpolation=cv2.INTER_LINEAR)
+        if not self.preserve_aspect_ratio:
+            img = cv2.resize(img, (1280, 720), interpolation=cv2.INTER_LINEAR)
         img, padding = self._letterbox(img)
         img = img[:, :, ::-1].transpose(2, 0, 1)
         img = np.ascontiguousarray(img)
-        tensor = torch.from_numpy(img).to(self.device).float()
+        tensor = torch.from_numpy(img).to(self.device)
+        tensor = tensor.half() if self.half else tensor.float()
         tensor /= 255.0
         return tensor.unsqueeze(0), padding
 
@@ -149,12 +165,23 @@ class YOLOPv2Detector(BaseDetector):
         else:
             tensor, padding = self._preprocess_image(image)
 
+        self.last_detections = []
         with torch.inference_mode():
             if self.drivable_only:
                 seg = self.model(tensor)
                 lane = None
             else:
-                _, seg, lane = self.model(tensor)
+                detections, seg, lane = self.model(tensor)
+            if not torch.isfinite(seg).all() or (lane is not None and not torch.isfinite(lane).all()):
+                raise ValueError('nonfinite YOLOPv2 segmentation output')
+            if self.detect_objects:
+                from autodrive.perception.yolopv2_objects import decode_objects
+                heads, anchors = detections
+                self.last_detections = decode_objects(
+                    [head.detach().float().cpu().numpy() for head in heads],
+                    [anchor.detach().float().cpu().numpy() for anchor in anchors],
+                    tuple(tensor.shape[-2:]), padding, confidence=self.conf_threshold,
+                )
 
         if self.fast_mask:
             top, bottom, left, right = padding

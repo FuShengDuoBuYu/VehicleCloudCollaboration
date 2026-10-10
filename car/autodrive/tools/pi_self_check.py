@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only Raspberry Pi readiness checks for the onboard driving runtime."""
+"""Read-only readiness checks for the selected onboard vehicle profile."""
 
 import argparse
 import importlib
@@ -10,27 +10,32 @@ from pathlib import Path
 import shutil
 import sys
 
-import yaml
-
-
 AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
 CAR_DIR = AUTODRIVE_DIR.parent
+CONTROL_DIR = CAR_DIR / "control"
 REPO_ROOT = CAR_DIR.parent
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
+if str(CONTROL_DIR) not in sys.path:
+    sys.path.insert(0, str(CONTROL_DIR))
 
 from autodrive.perception.perspective import validate_calibration_camera_pose
+from vehicle_control.profile import load_runtime_config
 
 
 LOCAL_CONFIG = AUTODRIVE_DIR / "config" / "onboard_runtime.yaml"
 DEFAULT_CONFIG = LOCAL_CONFIG
-MINIMUM_PYTHON = (3, 9)
+MINIMUM_PYTHON = (3, 8)
 MAXIMUM_PYTHON = (3, 12)
 
 
 def build_parser():
     parser = argparse.ArgumentParser(description="Read-only onboard readiness check")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
+    parser.add_argument(
+        "--vehicle-profile",
+        help="Vehicle profile ID or YAML path",
+    )
     parser.add_argument(
         "--camera",
         action="store_true",
@@ -56,8 +61,9 @@ def add(checks, name, status, detail):
     checks.append({"name": name, "status": status, "detail": str(detail)})
 
 
-def check_imports(checks):
-    modules = ["numpy", "cv2", "yaml", "smbus2"]
+def check_imports(checks, backend):
+    modules = ["numpy", "cv2", "yaml"]
+    modules.append("smbus2" if backend == "raspbot" else "serial")
     for name in modules:
         try:
             module = importlib.import_module(name)
@@ -95,12 +101,20 @@ def main():
     checks = []
     config_path = Path(args.config).expanduser().resolve()
     try:
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-        if config.get("version") != 1:
-            raise ValueError("config version must be 1")
-        add(checks, "runtime_config", "pass", config_path)
+        config_path, config = load_runtime_config(
+            config_path,
+            vehicle_selector=args.vehicle_profile,
+        )
+        vehicle = config.get("vehicle", {})
+        add(
+            checks,
+            "runtime_config",
+            "pass",
+            f"{config_path}; vehicle={vehicle.get('profile')}",
+        )
     except Exception as exc:
         config = {}
+        vehicle = {}
         add(checks, "runtime_config", "fail", exc)
 
     python_ok = MINIMUM_PYTHON <= sys.version_info[:2] < MAXIMUM_PYTHON
@@ -108,17 +122,18 @@ def main():
         checks,
         "python_version",
         "pass" if python_ok else "fail",
-        f"{platform.python_version()}; supported: >=3.9,<3.12",
+        f"{platform.python_version()}; supported: >=3.8,<3.12",
     )
     machine = platform.machine().lower()
-    pi_arch = machine in {"aarch64", "arm64", "armv7l"}
+    arm_arch = machine in {"aarch64", "arm64", "armv7l"}
     add(
         checks,
         "architecture",
-        "pass" if pi_arch else "warn",
-        f"{machine}; ARM is expected on the Raspberry Pi",
+        "pass" if arm_arch else "warn",
+        f"{machine}; ARM is expected on both supported vehicles",
     )
-    check_imports(checks)
+    backend = str(vehicle.get("backend", "raspbot"))
+    check_imports(checks, backend)
 
     add(
         checks,
@@ -152,22 +167,40 @@ def main():
         except Exception as exc:
             add(checks, "perspective_calibration", "fail", exc)
 
-    i2c_device = Path("/dev/i2c-1")
-    if i2c_device.exists():
-        readable = os.access(i2c_device, os.R_OK | os.W_OK)
+    device = Path(
+        "/dev/i2c-1"
+        if backend == "raspbot"
+        else vehicle.get("chassis", {}).get("serial_port", "/dev/myserial")
+    )
+    if device.exists():
+        readable = os.access(device, os.R_OK | os.W_OK)
         add(
             checks,
-            "i2c_device",
+            "hardware_device",
             "pass" if readable else "fail",
-            f"{i2c_device}, read/write={readable}",
+            f"{device}, read/write={readable}",
         )
     else:
         add(
             checks,
-            "i2c_device",
+            "hardware_device",
             "warn",
-            "/dev/i2c-1 is absent; expected outside Raspberry Pi",
+            f"{device} is absent; expected only on its matching vehicle",
         )
+
+    status = vehicle.get("status", {})
+    add(
+        checks,
+        "motion_calibration",
+        "pass" if status.get("motion_calibrated") else "warn",
+        "calibrated" if status.get("motion_calibrated") else "dry-run only",
+    )
+    add(
+        checks,
+        "gimbal_calibration",
+        "pass" if status.get("gimbal_calibrated") else "warn",
+        "calibrated" if status.get("gimbal_calibrated") else "startup disabled",
+    )
 
     free_gib = shutil.disk_usage(REPO_ROOT).free / 1024**3
     add(
@@ -183,6 +216,8 @@ def main():
         "ok": not any(item["status"] == "fail" for item in checks),
         "strict_ok": all(item["status"] == "pass" for item in checks),
         "platform": {
+            "vehicle_profile": vehicle.get("profile"),
+            "vehicle_backend": backend,
             "machine": platform.machine(),
             "system": platform.platform(),
             "python": platform.python_version(),

@@ -1,4 +1,4 @@
-"""Guarded camera-gimbal pose helpers for the Raspbot S1/S2 servos."""
+"""Guarded, platform-independent camera-gimbal pose helpers."""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,13 +43,21 @@ class CameraGimbalPose:
             raise ValueError("settle_time must not be negative")
 
     def apply(self, controller, sleep=time.sleep):
-        commands = []
-        if self.pan_angle is not None:
-            controller.Ctrl_Servo(PAN_SERVO_ID, int(self.pan_angle))
-            commands.append((PAN_SERVO_ID, int(self.pan_angle)))
-        if self.tilt_angle is not None:
-            controller.Ctrl_Servo(TILT_SERVO_ID, int(self.tilt_angle))
-            commands.append((TILT_SERVO_ID, int(self.tilt_angle)))
+        if hasattr(controller, "set_pose"):
+            commands = controller.set_pose(
+                pan_angle=self.pan_angle,
+                tilt_angle=self.tilt_angle,
+            )
+        else:
+            # Compatibility for direct use with the bundled Raspbot library.
+            commands = []
+            if self.pan_angle is not None:
+                controller.Ctrl_Servo(PAN_SERVO_ID, int(self.pan_angle))
+                commands.append((PAN_SERVO_ID, int(self.pan_angle)))
+            if self.tilt_angle is not None:
+                controller.Ctrl_Servo(TILT_SERVO_ID, int(self.tilt_angle))
+                commands.append((TILT_SERVO_ID, int(self.tilt_angle)))
+            commands = tuple(commands)
         if self.settle_time:
             sleep(self.settle_time)
         return tuple(commands)
@@ -73,18 +81,25 @@ def startup_pose_from_mapping(camera_config):
 
 def initialize_configured_gimbal(
     camera_config,
+    vehicle_config=None,
     controller_factory=None,
     sleep=time.sleep,
 ):
-    """Apply a configured startup pose and close the temporary I2C handle."""
+    """Apply a configured startup pose through the selected vehicle backend."""
     pose = startup_pose_from_mapping(camera_config)
     if pose is None:
         return ()
-    if controller_factory is None:
+    if controller_factory is not None:
+        controller = controller_factory()
+    elif vehicle_config is not None:
+        from vehicle_control.factory import create_gimbal
+
+        controller = create_gimbal(vehicle_config)
+    else:
+        # Backwards compatibility for callers that predate vehicle profiles.
         from Raspbot_Lib import Raspbot
 
-        controller_factory = Raspbot
-    controller = controller_factory()
+        controller = Raspbot()
     try:
         return pose.apply(controller, sleep=sleep)
     finally:

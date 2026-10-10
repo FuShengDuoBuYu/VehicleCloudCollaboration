@@ -1,6 +1,10 @@
 """Safety boundary between normalized LCC commands and the physical chassis."""
 
+from __future__ import annotations
+
 from dataclasses import asdict, dataclass
+import math
+from numbers import Real
 import threading
 import time
 from typing import Optional
@@ -26,12 +30,16 @@ class WheelMappingConfig:
     tight_turn_outside_pwm: int = 0
     tight_turn_inside_pwm: int = 0
     transition_time: float = 0.25
+    stationary_pivot_pwm: int = 0
 
     def __post_init__(self):
         if self.drive_mode != "four-wheel-trim":
             raise ValueError("drive_mode must be four-wheel-trim")
         if not 1 <= self.pwm_limit <= 255:
             raise ValueError("pwm_limit must be in [1, 255]")
+        if (type(self.stationary_pivot_pwm) is not int
+                or not 0 <= self.stationary_pivot_pwm <= min(30, self.pwm_limit)):
+            raise ValueError("stationary_pivot_pwm must be an integer in [0, min(30, pwm_limit)]")
         if not 0 <= self.minimum_moving_pwm <= self.pwm_limit:
             raise ValueError("minimum_moving_pwm must be in [0, pwm_limit]")
         direct_values = (
@@ -183,6 +191,8 @@ class SafeWheelDriver:
         self.motors_enabled = bool(motors_enabled)
         self.config = config
         self._lock = threading.Lock()
+        self._motion_deadline = None
+        self._inhibited_reason = None
         self._moving = False
         # Force the first explicit stop through to the motor controller. Later
         # stop frames are de-duplicated so a lost-boundary condition does not
@@ -207,6 +217,21 @@ class SafeWheelDriver:
         if command.action == "stop":
             return 0, 0, 0, 0
 
+        if command.action in {"pivot-right", "pivot-left"}:
+            if self.config.stationary_pivot_pwm == 0:
+                raise ValueError("stationary pivot is disabled")
+            values = (command.steering, command.left_speed, command.right_speed)
+            if any(isinstance(value, bool) or not isinstance(value, Real)
+                   or not math.isfinite(value) or not -1 <= value <= 1 for value in values):
+                raise ValueError("stationary pivot proposals must be finite normalized numbers")
+            direction = 1 if command.action == "pivot-right" else -1
+            if not (direction * command.steering > 0
+                    and direction * command.left_speed > 0
+                    and direction * command.right_speed < 0):
+                raise ValueError("stationary pivot action and proposed directions disagree")
+            pwm = direction * self.config.stationary_pivot_pwm
+            return pwm, pwm, -pwm, -pwm
+
         steering = float(np.clip(command.steering, -1.0, 1.0))
         delta = int(round(steering * self.config.front_steering_delta_pwm))
         if self.config.maximum_steering_delta_pwm > 0:
@@ -217,14 +242,13 @@ class SafeWheelDriver:
                     self.config.maximum_steering_delta_pwm,
                 )
             )
-        # Respect the calibrated moving floor in either turn direction. With
-        # asymmetric straight trims, safe positive/negative limits differ.
+        # Bound reductions by the moving floor. Saturating the outside wheels
+        # at pwm_limit must still allow the inside wheels to slow for a turn.
+        # Each outside wheel is independently capped below.
         moving_floor = self.config.minimum_moving_pwm
         positive_limit = max(
             0,
             min(
-                self.config.pwm_limit - self.config.front_left_base_pwm,
-                self.config.pwm_limit - self.config.rear_left_base_pwm,
                 self.config.front_right_base_pwm - moving_floor,
                 self.config.rear_right_base_pwm - moving_floor,
             ),
@@ -234,8 +258,6 @@ class SafeWheelDriver:
             min(
                 self.config.front_left_base_pwm - moving_floor,
                 self.config.rear_left_base_pwm - moving_floor,
-                self.config.pwm_limit - self.config.front_right_base_pwm,
-                self.config.pwm_limit - self.config.rear_right_base_pwm,
             ),
         )
         delta = int(np.clip(delta, -negative_limit, positive_limit))
@@ -330,13 +352,16 @@ class SafeWheelDriver:
             rear_right,
         )
 
-    def apply(self, command: DifferentialDriveCommand) -> dict:
+    def apply(self, command: DifferentialDriveCommand, *, deadline=None) -> dict:
         if command.action == "stop":
             return self.stop(command.reason or "controller requested stop")
 
-        front_left, rear_left, front_right, rear_right = (
-            self.command_to_four_pwm(command)
-        )
+        try:
+            front_left, rear_left, front_right, rear_right = self.command_to_four_pwm(command)
+        except ValueError:
+            if command.action in {"pivot-right", "pivot-left"}:
+                self.stop("invalid or disabled stationary pivot")
+            raise
         state = {
             "mode": "hardware" if self.motors_enabled else "dry-run",
             "action": command.action,
@@ -350,6 +375,12 @@ class SafeWheelDriver:
             "updated_at": time.monotonic(),
         }
         with self._lock:
+            if self._inhibited_reason is not None:
+                return dict(self._last_state)
+            if deadline is not None and (type(deadline) not in (int, float)
+                    or not math.isfinite(deadline) or time.monotonic() >= deadline):
+                return self._stop_locked('visual step expired before application')
+            self._motion_deadline = deadline
             if self.motors_enabled:
                 if not self._moving and self.config.transition_time > 0:
                     # Ramp only when leaving a stopped state. Ramping every
@@ -391,12 +422,32 @@ class SafeWheelDriver:
             "updated_at": time.monotonic(),
         }
         with self._lock:
-            if self.motors_enabled and not self._stop_written:
-                self.chassis.stop()
-            self._moving = False
-            self._stop_written = True
-            self._last_state = state
+            return self._stop_locked(reason, state)
+
+    def _stop_locked(self, reason, state=None):
+        if state is None:
+            state = dict(self._last_state, action='stopped', left_pwm=0, right_pwm=0,
+                front_left_pwm=0, rear_left_pwm=0, front_right_pwm=0, rear_right_pwm=0,
+                reason=str(reason), updated_at=time.monotonic())
+        if self.motors_enabled and not self._stop_written:
+            self.chassis.stop()
+        self._moving = False
+        self._stop_written = True
+        self._motion_deadline = None
+        self._last_state = state
         return dict(state)
+
+    def inhibit(self, reason):
+        """An operator/lease cancellation cannot be undone in this driver instance."""
+        with self._lock:
+            self._inhibited_reason = str(reason)
+            return self._stop_locked(reason)
+
+    def check_motion_deadline(self):
+        with self._lock:
+            if self._motion_deadline is not None and time.monotonic() >= self._motion_deadline:
+                return self._stop_locked('visual step time ceiling')
+            return dict(self._last_state)
 
     def get_state(self) -> dict:
         with self._lock:
@@ -441,6 +492,7 @@ class PerceptionMotionGate:
         self._consecutive_valid = 0
         self._last_stop_reason = "waiting for initial perception"
         self._candidate_source: Optional[str] = None
+        self._last_semantic_sequence: Optional[int] = None
         self._last_lateral: Optional[float] = None
         self._last_heading: Optional[float] = None
         self._last_source: Optional[str] = None
@@ -450,6 +502,7 @@ class PerceptionMotionGate:
         self._consecutive_valid = 0
         self._last_stop_reason = str(reason)
         self._candidate_source = None
+        self._last_semantic_sequence = None
         self._last_lateral = None
         self._last_heading = None
         self._last_source = None
@@ -582,6 +635,13 @@ class PerceptionMotionGate:
 
         if self._candidate_source is None:
             self._candidate_source = source
+        # A fast control loop can consume the same asynchronous mask many times.
+        # Resuming requires distinct model observations, not repeated control ticks.
+        sequence = getattr(boundary_result, "semantic_sequence", None)
+        if sequence is not None:
+            if sequence == self._last_semantic_sequence:
+                return self._stop_command(command, "waiting for a new YOLOPv2 observation")
+            self._last_semantic_sequence = sequence
         self._consecutive_valid += 1
         if self._consecutive_valid >= self.resume_valid_frames:
             self._ready = True

@@ -1,0 +1,1102 @@
+{
+  "task_id": "2026-10-08-jetson-yolopv2-field",
+  "date_timezone": "2026-10-08 Asia/Shanghai",
+  "state": "reported",
+  "head": "6bf86933ded040c64613515497eb75c9f77fe371",
+  "working_tree": "dirty; original user changes preserved",
+  "primary_run": "20261008_080239_047274_dryrun",
+  "motors_enabled": false,
+  "cloud": "deferred by user",
+  "files": [
+    {
+      "path": "outputs/field_yolopv2/20261008/baseline-host-tests.log",
+      "size": 262,
+      "sha256": "70d12bea2cea9531ced951a2fa23acddba3bc86940a96a0fcc1c4775f4c9d522"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/baseline-tests-with-test-path.log",
+      "size": 8900,
+      "sha256": "8c0f4ad9b7f7262a6fb090c6893bb012736c1168ac7ad54701fd669b130480d4"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/baseline-tests.log",
+      "size": 952,
+      "sha256": "11408ed1bbeb6b92fc33e6f643e63a27520e1a8b570289a1630295684bdc27df"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/AGENTS.md",
+      "size": 3331,
+      "sha256": "00b072dbf6b1201c5e78a88143ec4b6e35961aa2095df991e98d3a271f3663fc"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/PROJECT_INDEX.md",
+      "size": 10955,
+      "sha256": "0f35a568ca183dd954a4e696623dad721f8313e8cdce1c356d106961418e3d8b"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/README.md",
+      "size": 4371,
+      "sha256": "bce7ff46198be4bd6b250501236ace37ceca9f5064d1bfb50bf6943047d42ea6"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/README.md",
+      "size": 8556,
+      "sha256": "65277b4f4f2716989b8ae323146ab9d624e81dbe9e005b590280f6fffaaff274"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/camera/gimbal.py",
+      "size": 3746,
+      "sha256": "47bbe820fbbd6095f971330818572cf0c25106289fa2f87de651c64ccecc77c1"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/config/onboard_runtime.example.yaml",
+      "size": 4593,
+      "sha256": "ab14bbbdfc0b56fca886de77b82df5455219a332ad3042503c0cf4b80bdf1538"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/config/onboard_runtime.yaml",
+      "size": 14136,
+      "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/control/drive_runtime.py",
+      "size": 55211,
+      "sha256": "91870574c6722b8397ab78a971d886cdc00b786270d19ecf6892a5d4639b24f2"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/control/lane_centering.py",
+      "size": 19148,
+      "sha256": "d6ce718ebac997048e2471926e95361e88e8c858f25da4852eb14e4c60efe262"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/perception/outer_loop.py",
+      "size": 22980,
+      "sha256": "0e53f10b8b0aea9d9707d653e37bcd805cec3dd24674fb687ad4421f9477fdfe"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/perception/visualization.py",
+      "size": 5518,
+      "sha256": "03400e90ffd7b4d6273bc1c823d4531b6ca17abeb11aea6fb1c035f335fe9df9"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/perception/yolopv2_fusion.py",
+      "size": 23441,
+      "sha256": "6320fe07517ef64b1df514f018f3edf3f3c465914f57be9a108d23490041338c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/perception/yolopv2_onnx.py",
+      "size": 4430,
+      "sha256": "c0ce951c742a0848187e4a6790015a288423e185929aad3d63afcac4bb2dba48"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/runtime/onboard.py",
+      "size": 70402,
+      "sha256": "079819ee3791dc9b24bc3616d14642210cd18a998b033d6deabd73f5d4dc8171"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/tools/align_camera_gimbal.py",
+      "size": 4654,
+      "sha256": "0187273d756e281727a324ccea70127e3a83075a2054f8e1f350b4d21425262c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/tools/calibrate_perspective.py",
+      "size": 6777,
+      "sha256": "b0e1812d406dad6f1d380144c67b6fc717a4f46a7aff5b7f47cbcda87d433db6"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/tools/capture_onboard.py",
+      "size": 5839,
+      "sha256": "122a11e6a53f4cd2506f161db3d0a541045debb540aadef12411398fa406c525"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/tools/check_wheel_directions.py",
+      "size": 6645,
+      "sha256": "2785b93357878cffd0e78bc2b25e55b8d50b406f9976eb9c0f1c617b696106b6"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/tools/pi_self_check.py",
+      "size": 7391,
+      "sha256": "f2e6e3738765265208b79445bff61eddb4800e9698dd7d0aab1a39dd259f3413"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/web/cli.py",
+      "size": 2994,
+      "sha256": "827f6254428d073c670b7148d00fc46d9732967c73fefd030c18ef618bca13d3"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/autodrive/web/server.py",
+      "size": 16084,
+      "sha256": "f5e63c2c076407ac562ec8ed44ddc220a17cb98b258ed077060b2b37d081d519"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/README.md",
+      "size": 3199,
+      "sha256": "f89bb9541f52350d6a5b9797c03fa68d3696be74f57abe378abab8af9b20557e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/__init__.py",
+      "size": 289,
+      "sha256": "a653132230bf47a1dbfed75fe54f080a345d9650dedada6718d746e3c67a9623"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/base.py",
+      "size": 9872,
+      "sha256": "2c9b4d97fdb115467e4c9cd6a02f2eaff5f6635bfa65d1ecf9a8e5fb1fb6a85e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/factory.py",
+      "size": 4720,
+      "sha256": "347515a0544ee16baed58215baf16857912908196bc980e8a974455e2a052c28"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/hardware.py",
+      "size": 687,
+      "sha256": "2bcc6ca83484483d2bbda10b07a4582c1e033a3c12a73032d727726702d21343"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/platforms/__init__.py",
+      "size": 61,
+      "sha256": "9d26eccc4b8fc8f5140b1cb88524e7e0c2fec7f70044f376f0e2557fd58a394e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/platforms/raspbot.py",
+      "size": 1851,
+      "sha256": "2ce564d22a336be847cee5adaeb4e28218d32c8b23e2ddfc241191800e460591"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/platforms/rosmaster.py",
+      "size": 3404,
+      "sha256": "4fbde98a8662bf230550cbbc49f63d24006a2f9ff06866ffd7091ca7bfaa2af2"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/platforms/rosmaster_transport.py",
+      "size": 10014,
+      "sha256": "9b74468da6aaca33d93584c75580aaf565c6464a94a8e7b4bcadd95d4f24f6fe"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/profile.py",
+      "size": 3322,
+      "sha256": "98dd815f77012ccfcddfc21b62a0d2bcdd212a48cb226b9c14a78a8e02962ad2"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/profiles/raspbot_pi5.yaml",
+      "size": 1199,
+      "sha256": "13a4418b068118534dc8e0e0ac332d03fdf1cd33be0534151552e58d75427a17"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/control/vehicle_control/profiles/rosmaster_jetson.yaml",
+      "size": 1858,
+      "sha256": "96689b019e3ddbaa584ac5ca9fe8484967318fd86511f6bcd46d9caa240a7cba"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/test/test_camera_gimbal.py",
+      "size": 3677,
+      "sha256": "1fc33e7d59362515ec14b58841b1046e688a681e0cb53d514c6fb6ef143dd0ea"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/test/test_hardware_mapping.py",
+      "size": 4975,
+      "sha256": "5a8d2db725f081eea54eede6d76a6ea6575bafef74eab139fee322563a219c3b"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/test/test_hardware_safety.py",
+      "size": 7930,
+      "sha256": "a0065a362a457c7927e7a465f326bf318423f61cbf6bbf8632217f12817634ea"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/test/test_lcc_web.py",
+      "size": 6011,
+      "sha256": "15467d1c47f368e5d885086f7c2a5fb95de693d2a35fc3a05762801167e2e0cc"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/car/test/test_rosmaster_transport.py",
+      "size": 8378,
+      "sha256": "0d2da19d1ee60489d9a4b70588fd9b4bd9f5a5eff7e27fe5b211b2876cd1d9c9"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-bootstrap-manifest.json",
+      "size": 2058,
+      "sha256": "14d189c3f179c938c7e72890a8ee7a6f0d0db9c55e05418d43909a82c9e2bfd5"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-car-baseline-report.md",
+      "size": 35798,
+      "sha256": "ee9e73ee85c5a4c8c69e812f9d036cd62593b654fae5c4c73e8f51e4007ead50"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-car-baseline.md",
+      "size": 3271,
+      "sha256": "2e63b12e04dbe251a8c0c182234a8b71502fb145a9c373254659d5f6eec6e787"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-car-hardware-acceptance-manifest.json",
+      "size": 63502,
+      "sha256": "4c55af5673af9124f51f8ef8c6f53c39aa00b67ede159ed1362eb91faaff1a2b"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-car-hardware-acceptance-progress.md",
+      "size": 6043,
+      "sha256": "5c6048ffbd3856df4c4184aed2b04a5e3a8aa0c6ee563792ff43afc80be3f91f"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-car-hardware-acceptance-report.md",
+      "size": 18145,
+      "sha256": "46c4823f7e45e80be4ba110d947c05bf00348800e3f29e922b0946e6b27d9abd"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-jetson-bringup-camera-selfcheck.json",
+      "size": 1891,
+      "sha256": "9e5995f609637d34438c77340a309e89d60d148dea61a47dedec0cc01f9c7bd6"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-jetson-bringup-progress.md",
+      "size": 3358,
+      "sha256": "336fec00838ee10d4faaff23e2466704f421835b3c1e35cc5a89b13abf8cfb86"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-jetson-bringup-validation.json",
+      "size": 5911,
+      "sha256": "3fd7c06ab031c15b9861de2379c627438434608ad4659b5db44dcd59e0a4500f"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/coordination/2026-10-08-role-allocation.md",
+      "size": 3146,
+      "sha256": "516aebeaaf01074e72d1f2022623c96d1e46815a0e4e30a9959f3d08df2e8439"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/docs/superpowers/plans/2026-10-08-car-hardware-acceptance.md",
+      "size": 7773,
+      "sha256": "02f865c1abd3a0195e6e50d976a9589438d36c4f2bfebd4752640128633aa89f"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/docs/superpowers/specs/2026-10-08-jetson-vehicle-bringup-design.md",
+      "size": 13863,
+      "sha256": "4a1a40d85d45288a81635d52764a34477042941227a9b3224b161a6d45bce1f8"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/run.sh",
+      "size": 807,
+      "sha256": "f2841ff7e579337e34604ed474fc00007449a73c3e34887d7faeb13412e3d2dc"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/skills/thesis-handoff/SKILL.md",
+      "size": 5857,
+      "sha256": "e75fec64f50dcf5f66fb7e233ffeb0e5f73c23f1d6c1681923ab0bc646c6fc53"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/skills/thesis-handoff/agents/openai.yaml",
+      "size": 329,
+      "sha256": "834acb32c263819309d211812b7a4ce9831e692434211be21e5c8e6a348e64c8"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/skills/vehicle-cloud-thesis/SKILL.md",
+      "size": 15005,
+      "sha256": "b5241be6af8a7091f5a4b25343d7f33d989763a7928396da0c488f5dc13a568e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before/skills/vehicle-cloud-thesis/agents/openai.yaml",
+      "size": 289,
+      "sha256": "87ec62dd6e27e63f95f23222f94d05d0f7da7cf7f9427dbb5ba0cea05bfce9af"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before-integration/car/autodrive/control/drive_runtime.py",
+      "size": 55211,
+      "sha256": "91870574c6722b8397ab78a971d886cdc00b786270d19ecf6892a5d4639b24f2"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before-integration/car/autodrive/control/lane_centering.py",
+      "size": 19148,
+      "sha256": "d6ce718ebac997048e2471926e95361e88e8c858f25da4852eb14e4c60efe262"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before-integration/car/autodrive/perception/outer_loop.py",
+      "size": 22980,
+      "sha256": "0e53f10b8b0aea9d9707d653e37bcd805cec3dd24674fb687ad4421f9477fdfe"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before-integration/car/autodrive/perception/yolopv2_fusion.py",
+      "size": 23441,
+      "sha256": "6320fe07517ef64b1df514f018f3edf3f3c465914f57be9a108d23490041338c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before-integration/car/autodrive/runtime/onboard.py",
+      "size": 70402,
+      "sha256": "079819ee3791dc9b24bc3616d14642210cd18a998b033d6deabd73f5d4dc8171"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before-integration/car/longtail/detectors/__init__.py",
+      "size": 313,
+      "sha256": "3f5f2579e64a5e1a41218b34cad58616c2e61ca74c456fc934c36ba20efd7a41"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/before-integration/car/longtail/detectors/yolopv2_detector.py",
+      "size": 13986,
+      "sha256": "38eaf876202686883791099bf650a4375b36d0a51cb6331ccc31cb53eec35bba"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/capture-field.log",
+      "size": 167,
+      "sha256": "9dff25e250554693815875bed5ced85dcb88f5d92aa0c914e6665e52266e1492"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/capture-field.py",
+      "size": 1167,
+      "sha256": "0b48678a42e0982dad54f4647afdaff3a9fdbc09d5d836a03e57908befd6b2d5"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/check-field-control.py",
+      "size": 1798,
+      "sha256": "7a94e65c5305291383c1647af33771da775899ebd731476149b96fa264b4e7b4"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/clocks-readonly.txt",
+      "size": 1221,
+      "sha256": "8313ecc40da7da7dc25217fb873cce8ddc8fda1441dcab82a654f0a18cc634d9"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/autodrive/control/drive_runtime.py",
+      "size": 55785,
+      "sha256": "5463012f662a5f8129f71c47da7bf2e6374af13f8b59240122021e3a74a921f4"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/autodrive/perception/outer_loop.py",
+      "size": 23024,
+      "sha256": "0d0c1dccae2749693c1fef0e01fbe6de6917d0440a325d2a88f13e94016ae6fa"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/autodrive/perception/yolopv2_fusion.py",
+      "size": 24756,
+      "sha256": "5510e312d78815f1428e5cdf420c195dd7ba758a878325c45a36140398c7d7d9"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/autodrive/perception/yolopv2_objects.py",
+      "size": 2992,
+      "sha256": "347369b8daa1f8d56754fb4d3d2e7397b3d67971b4e23de19944a13c79d8fded"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/autodrive/perception/yolopv2_semantic.py",
+      "size": 4073,
+      "sha256": "60b6334940e8f8c0d073a10ad3cbd9f39ec991a01a9f4640a697c820d6a627b5"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/autodrive/runtime/onboard.py",
+      "size": 71976,
+      "sha256": "a06a59123a3fba373a61c415aad62552578a416cc6dbf990bc0a27a295f078b6"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2.yaml",
+      "size": 2341,
+      "sha256": "89023e54e582c83ffbeaeae23cc96369afd4924fb0dfb87946bb08482362be82"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/longtail/detectors/__init__.py",
+      "size": 648,
+      "sha256": "f82c6a46882b44f11406e212098f316d9193586ff7772eaba20c39507f128a6d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/longtail/detectors/yolopv2_detector.py",
+      "size": 15527,
+      "sha256": "b92017382190c945577132565c69970e891e35c8dedd4c956b1acaca3ad1abda"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/test/test_yolopv2_objects.py",
+      "size": 1615,
+      "sha256": "626e45cb53e7bcb02ea1f082f35404f275778a7c07007fb63de1ed7c0ae76c01"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/test/test_yolopv2_primary.py",
+      "size": 7832,
+      "sha256": "03f45ad3ba488fef7bf5c1944ccaa097be8fbe9e2d3398efcf58aa0c18e855d9"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/code-at-first-live-run/car/test/test_yolopv2_torch_input.py",
+      "size": 1428,
+      "sha256": "cc887eb30a722112889c2da53599be3b1d5c373df03fe9eb802ddb3879472951"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/compare-inputs.py",
+      "size": 2181,
+      "sha256": "784bc85688f0317a42fa4b13a4ec5e40817dc33d96501df9848ea0981225786b"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/cuda-install.log",
+      "size": 6611,
+      "sha256": "dea0d931b7b0f9e465f29a79b7362fb613fbc8c79eaad08c89355c5c9b6c1576"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/derived-checks.json",
+      "size": 578,
+      "sha256": "3d4bfafd600c60b3026367fbc38399b3b1fdf9b3a17a9a170d8a775b4be4dc4e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/control-320-frame-0000.png",
+      "size": 517224,
+      "sha256": "6bb0104c2fa87b3fc08dc7bd123441f9e34fae45f58f64db7c4d8176edccafc3"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/control-320-frame-0060.png",
+      "size": 535419,
+      "sha256": "4d94a9cd450905eddfee3e2e6b71a1970f5ecc02734d643324c20ccfe9f48cac"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/control-320-frame-0150.png",
+      "size": 534565,
+      "sha256": "0cb2f5b2599071ba401bbb3272fc3fa6d308da828e16639cd9923057a548e092"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/control-480-frame-0000.png",
+      "size": 509111,
+      "sha256": "0f57539ebfbd437256f56cc6825ec4ee4c557d35f4189457c816eaee1a18eeb1"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/control-480-frame-0060.png",
+      "size": 525326,
+      "sha256": "24c8e009c116412b01c45a0dc9c916be67544a011d815a73ec4ef187cf5b41e5"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/control-480-frame-0150.png",
+      "size": 525171,
+      "sha256": "046b2f84832a84d468251c7b81274e51d185bd1a662a21d5872ce93f72bab40d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/drivable.png",
+      "size": 2398,
+      "sha256": "41a3b499cb71eb7dd8a81b10df35b613c785f887b8c21b6fdbfdb51d50ffcaf3"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/frame-0000.png",
+      "size": 577378,
+      "sha256": "27fc98ff0d5a90bbc77450d9090277ea23b35c945bd143f114896f9baac7ba6b"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/frame-0060.png",
+      "size": 595776,
+      "sha256": "12bf674a3630c7e11e12860ac948851d7307d576708fd38e591258b06cf65c68"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/frame-0150.png",
+      "size": 594811,
+      "sha256": "49bca3d810443af37bd1092ce5462ec622ac845df651593224ccb7582884a23c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/lane.png",
+      "size": 1961,
+      "sha256": "c3e4f99cc511cbcc4fa3a4f486067a0bf7b49e108d2bb20598dc07bf249c1a6a"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/overlay-320-native-fp16.png",
+      "size": 526405,
+      "sha256": "fff6ed4f570c50b0d40efde17499751ef28d2517999025752de365c51916b1e9"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/overlay-480-native-fp16.png",
+      "size": 526631,
+      "sha256": "2714e2929cf2fa8bed874848c1a85c39662c1a84979b651f99fd0163c5bc5a49"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/overlay-640-legacy-stretch-fp16.png",
+      "size": 513096,
+      "sha256": "31bb897781411131ee9bda2c9e6f01cc4d0f1905d665828f85a6eb829c42d6b8"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/overlay-640-native-fp32.png",
+      "size": 561494,
+      "sha256": "4e021bc44a6985d562483d828f9f4ccece1ec16b558ce6b9e0c9d7783aec34bb"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/raw.avi",
+      "size": 11562218,
+      "sha256": "84ba249c70f9cbad564106e03db11e10fd102415a7cf983de4917034b443ced1"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/road-320-native-fp16.png",
+      "size": 2583,
+      "sha256": "c7dd3a5d4932834dbf87624cec2a3d71a9d8dd8a6f4df1ac033404bb87d75d78"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/road-480-native-fp16.png",
+      "size": 1841,
+      "sha256": "6275ef479fce61f55d1d43542daca2de282cfc21cf2657d838db3d2ab5e07c91"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/road-640-legacy-stretch-fp16.png",
+      "size": 1947,
+      "sha256": "d600646857d9eeed6ad2cc46d18bdd3f0222aff28d94b237ff909e3c5f6ff50f"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/road-640-native-fp32.png",
+      "size": 2386,
+      "sha256": "3807c17395463e03a3d0ebcab58718ad0e1c1b4774b180cd442e641188a956aa"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/timestamps.json",
+      "size": 16830,
+      "sha256": "08d587bd6c337436aadb6715c4b1f58f8b6bcf944f75373b8fb2fc4edd5e5a26"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-camera/yolopv2-overlay.png",
+      "size": 561527,
+      "sha256": "701f04459d7d35a40907ca3feb011901fc1709c8a05efcea0e7d1de9bd3eb808"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-control-comparison-fixed.log",
+      "size": 4527,
+      "sha256": "17fbcbbb51b0d7bd234c901b2e1974377c3270760418d74a2bd5efda83d02daf"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-control-comparison-retry.log",
+      "size": 5082,
+      "sha256": "a2ca3336359d06ad902f9dc5405a534c38ede14c16968de4f8e0cd831b46e7a4"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-control-comparison.json",
+      "size": 8207,
+      "sha256": "53d4c3503f3a25d203eb2f6d47ddedae5ab14295e33f08031459d5c12d0153de"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/field-control-comparison.log",
+      "size": 2556,
+      "sha256": "3a542c28cfb8a085a682d2abc0275c7f25f258dd10c543be073ae4740392c626"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-git-status.txt",
+      "size": 1654,
+      "sha256": "053cba6efd03011853f4e2725b8037ff86f78ff58e9b60d780e4b7ceb385a8be"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/PROJECT_INDEX.md",
+      "size": 13797,
+      "sha256": "8f0b054dc0233ee7bf9b92f913bf3a6443803c0ca5865e9c5d946c1e5ddb448e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/autodrive/control/drive_runtime.py",
+      "size": 55785,
+      "sha256": "5463012f662a5f8129f71c47da7bf2e6374af13f8b59240122021e3a74a921f4"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/autodrive/control/lane_centering.py",
+      "size": 20243,
+      "sha256": "3a348d9a02284e14e749a6a0230195190b68280074694ba0a7af06c0ed01f984"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/autodrive/perception/outer_loop.py",
+      "size": 23024,
+      "sha256": "0d0c1dccae2749693c1fef0e01fbe6de6917d0440a325d2a88f13e94016ae6fa"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/autodrive/perception/yolopv2_fusion.py",
+      "size": 25174,
+      "sha256": "592e87e2b423d2a611484ab8b2973827a73b877c350866ce5632953078dea6d8"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/autodrive/perception/yolopv2_objects.py",
+      "size": 2992,
+      "sha256": "347369b8daa1f8d56754fb4d3d2e7397b3d67971b4e23de19944a13c79d8fded"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/autodrive/perception/yolopv2_semantic.py",
+      "size": 4573,
+      "sha256": "4c048f94193feead434df1f41ebdb596cef6ea3b4e40cd86a55df3911a4194e4"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/autodrive/runtime/onboard.py",
+      "size": 72171,
+      "sha256": "8b293c3cbb7c2d2f8352d3f1e0eb76f66a1f6b27064538df50d83f7cc2e8f589"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2.yaml",
+      "size": 2341,
+      "sha256": "087cdfddffd6d8f61f0f2a10e4b893480e8bd5fb2f11acd8dd253202fe96cb1d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/longtail/detectors/__init__.py",
+      "size": 648,
+      "sha256": "f82c6a46882b44f11406e212098f316d9193586ff7772eaba20c39507f128a6d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/longtail/detectors/yolopv2_detector.py",
+      "size": 15684,
+      "sha256": "7a375461ee5e59710fbabab9c336db5fd99ea5779f1a7f0f16cdef405cee9b51"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/test/test_yolopv2_objects.py",
+      "size": 1615,
+      "sha256": "626e45cb53e7bcb02ea1f082f35404f275778a7c07007fb63de1ed7c0ae76c01"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/test/test_yolopv2_primary.py",
+      "size": 9688,
+      "sha256": "d14a2bf60b1b663b5da44ff59dd2f7b6af16211425ec4c3b9aac269ee0c2eb23"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/car/test/test_yolopv2_torch_input.py",
+      "size": 2392,
+      "sha256": "dcc5b73480d2e59594e48dcc48329e00e9fe41fe2ff1881b06497de1938f39d5"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/coordination/2026-10-08-jetson-yolopv2-field-report.md",
+      "size": 10892,
+      "sha256": "47d52b11388ae3cd608a479a57dfbf597b9a08319184c3c527a5325270681805"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/docs/jetson-yolopv2.md",
+      "size": 3723,
+      "sha256": "811a09244c8cc082cbc8c3ec105d1968379597b69a6c7279b26b56641017956a"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/docs/superpowers/plans/2026-10-08-jetson-yolopv2-field.md",
+      "size": 3211,
+      "sha256": "e4400be99bccb98cb813c7912edb6ddf48d35cec5e1d95fca3bdcb1950660771"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/final-source/run_jetson_yolopv2.sh",
+      "size": 622,
+      "sha256": "343234408cb5c0e1248a3dadac0625b2cf1de3a0c7fd067f684f1e31380f9532"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/freshness-precision-red.log",
+      "size": 2670,
+      "sha256": "9a40a1ccf4f0fdd8f0da5d2d60624d2f7c2458dc670d9bfeb3c7a00dcf0a734e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/full-regression-final.log",
+      "size": 286,
+      "sha256": "70ae1eca273bc426325dfa9dad03d4ae96162da7bbabd698e7bd9876dccb0cc0"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/full-regression.log",
+      "size": 285,
+      "sha256": "8ff5fae0c872086063d3440612d9782d74dde16dce6aff598f6548691ed57a9d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/gpu-environment.json",
+      "size": 155,
+      "sha256": "c6449060f2b5f0d5cd0fcdcab43eafe7123d3e20012d7d316539bbbdf2264db6"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/gpu-packages.txt",
+      "size": 307,
+      "sha256": "5e7e32df4c9c3d2d0022f3c4d33f8b43ee72b613ccfddccff58e2120b3053546"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/implementation-baseline.json",
+      "size": 10012,
+      "sha256": "8d65c5f69737f401758f7a297194865643438b324e155b91f56d5109c4761694"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/implementation-incremental.patch",
+      "size": 49615,
+      "sha256": "18977d5fd0c6c50f29a9b6fedc74227b8b3c2fa24fb8af2f11350855fa8ed21f"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/input-comparison.json",
+      "size": 2620,
+      "sha256": "cef8f5f29ab9d1aa40ba68081a8ab23380683b9429d46d6fdf38e46f95b6f777"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/input-comparison.log",
+      "size": 2544,
+      "sha256": "2558ddc65a98fdda207622971cae182c614a31f533eeb8bbf37a3525b0499953"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/integration-record.json",
+      "size": 3304,
+      "sha256": "08204d32ae8e8e4bf9cd057cecf14f1502f368ac33e63ff4782763c8032b5877"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/lane-exclusion-red.log",
+      "size": 682,
+      "sha256": "05e196470dbde4cde1a8286a896147c6cf990be55c4aab48317f6823a9d14d3a"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/launcher-help.txt",
+      "size": 2133,
+      "sha256": "07fb15b947140f76e5bea662400daea7c7ae8790992d32d7a1045d65b396c2cf"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/latest.jpg",
+      "size": 151212,
+      "sha256": "211b5285f9532c0d6553f897a39ac1d859c1efcff5f6c7e83d63deb0bf3a5315"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/latest_birdeye.jpg",
+      "size": 4500,
+      "sha256": "ca202ad7362c32a636f74a0c50ab278fdf4baee75097255fae128b739a4b8f4b"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/onboard_log.csv",
+      "size": 149620,
+      "sha256": "cb46ffea862ebe6a3cb2961b54502fb84566ff5755c22c9033a333e1813b237e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/runs/20261008_074850_305446_dryrun/annotated.mp4",
+      "size": 11250945,
+      "sha256": "c1023d38c142739d197c3ca7c01209222ce177ef49bfec1796c83d89c6a6e398"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/runs/20261008_074850_305446_dryrun/birdeye.mp4",
+      "size": 118214,
+      "sha256": "4405a000d57eac6cd6f12e64197d3273a5568fae17c1b5387649d3f75bcdf4c7"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/runs/20261008_074850_305446_dryrun/onboard_log.csv",
+      "size": 149620,
+      "sha256": "cb46ffea862ebe6a3cb2961b54502fb84566ff5755c22c9033a333e1813b237e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/runs/20261008_074850_305446_dryrun/raw.mp4",
+      "size": 13343768,
+      "sha256": "a56742f1a03780e922b841c59cb581de34b25357c2445ae7b26d4a72a1ad52c3"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/runs/20261008_074850_305446_dryrun/resolved_runtime_config.yaml",
+      "size": 5091,
+      "sha256": "c26ac4e9d201f0eac7bb2ac0728f8ef50aaa8fbf45c3a161071d6c0555a3ea52"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/runs/20261008_074850_305446_dryrun/runtime_config.yaml",
+      "size": 14136,
+      "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/runs/20261008_074850_305446_dryrun/status.json",
+      "size": 6998,
+      "sha256": "5e4b764e78ce2d32e14b845c602ed168f186917276b645a84f2035f607ec6b71"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/runs/20261008_074850_305446_dryrun/vehicle_profile.yaml",
+      "size": 2341,
+      "sha256": "89023e54e582c83ffbeaeae23cc96369afd4924fb0dfb87946bb08482362be82"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime/status.json",
+      "size": 6998,
+      "sha256": "5e4b764e78ce2d32e14b845c602ed168f186917276b645a84f2035f607ec6b71"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime-summary.json",
+      "size": 7636,
+      "sha256": "b25f2ed2207833e0397682f119c36d9a8ed4e8e83f5119832f62a84035e5db7e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/live-runtime.log",
+      "size": 14716,
+      "sha256": "f8a2f2516910d92f982ab6e20c47dc9e4234ce62c051a0fbf4eef5cf316b5ed5"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-final-tests.log",
+      "size": 288,
+      "sha256": "7bbd5b106099c77b8cb776e5c9e7ba27e614006f7fdf68c7deb22b1ff9c947db"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/latest.jpg",
+      "size": 139992,
+      "sha256": "0f96bdec91dfb9bc8e1c631df1b923ffe1a4aac141bf815ae5d39fb3a763d038"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/latest_birdeye.jpg",
+      "size": 12865,
+      "sha256": "3b228a2e5d9ee7cc6d4695a2b32514cb723627003830bcbc60367d3c9b681940"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/onboard_log.csv",
+      "size": 131117,
+      "sha256": "af547f032565e84a7bbe7efca7e9740361eb81c5878e9a7b9af3a2773338409c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/runs/20261008_080239_047274_dryrun/annotated.mp4",
+      "size": 8748927,
+      "sha256": "7a099e3c1133f1836b78bd93186a4712f768b764915d017f27475b735bdf34e9"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/runs/20261008_080239_047274_dryrun/birdeye.mp4",
+      "size": 569541,
+      "sha256": "5e2010a52710e6ac1fe906a119a79cceee26f0ccd81913fc03290a8d4572bd1c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/runs/20261008_080239_047274_dryrun/onboard_log.csv",
+      "size": 131117,
+      "sha256": "af547f032565e84a7bbe7efca7e9740361eb81c5878e9a7b9af3a2773338409c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/runs/20261008_080239_047274_dryrun/raw.mp4",
+      "size": 13274629,
+      "sha256": "6c85abdf58bc697b1616d8121ae0e260b40368ac634fce1210f6d9e245d63a96"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/runs/20261008_080239_047274_dryrun/resolved_runtime_config.yaml",
+      "size": 5050,
+      "sha256": "eb91ea5e222739f669aa4b9b3e12de2f3f4da1389048c44d930ac17cbb70db12"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/runs/20261008_080239_047274_dryrun/runtime_config.yaml",
+      "size": 14136,
+      "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/runs/20261008_080239_047274_dryrun/status.json",
+      "size": 6787,
+      "sha256": "2aa654d060ab817ca32d1634d03d6e5f9c2a61512e44079f1278da5642c28170"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/runs/20261008_080239_047274_dryrun/vehicle_profile.yaml",
+      "size": 2341,
+      "sha256": "087cdfddffd6d8f61f0f2a10e4b893480e8bd5fb2f11acd8dd253202fe96cb1d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320/status.json",
+      "size": 6787,
+      "sha256": "2aa654d060ab817ca32d1634d03d6e5f9c2a61512e44079f1278da5642c28170"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320-summary.json",
+      "size": 1660,
+      "sha256": "80531ea58046c3a8a3fa2cd41183df5fbff0f3eff52a4be867017fdc89ceecda"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/main-live-320.log",
+      "size": 13569,
+      "sha256": "f844560d129cc560cc6fd79b7c76a51ba4d798dd2566af850b8f3f655c57f751"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/model-download.log",
+      "size": 53485,
+      "sha256": "f9706c9f1b0cabd5d55157b37e487f3971ab5d5f40962ae6960f27fb464db050"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/model-manifest.json",
+      "size": 335,
+      "sha256": "3fe0b995fabcd1615c37c422ac4b2a6275d292cb57d9279fc99d87ffdf2d956c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/nvrtc-install.log",
+      "size": 1780,
+      "sha256": "4473db9fc6c2a13f88c17f1599b8ea27cfb2b462fd7c8b43d1a8f9602024de93"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/nvtx-install.log",
+      "size": 1772,
+      "sha256": "094482920c7fc0a59ee9c464aa749c72a3f58ac0f5c5bec4e76eb260336945dc"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/objects-green.log",
+      "size": 194,
+      "sha256": "829631dcd4adf3eb698124fbdbdd211f683714489cec5b90555a744934cf5602"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/objects-red.log",
+      "size": 4183,
+      "sha256": "e102883a4de07ad223e835e7f98f4426d41bd4c228ae3fc0ccd3964d7cf5c765"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/power-mode.txt",
+      "size": 21,
+      "sha256": "7959c6dc551a7101c576d29642b6895d3bf9b887800ba5a9be5e152f275a7db0"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/pre-update.json",
+      "size": 8529,
+      "sha256": "25030ed75a62043af4735b3935a121aa02082cddb5403aba8b2bff9e7aa29e0c"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/pre-update.patch",
+      "size": 64129,
+      "sha256": "9523bed7dabd72270b53dd79c2dae73d6c4895097486e95d7139b39903b51478"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/preview-support-green.log",
+      "size": 197,
+      "sha256": "731706747f51da0dcf04eacac4797b677e1493bc4519bb5cf44d7d05148bb563"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/preview-support-red.log",
+      "size": 683,
+      "sha256": "b6685b652021b9e53fa2a179cee51b1ee5f00ea0ea66179c8de8c637e89bf48d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/readme-stash.json",
+      "size": 152,
+      "sha256": "99e106626dd15df97b4a51732c87a14922c428f2ed48c3a5959dc3865c8bb83b"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/resume-gate-green.log",
+      "size": 200,
+      "sha256": "54b02f05943fd7055c020e5cf49b9997ccaa5fbe3da35b0cafdc5a5afdad74af"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/resume-gate-red.log",
+      "size": 1330,
+      "sha256": "afed82ceea35468c44b49b2db5086a62a88dd252b23f3e38a1123b40c1e3ae98"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/review-regressions-red.log",
+      "size": 2493,
+      "sha256": "0a302e10b6e5f11ba25d749969ecafaf31173f1ae436547e8ccc571769a81163"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/semantic-green.log",
+      "size": 106,
+      "sha256": "14eb3a78ea719287926958fff31232b63759641566e7566168a5a6e399b0ae26"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/semantic-red.log",
+      "size": 8582,
+      "sha256": "9a1f191d85d7f0ed984b81ce903772ed6c8cae24f97da6afad57b43760e60692"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/semantic-regression.log",
+      "size": 190,
+      "sha256": "1040823090de074b8b080ba3ea23dacfac122fcdb923072614fc721764c8dbcf"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/autodrive/control/drive_runtime.py",
+      "size": 55785,
+      "sha256": "5463012f662a5f8129f71c47da7bf2e6374af13f8b59240122021e3a74a921f4"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/autodrive/control/lane_centering.py",
+      "size": 20243,
+      "sha256": "3a348d9a02284e14e749a6a0230195190b68280074694ba0a7af06c0ed01f984"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/autodrive/perception/outer_loop.py",
+      "size": 23024,
+      "sha256": "0d0c1dccae2749693c1fef0e01fbe6de6917d0440a325d2a88f13e94016ae6fa"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/autodrive/perception/yolopv2_fusion.py",
+      "size": 25174,
+      "sha256": "592e87e2b423d2a611484ab8b2973827a73b877c350866ce5632953078dea6d8"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/autodrive/perception/yolopv2_objects.py",
+      "size": 2992,
+      "sha256": "347369b8daa1f8d56754fb4d3d2e7397b3d67971b4e23de19944a13c79d8fded"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/autodrive/perception/yolopv2_semantic.py",
+      "size": 4573,
+      "sha256": "4c048f94193feead434df1f41ebdb596cef6ea3b4e40cd86a55df3911a4194e4"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/autodrive/runtime/onboard.py",
+      "size": 72171,
+      "sha256": "8b293c3cbb7c2d2f8352d3f1e0eb76f66a1f6b27064538df50d83f7cc2e8f589"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2.yaml",
+      "size": 2341,
+      "sha256": "087cdfddffd6d8f61f0f2a10e4b893480e8bd5fb2f11acd8dd253202fe96cb1d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/longtail/detectors/__init__.py",
+      "size": 648,
+      "sha256": "f82c6a46882b44f11406e212098f316d9193586ff7772eaba20c39507f128a6d"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/longtail/detectors/yolopv2_detector.py",
+      "size": 15684,
+      "sha256": "7a375461ee5e59710fbabab9c336db5fd99ea5779f1a7f0f16cdef405cee9b51"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/test/test_yolopv2_objects.py",
+      "size": 1615,
+      "sha256": "626e45cb53e7bcb02ea1f082f35404f275778a7c07007fb63de1ed7c0ae76c01"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/test/test_yolopv2_primary.py",
+      "size": 9688,
+      "sha256": "d14a2bf60b1b663b5da44ff59dd2f7b6af16211425ec4c3b9aac269ee0c2eb23"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/car/test/test_yolopv2_torch_input.py",
+      "size": 2392,
+      "sha256": "dcc5b73480d2e59594e48dcc48329e00e9fe41fe2ff1881b06497de1938f39d5"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/docs/jetson-yolopv2.md",
+      "size": 3723,
+      "sha256": "811a09244c8cc082cbc8c3ec105d1968379597b69a6c7279b26b56641017956a"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/stage/run_jetson_yolopv2.sh",
+      "size": 622,
+      "sha256": "343234408cb5c0e1248a3dadac0625b2cf1de3a0c7fd067f684f1e31380f9532"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/status-before-doc-update.txt",
+      "size": 1654,
+      "sha256": "053cba6efd03011853f4e2725b8037ff86f78ff58e9b60d780e4b7ceb385a8be"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/status-before-integration.txt",
+      "size": 1338,
+      "sha256": "53f27c31cab2ff02d6a7bb5ea1afe4eb26bc11ae970c5d4d3f868e06ad84a7ea"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/torch-download.log",
+      "size": 23227,
+      "sha256": "64d59bd0d46bb623d169fed12acb48650ed2ab98093f403a1ba815b2eb639d41"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/torch-green.log",
+      "size": 117,
+      "sha256": "9d337d6163b628a946ce71d01e73de89904adfab877c77f495a9ae729f26e54e"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/torch-input-red.log",
+      "size": 2191,
+      "sha256": "008a557a66b775cfe3a04fcce4f2ef6b97eb5664c5ca6279ba618ef7394c3c57"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/torch-install.log",
+      "size": 3071,
+      "sha256": "78db0c4b65f44f77c23ad32fa7f6fb1b6cb8fe5202975ee93caabbe2cf23db97"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/torch-wheel.json",
+      "size": 367,
+      "sha256": "2a486dd802cc74354e6138a88b1a14257444ccca798c7ac9acaf7ba7d6ecf2d8"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/venv-freeze.txt",
+      "size": 293,
+      "sha256": "6f71a5ab14c65d4369af32e81437ec2e392084d28cb066d719a19f1ddbd32d95"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/verify-yolopv2-gpu.py",
+      "size": 2764,
+      "sha256": "297d1c0cb85e78d8711d134add29073c26dc7fbb99a0e4643729184273ff9ab5"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/worktree-final-tests.log",
+      "size": 288,
+      "sha256": "9dd72a7309d200d457d8a14c2d25cb7387e7d3434efc5e924e33c6d7ad9b8497"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/yolopv2-gpu-verification.json",
+      "size": 1235,
+      "sha256": "e352bd873605115acacbd1d3205b38c8212b0255de6356a41ccec7848e46e918"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/yolopv2-gpu-verification.log",
+      "size": 4787,
+      "sha256": "130915b714c0b75fd2fd7a5e344def54349f3382c2ecf98de74581f81e054898"
+    },
+    {
+      "path": "outputs/field_yolopv2/20261008/yolopv2-release.json",
+      "size": 214,
+      "sha256": "fd1b05f86cbfa70c09eaddc3d0987b86f9cefb30ea3bb9d57546993ff1fd1623"
+    },
+    {
+      "path": "car/longtail/models/yolopv2.pt",
+      "size": 156380200,
+      "sha256": "f2a8c8374203ae3e67ff9c184e931f763957de92a993b23269e4e721627f1f8c"
+    },
+    {
+      "path": "outputs/field_yolopv2/downloads/torch-2.0.0+nv23.05-cp38-cp38-linux_aarch64.whl",
+      "size": 171768083,
+      "sha256": "39eeb9894ef8c7b84249ab917f212a91703f30255d591b956ab12cc10e836532"
+    }
+  ]
+}

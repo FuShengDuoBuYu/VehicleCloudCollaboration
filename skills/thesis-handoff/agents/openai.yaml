@@ -1,0 +1,6 @@
+interface:
+  display_name: "论文与车端任务交接"
+  short_description: "Coordinate thesis and vehicle tasks with traceable evidence"
+  default_prompt: "Use $thesis-handoff to prepare or reconcile this thesis and vehicle task with verified artifact paths and clear authorization."
+policy:
+  allow_implicit_invocation: true

@@ -1,5 +1,7 @@
 """Outer-loop corridor tracking for the fixed yellow-boundary test field."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -103,6 +105,18 @@ class BoundaryTrackResult:
     ego_yellow_ratio: float = 0.0
     yellow_hazard: bool = False
     boundary_visible_ratio: float = 0.0
+    semantic_sequence: Optional[int] = None
+    semantic_captured_at: Optional[float] = None
+    semantic_preview_point: Optional[tuple[int, int]] = None
+    semantic_front_boundary_ratio: Optional[float] = None
+    semantic_right_exit_observed: bool = False
+    semantic_hard_safe: bool = False
+    semantic_front_observed: bool = False
+    semantic_observed_front_ratio: Optional[float] = None
+    semantic_front_spread_ratio: Optional[float] = None
+    semantic_right_exit_support_ratio: Optional[float] = None
+    semantic_corner_reject_reason: str = ''
+    semantic_pivot_road_support_ratio: float = 0.0
     semantic_fusion_source: str = "disabled"
     semantic_result_age_seconds: Optional[float] = None
     semantic_overlap_ratio: Optional[float] = None
@@ -110,6 +124,18 @@ class BoundaryTrackResult:
     semantic_inference_seconds: Optional[float] = None
     semantic_precision: Optional[str] = None
     semantic_requested_precision: Optional[str] = None
+    semantic_exclusion_mask: Optional[np.ndarray] = None
+    semantic_track_colors: bool = False
+    semantic_allowed_white_pixels: int = 0
+    semantic_yellow_pixels: int = 0
+    semantic_yellow_mask: Optional[np.ndarray] = None
+    semantic_track_surface_pixels: int = 0
+    semantic_turn_entry_ready: bool = False
+    semantic_exit_heading_error: Optional[float] = None
+    semantic_rotation_mask: Optional[np.ndarray] = None
+    semantic_rotation_heading_error: Optional[float] = None
+    semantic_forward_road_valid: bool = True
+    semantic_rotation_yellow_ratio: Optional[float] = None
 
 
 class OuterLoopBoundaryTracker:

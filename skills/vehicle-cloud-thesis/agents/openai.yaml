@@ -1,0 +1,6 @@
+interface:
+  display_name: "Vehicle–Cloud Thesis"
+  short_description: "Evidence-grounded vehicle–cloud thesis research and writing"
+  default_prompt: "Use $vehicle-cloud-thesis to continue this thesis task from the durable project evidence."
+policy:
+  allow_implicit_invocation: true

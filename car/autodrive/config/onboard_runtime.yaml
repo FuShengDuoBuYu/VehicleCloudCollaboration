@@ -1,5 +1,9 @@
 version: 1
 
+vehicle:
+  # Override with --vehicle-profile rosmaster_jetson on the Jetson X3.
+  profile: raspbot_pi5
+
 camera:
   index: 0
   width: 640
@@ -86,7 +90,7 @@ outer_loop:
   # Fresh two-boundary fits in the corrected bird's-eye image measured
   # 0.554-0.577 on the latest straight runs. Use the configured 0.70 only as
   # the one-boundary fallback; when both edges fit, their real midpoint is used.
-  expected_lane_width_ratio: 0.58
+  expected_lane_width_ratio: 0.70
   minimum_lane_width_ratio: 0.42
   maximum_lane_width_ratio: 0.72
   # The mat has a fixed calibrated width. Do not let partial corner/intersection

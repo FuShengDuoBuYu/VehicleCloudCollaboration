@@ -1,0 +1,178 @@
+version: 1
+id: rosmaster_jetson_yolopv2_visual_feedback
+backend: rosmaster
+description: Fresh YOLO permits continuous gentle cruise and short revocable corner
+  steps; no fixed corner angle or entry location
+status:
+  motion_calibrated: false
+  gimbal_calibrated: false
+  wheel_mapping_verified: true
+  ground_forward_stop_verified: true
+chassis:
+  serial_port: /dev/myserial
+  car_type: 1
+  delay: 0.002
+  debug: false
+  command_limit: 100
+  motor_order:
+  - 0
+  - 1
+  - 2
+  - 3
+  wheel_signs:
+  - 1
+  - 1
+  - 1
+  - 1
+gimbal:
+  serial_port: /dev/myserial
+  car_type: 1
+  delay: 0.002
+  debug: false
+  pan_servo_id: 1
+  tilt_servo_id: 2
+  pan_limits:
+  - 0
+  - 180
+  tilt_limits:
+  - 0
+  - 100
+runtime_overrides:
+  camera:
+    index: 0
+    width: 640
+    height: 480
+    fps: 20
+    rotation_degrees: 0
+    flip_horizontal: false
+    flip_vertical: false
+    gimbal:
+      initialize_on_startup: false
+      pan_angle: null
+      tilt_angle: null
+      settle_time: 0.8
+    stale_timeout: 0.25
+  perception:
+    mode: yolopv2
+    track_colors:
+      enabled: true
+      surface_assist: true
+    semantic_stability:
+      enabled: true
+      time_constant_seconds: 0.12
+      max_gap_seconds: 0.25
+      threshold: 0.65
+      reset_iou: 0.8
+    mask_width: 320
+    mask_height: 240
+    yolopv2:
+      enabled: true
+      backend: torchscript
+      weights: car/longtail/models/yolopv2.pt
+      device: cuda:0
+      half: true
+      img_size: 384
+      preserve_aspect_ratio: true
+      detect_objects: true
+      fast_mask: true
+      drivable_only: false
+      optimize_for_inference: false
+      torch_num_threads: 2
+      torch_interop_threads: 1
+      adaptive_precision: false
+      int8_weights: ''
+      asynchronous: true
+      # Capture-to-application age includes async inference and path analysis.
+      max_result_age_seconds: 0.6
+      required_for_motion: true
+    semantic_outer_loop:
+      enabled: true
+      width_profile:
+      - - 0.502092
+        - 0.275
+      - - 0.543933
+        - 0.390625
+      - - 0.585774
+        - 0.509375
+      - - 0.627615
+        - 0.68125
+      - - 0.669456
+        - 0.746875
+      - - 0.711297
+        - 0.8625
+      - - 0.753138
+        - 0.946875
+      - - 0.794979
+        - 0.996875
+      - - 0.83682
+        - 1.0
+      - - 0.878661
+        - 1.0
+      - - 0.941423
+        - 1.0
+      - - 1.0
+        - 1.0
+      preview_ratio: 0.62
+      stationary_corners: true
+      visual_feedback: true
+  centerline:
+    top_ratio: 0.54
+    lookahead_ratio: 0.62
+    tight_turn_lookahead_ratio: 0.78
+    bottom_ratio: 0.94
+  cloud_arbitration:
+    enabled: false
+    trigger_observations: 3
+    resume_observations: 5
+    observation_max_age_seconds: 0.3
+    request_timeout_seconds: 8.0
+    response_max_age_seconds: 10.0
+    retry_seconds: 2.0
+    mask_change_threshold: 0.4
+  perspective:
+    calibration: null
+  wheels:
+    drive_mode: four-wheel-trim
+    pwm_limit: 30
+    minimum_moving_pwm: 5
+    front_left_base_pwm: 30
+    rear_left_base_pwm: 30
+    front_right_base_pwm: 30
+    rear_right_base_pwm: 30
+    front_steering_delta_pwm: 30
+    maximum_steering_delta_pwm: 30
+    tight_turn_start_steering: 0.5
+    tight_turn_full_steering: 0.7
+    tight_turn_outside_pwm: 30
+    tight_turn_inside_pwm: 0
+    transition_time: 0.0
+    stationary_pivot_pwm: 30
+  runtime:
+    live_update_hz: 10
+    output_dir: outputs/onboard_runtime/rosmaster_jetson_yolopv2_visual_feedback
+    route_hint: center
+    video_sample_every: 1
+    archive_runs: true
+    require_sensor_recording: true
+  outer_loop:
+    enabled: false
+  safety:
+    resume_valid_frames: 2
+    resume_min_confidence: 0.5
+    corner_continuation:
+      enabled: false
+  lcc:
+    heading_gain: 0.92
+  stationary_corner:
+    enabled: true
+    visual_feedback: true
+    yaw_sign: -1
+    visual_corner_guard: true
+    visual_path_margin_ratio: 0.06
+    continuous_cruise: true
+    step_settle_seconds: 0.25
+    semantic_max_age_seconds: 0.6
+  stationary_corner_calibration:
+    verified: true
+    yaw_sign: -1
+    evidence: outputs/corner_fix/20261009/stationary-turn/pulse03/runs/20261009T122223_336107Z_cfed3cd4/summary.json

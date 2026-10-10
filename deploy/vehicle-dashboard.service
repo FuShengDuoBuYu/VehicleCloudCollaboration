@@ -1,0 +1,18 @@
+[Unit]
+Description=Vehicle read-only HTTP dashboard
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=jetson
+WorkingDirectory=/home/jetson/VehicleCloudCollaboration
+ExecStart=/home/jetson/VehicleCloudCollaboration/run_vehicle_dashboard.sh web
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

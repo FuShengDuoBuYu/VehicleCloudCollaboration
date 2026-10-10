@@ -1,0 +1,19 @@
+[Unit]
+Description=Vehicle camera and YOLOPv2 observation only (no motors)
+After=vehicle-dashboard.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=jetson
+WorkingDirectory=/home/jetson/VehicleCloudCollaboration
+ExecStart=/home/jetson/VehicleCloudCollaboration/run_vehicle_dashboard.sh perception
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

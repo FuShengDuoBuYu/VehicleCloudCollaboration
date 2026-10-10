@@ -1,7 +1,11 @@
 """Asynchronous YOLOPv2 masks and conservative LCC corridor fusion."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from copy import deepcopy
 from pathlib import Path
+import math
 import queue
 import threading
 import time
@@ -19,6 +23,9 @@ class YOLOPv2FusionConfig:
     backend: str = "torchscript"
     weights: str = ""
     device: str = "cpu"
+    half: bool = False
+    preserve_aspect_ratio: bool = False
+    detect_objects: bool = False
     img_size: int = 320
     fast_mask: bool = True
     optimize_for_inference: bool = True
@@ -40,6 +47,11 @@ class YOLOPv2FusionConfig:
     required_for_motion: bool = False
 
     def __post_init__(self):
+        if any(type(flag) is not bool for flag in (self.enabled, self.half, self.preserve_aspect_ratio, self.detect_objects,
+                self.required_for_motion, self.asynchronous, self.drivable_only, self.adaptive_precision)):
+            raise ValueError("YOLOPv2 precision and image aspect flags must be boolean")
+        if self.half and (not self.device.startswith("cuda") or self.backend != "torchscript" or self.adaptive_precision):
+            raise ValueError("YOLOPv2 half precision requires CUDA TorchScript without adaptive precision")
         if self.img_size < 32:
             raise ValueError("YOLOPv2 img_size must be at least 32")
         if self.backend not in {"torchscript", "onnxruntime"}:
@@ -58,7 +70,7 @@ class YOLOPv2FusionConfig:
             raise ValueError("YOLOPv2 straight confidence must be in [0, 1]")
         if self.fusion_mode not in {"intersection", "validate"}:
             raise ValueError("YOLOPv2 fusion_mode must be intersection or validate")
-        if self.max_result_age_seconds <= 0.0:
+        if not math.isfinite(self.max_result_age_seconds) or self.max_result_age_seconds <= 0.0:
             raise ValueError("YOLOPv2 max_result_age_seconds must be positive")
         if not 0.0 <= self.minimum_overlap_ratio <= 1.0:
             raise ValueError("YOLOPv2 minimum_overlap_ratio must be in [0, 1]")
@@ -77,6 +89,8 @@ class _MaskResult:
     precision: str
     drivable_mask: np.ndarray
     lane_mask: np.ndarray
+    detections: tuple = ()
+    source_frame: Optional[np.ndarray] = None
 
 
 class YOLOPv2FusionDetector:
@@ -126,7 +140,10 @@ class YOLOPv2FusionDetector:
 
                 if config.torch_num_threads > 0:
                     torch.set_num_threads(int(config.torch_num_threads))
-                if config.torch_interop_threads > 0:
+                # NVIDIA's Jetson wheel can abort natively on a repeated
+                # setter call; do not reconfigure an already matching pool.
+                if (config.torch_interop_threads > 0
+                        and torch.get_num_interop_threads() != int(config.torch_interop_threads)):
                     try:
                         torch.set_num_interop_threads(
                             int(config.torch_interop_threads)
@@ -139,6 +156,9 @@ class YOLOPv2FusionDetector:
                     {
                         "weights_path": str(weights),
                         "device": config.device,
+                        "half": config.half,
+                        "preserve_aspect_ratio": config.preserve_aspect_ratio,
+                        "detect_objects": config.detect_objects,
                         "img_size": int(config.img_size),
                         "fast_mask": bool(config.fast_mask),
                         "optimize_for_inference": bool(
@@ -164,7 +184,8 @@ class YOLOPv2FusionDetector:
             )
         self.model = model
         self.int8_model = int8_model
-        self._models = {"fp32": model}
+        default_precision = "fp16" if config.half else "fp32"
+        self._models = {default_precision: model}
         if int8_model is not None:
             self._models["int8"] = int8_model
         self._lock = threading.Lock()
@@ -175,13 +196,13 @@ class YOLOPv2FusionDetector:
         self._sequence = 0
         self._submitted = 0
         self._completed = 0
-        self._submitted_by_precision = {"fp32": 0, "int8": 0}
-        self._completed_by_precision = {"fp32": 0, "int8": 0}
+        self._submitted_by_precision = {"fp32": 0, "fp16": 0, "int8": 0}
+        self._completed_by_precision = {"fp32": 0, "fp16": 0, "int8": 0}
         self._dropped = 0
-        self._requested_precision = "fp32"
+        self._requested_precision = default_precision
         self._straight_valid_frames = 0
         self._precision_switches = 0
-        self._last_switch_reason = "startup defaults to FP32"
+        self._last_switch_reason = "startup configured precision"
         self._closed = False
         self._queue = queue.Queue(maxsize=1) if config.asynchronous else None
         self._thread = None
@@ -318,6 +339,8 @@ class YOLOPv2FusionDetector:
             precision=precision,
             drivable_mask=self._resize_mask(drivable),
             lane_mask=self._resize_mask(lane),
+            detections=tuple(deepcopy(getattr(self._models[precision], "last_detections", ()))),
+            source_frame=frame.copy(),
         )
 
     def _publish_result(self, result: _MaskResult) -> None:
@@ -377,13 +400,16 @@ class YOLOPv2FusionDetector:
             with self._lock:
                 self._dropped += 1
 
-    def predict_masks(self, frame: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict_masks(self, frame: np.ndarray, captured_at=None) -> tuple[np.ndarray, np.ndarray]:
         if self._closed:
             raise RuntimeError("YOLOPv2 fusion detector is closed")
         if frame is None or np.asarray(frame).ndim != 3:
             raise ValueError("YOLOPv2 fusion detector requires a BGR frame")
         sequence = self._next_sequence()
-        captured_at = self._clock()
+        now = self._clock()
+        captured_at = now if captured_at is None else float(captured_at)
+        if not math.isfinite(captured_at) or captured_at > now:
+            raise ValueError("capture timestamp must be finite and not in the future")
         with self._lock:
             precision = self._requested_precision
 
@@ -408,6 +434,30 @@ class YOLOPv2FusionDetector:
             result = self._latest
         self._consumer_result = result
         return result.drivable_mask.copy(), result.lane_mask.copy()
+
+    def get_consumed_frame(self):
+        """Display masks on their original camera image, not the next image."""
+        result = self._consumer_result
+        return (None if self._closed or result is None or result.source_frame is None
+                else result.source_frame.copy())
+
+    def get_consumed_observation(self):
+        """Return the exact image/masks consumed by this control cycle.
+
+        The asynchronous publisher may already have a newer result. Never
+        attach that result's image to a decision made from an older mask.
+        """
+        result = self._consumer_result
+        if self._closed or result is None or result.source_frame is None:
+            return None
+        return {
+            "sequence": result.sequence,
+            "captured_at": result.captured_at,
+            "mask": result.drivable_mask.copy(),
+            "lane_mask": result.lane_mask.copy(),
+            "detections": deepcopy(list(result.detections)),
+            "frame": result.source_frame.copy(),
+        }
 
     def fuse_corridor(
         self,
@@ -529,6 +579,7 @@ class YOLOPv2FusionDetector:
             state = {
                 "enabled": True,
                 "backend": self.config.backend,
+                "max_result_age_seconds": self.config.max_result_age_seconds,
                 "adaptive_precision": self.config.adaptive_precision,
                 "straight_enter_frames": self.config.straight_enter_frames,
                 "straight_max_abs_steering": (
@@ -554,6 +605,7 @@ class YOLOPv2FusionDetector:
                 "queue_depth": 0 if self._queue is None else self._queue.qsize(),
                 "error": self._error,
                 "latest_sequence": None if latest is None else latest.sequence,
+                "detections": [] if latest is None else deepcopy(list(latest.detections)),
                 "latest_precision": (
                     None if latest is None else latest.precision
                 ),

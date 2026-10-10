@@ -1,0 +1,18 @@
+[Unit]
+Description=Vehicle lidar and depth dashboard publisher
+After=docker.service vehicle-dashboard.service
+Requires=docker.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=jetson
+WorkingDirectory=/home/jetson/VehicleCloudCollaboration
+ExecStart=/home/jetson/VehicleCloudCollaboration/run_vehicle_dashboard.sh sensors
+ExecStop=-/usr/bin/docker stop -t 8 vehicle-dashboard-sensors
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

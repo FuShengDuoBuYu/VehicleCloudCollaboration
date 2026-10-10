@@ -1,0 +1,1508 @@
+{
+  "created_at": "2026-10-09T18:40:09.193975+08:00",
+  "head": "fce828b89b084eda293e83b99c8861f522858d8e",
+  "sources_match_before_live": true,
+  "working_tree_status": " M README.md\n M car/autodrive/README.md\n M car/autodrive/camera/gimbal.py\n M car/autodrive/config/onboard_runtime.example.yaml\n M car/autodrive/config/onboard_runtime.yaml\n M car/autodrive/control/drive_runtime.py\n M car/autodrive/control/lane_centering.py\n M car/autodrive/perception/outer_loop.py\n M car/autodrive/perception/visualization.py\n M car/autodrive/perception/yolopv2_fusion.py\n M car/autodrive/perception/yolopv2_onnx.py\n D car/autodrive/run_lcc_web.py\n M car/autodrive/runtime/onboard.py\n M car/autodrive/tools/align_camera_gimbal.py\n M car/autodrive/tools/calibrate_perspective.py\n M car/autodrive/tools/capture_onboard.py\n M car/autodrive/tools/check_wheel_directions.py\n M car/autodrive/tools/pi_self_check.py\n M car/autodrive/web/__init__.py\n D car/autodrive/web/cli.py\n D car/autodrive/web/index.html\n D car/autodrive/web/server.py\n M car/control/README.md\n M car/control/vehicle_control/__init__.py\n M car/control/vehicle_control/hardware.py\n M car/longtail/detectors/__init__.py\n M car/longtail/detectors/yolopv2_detector.py\n M car/test/test_camera_gimbal.py\n M car/test/test_hardware_mapping.py\n D car/test/test_lcc_web.py\n M run.sh\n?? .agents/\n?? AGENTS.md\n?? PROJECT_INDEX.md\n?? car/autodrive/control/cloud_arbitration.py\n?? car/autodrive/control/cloud_worker.py\n?? car/autodrive/control/field_trial.py\n?? car/autodrive/perception/semantic_outer_route.py\n?? car/autodrive/perception/semantic_stability.py\n?? car/autodrive/perception/yolopv2_objects.py\n?? car/autodrive/perception/yolopv2_semantic.py\n?? car/autodrive/tools/replay_outer_loop.py\n?? car/autodrive/web/dashboard.css\n?? car/autodrive/web/dashboard.html\n?? car/autodrive/web/dashboard.js\n?? car/autodrive/web/dashboard.py\n?? car/autodrive/web/perception_monitor.py\n?? car/autodrive/web/sensor_publishers.py\n?? car/control/vehicle_control/base.py\n?? car/control/vehicle_control/factory.py\n?? car/control/vehicle_control/platforms/\n?? car/control/vehicle_control/profile.py\n?? car/control/vehicle_control/profiles/\n?? car/test/test_cloud_arbitration.py\n?? car/test/test_cloud_onboard.py\n?? car/test/test_cloud_worker.py\n?? car/test/test_dashboard_launcher.py\n?? car/test/test_dashboard_sensors.py\n?? car/test/test_hardware_safety.py\n?? car/test/test_outer_loop_replay.py\n?? car/test/test_outer_loop_trial.py\n?? car/test/test_pwm30_defaults.py\n?? car/test/test_rosmaster_transport.py\n?? car/test/test_semantic_stability.py\n?? car/test/test_vehicle_dashboard.py\n?? car/test/test_wheel_check_launcher.py\n?? car/test/test_yolopv2_objects.py\n?? car/test/test_yolopv2_primary.py\n?? car/test/test_yolopv2_torch_input.py\n?? coordination/\n?? deploy/\n?? docs/\n?? run_jetson_yolopv2.sh\n?? run_outer_loop.sh\n?? run_vehicle_dashboard.sh\n?? run_vehicle_experiment.sh\n?? run_wheel_check.sh\n?? skills/\n",
+  "source_files": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/__init__.py",
+      "bytes": 459,
+      "sha256": "11c47b57088f167e362f69b2549787f52592255348ccc0e2e8cd12e5310ec254"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/camera/__init__.py",
+      "bytes": 311,
+      "sha256": "019fe6e0f108d4b7906536848f1cf9b2c7f5c6e86aa30d5f4c3d1b2de156cd86"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/camera/gimbal.py",
+      "bytes": 3746,
+      "sha256": "47bbe820fbbd6095f971330818572cf0c25106289fa2f87de651c64ccecc77c1"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/camera/transform.py",
+      "bytes": 1557,
+      "sha256": "2befdca18b27a046843ec8607dde355a05ddaa0ecff24bfe969099d597e714e8"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/config/onboard_calibration.example.yaml",
+      "bytes": 481,
+      "sha256": "4e829cf54a1d98b4cd18e9b0f9204dc1400811a18a15a5a4561e8f8ed3d67252"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/config/onboard_calibration.yaml",
+      "bytes": 770,
+      "sha256": "0289a9e18cc2dfe5596dca6a6e734ab8aa1ded724255ce1373b60d6c4daff087"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/config/onboard_runtime.example.yaml",
+      "bytes": 4593,
+      "sha256": "ab14bbbdfc0b56fca886de77b82df5455219a332ad3042503c0cf4b80bdf1538"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/config/onboard_runtime.yaml",
+      "bytes": 14136,
+      "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/__init__.py",
+      "bytes": 359,
+      "sha256": "7875be89d35d6fae1216a614310f16d6a599d7cf853c2176db8748efd1a3187b"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/cloud_arbitration.py",
+      "bytes": 6670,
+      "sha256": "cfd3bc2f6ecb22e218570acb422558c2d7bef67132a9a095b23f5fa06f853aa1"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/cloud_worker.py",
+      "bytes": 6383,
+      "sha256": "946b8ac9416eb2e322044e85c04e3871896e0c8c9f1d19ecb08f2c7d73d3b7f5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/drive_runtime.py",
+      "bytes": 55557,
+      "sha256": "df920a3f8ac92ad4486a09af5feb744a1b3bfe9f7dd25479faad80869de34a67"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/field_trial.py",
+      "bytes": 3939,
+      "sha256": "66690f33d85f19e8f5357bda902e57aaf28c25c542c6d0d8a270ffd9fc4291ae"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/lane_centering.py",
+      "bytes": 20243,
+      "sha256": "3a348d9a02284e14e749a6a0230195190b68280074694ba0a7af06c0ed01f984"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/__init__.py",
+      "bytes": 347,
+      "sha256": "7aae4e56d49728e817d7246f5dfe30c6edc27b15b998b708d900878ef5c038c3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/outer_loop.py",
+      "bytes": 23024,
+      "sha256": "0d0c1dccae2749693c1fef0e01fbe6de6917d0440a325d2a88f13e94016ae6fa"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/perspective.py",
+      "bytes": 6337,
+      "sha256": "03d6de58ad243b2efda44f874f452107251a1e16ca0a227d5dd4b03a77fe0deb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/semantic_outer_route.py",
+      "bytes": 4853,
+      "sha256": "899b9578809a19ee9b5cb95a8a1ae520cf066ef811cffea41f9344843e32b813"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/semantic_stability.py",
+      "bytes": 2901,
+      "sha256": "2f3546bd05095734b44479dcdad02b465a90b2ce6eb4357e71b21843b87d7002"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/visualization.py",
+      "bytes": 6000,
+      "sha256": "631f3a2eda524b0d65f46e0747d29777c61c3b9c5e96d4480ae09eef1f56dd49"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/yolopv2_fusion.py",
+      "bytes": 26361,
+      "sha256": "9f349066ff0209aec5855512cbf569075ef9838c22616361d7542a53ebaa95cb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/yolopv2_objects.py",
+      "bytes": 2992,
+      "sha256": "347369b8daa1f8d56754fb4d3d2e7397b3d67971b4e23de19944a13c79d8fded"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/yolopv2_onnx.py",
+      "bytes": 4430,
+      "sha256": "c0ce951c742a0848187e4a6790015a288423e185929aad3d63afcac4bb2dba48"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/yolopv2_semantic.py",
+      "bytes": 5617,
+      "sha256": "9c5b03a996e8c05fa548cdc5c999e2589aa6b440bb782fb803429c9a3e89fbcb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/run_onboard.py",
+      "bytes": 347,
+      "sha256": "327d918c0031586e433e70611f493ef7701932b7ed0010abd1436ea08b0aa8a2"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/runtime/__init__.py",
+      "bytes": 41,
+      "sha256": "cabc25f4b056adbdefe8c74936f5bf8bb0347bd4d85b9b728d7d5783051335b7"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/runtime/onboard.py",
+      "bytes": 80218,
+      "sha256": "0976a40fce8e308136c4bf97190aae56a770da19252e64cee92b0db4ad7fc81c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/tools/__init__.py",
+      "bytes": 62,
+      "sha256": "f9157434ef0b3253c124bcc8d8387f43ab1d7c41dd09e51e1d0bfb9746e18b51"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/tools/align_camera_gimbal.py",
+      "bytes": 4654,
+      "sha256": "0187273d756e281727a324ccea70127e3a83075a2054f8e1f350b4d21425262c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/tools/calibrate_perspective.py",
+      "bytes": 6777,
+      "sha256": "b0e1812d406dad6f1d380144c67b6fc717a4f46a7aff5b7f47cbcda87d433db6"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/tools/capture_onboard.py",
+      "bytes": 5839,
+      "sha256": "122a11e6a53f4cd2506f161db3d0a541045debb540aadef12411398fa406c525"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/tools/check_wheel_directions.py",
+      "bytes": 6645,
+      "sha256": "aae0deb0367c50de0333b28b47c17094f9184b9bb4f0e8b9f7a94e6ee6e627e9"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/tools/pi_self_check.py",
+      "bytes": 7391,
+      "sha256": "f2e6e3738765265208b79445bff61eddb4800e9698dd7d0aab1a39dd259f3413"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/tools/replay_outer_loop.py",
+      "bytes": 17055,
+      "sha256": "422936508966280f8c82384ce073c9b25664c23c9ce01ba05da4b694faac6dff"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/__init__.py",
+      "bytes": 60,
+      "sha256": "6b52a55d915fb2b0e02e00553cd04b496406c214eaa5fdeec28be5cae5f05ff3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/dashboard.py",
+      "bytes": 20763,
+      "sha256": "d00232134a981b105f295650a76381daa656ad01e13101b103a3a8849bf13de2"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/perception_monitor.py",
+      "bytes": 1299,
+      "sha256": "825b9079f84dbf858b6743764217c701294a90e14f5e57d6b1861aca3d2cdc75"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/web/sensor_publishers.py",
+      "bytes": 10126,
+      "sha256": "51994af02443c8b5c76db0dff19b041553f64f52e1511c4985298d6b40f2e3bf"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/utils/McLumk_Wheel_Sports.py",
+      "bytes": 5219,
+      "sha256": "6b3d9e0a3f76b051cbab9f2cec99942bed727b308dda0f2eeb641969bb24fc5e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/utils/Raspbot_Lib.py",
+      "bytes": 15523,
+      "sha256": "9c21c7c43aeaead180e9cfea91e87510c086627560a5d1b5b1a4b3508ea7371c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/__init__.py",
+      "bytes": 289,
+      "sha256": "a653132230bf47a1dbfed75fe54f080a345d9650dedada6718d746e3c67a9623"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/base.py",
+      "bytes": 9872,
+      "sha256": "2c9b4d97fdb115467e4c9cd6a02f2eaff5f6635bfa65d1ecf9a8e5fb1fb6a85e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/camera.py",
+      "bytes": 4773,
+      "sha256": "937042c9912e4e489393bd3b0180b37d8535d8e8722238ae726779f32bb1f757"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/factory.py",
+      "bytes": 4720,
+      "sha256": "347515a0544ee16baed58215baf16857912908196bc980e8a974455e2a052c28"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/hardware.py",
+      "bytes": 687,
+      "sha256": "2bcc6ca83484483d2bbda10b07a4582c1e033a3c12a73032d727726702d21343"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/platforms/__init__.py",
+      "bytes": 61,
+      "sha256": "9d26eccc4b8fc8f5140b1cb88524e7e0c2fec7f70044f376f0e2557fd58a394e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/platforms/raspbot.py",
+      "bytes": 1851,
+      "sha256": "2ce564d22a336be847cee5adaeb4e28218d32c8b23e2ddfc241191800e460591"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/platforms/rosmaster.py",
+      "bytes": 3404,
+      "sha256": "4fbde98a8662bf230550cbbc49f63d24006a2f9ff06866ffd7091ca7bfaa2af2"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/platforms/rosmaster_transport.py",
+      "bytes": 10539,
+      "sha256": "89f9fd9f95df2f99e14b156ebe91d5b44157260148c99efcdd39eb68c1b0d3ea"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profile.py",
+      "bytes": 3322,
+      "sha256": "98dd815f77012ccfcddfc21b62a0d2bcdd212a48cb226b9c14a78a8e02962ad2"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profiles/raspbot_pi5.yaml",
+      "bytes": 1199,
+      "sha256": "13a4418b068118534dc8e0e0ac332d03fdf1cd33be0534151552e58d75427a17"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profiles/rosmaster_jetson.yaml",
+      "bytes": 1858,
+      "sha256": "96689b019e3ddbaa584ac5ca9fe8484967318fd86511f6bcd46d9caa240a7cba"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2.yaml",
+      "bytes": 3238,
+      "sha256": "4c41779e255869edca698f540613a0640ddabc1dc90fdad41f51bc2364c226f7"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2_outer_trial.yaml",
+      "bytes": 3598,
+      "sha256": "521d044815819fbeac2c1d436777cd809492df4d6b4582d253f1c767f7be6643"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/settings.py",
+      "bytes": 227,
+      "sha256": "4cbd8039ab6610825edaa0f2ef036569c2df23040ff372010f4cf3060159c0bb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/benchmark.py",
+      "bytes": 3426,
+      "sha256": "b84a9ec74b74bd6b7799a505e0a3bb522a38fab41c0b8376f690e9c8cef4cbd8"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/classifier.py",
+      "bytes": 5092,
+      "sha256": "57098479bfda9209e09436ea47f9dce4c3e5ca59d96da7b417e192f3fc347a7c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/detectors/__init__.py",
+      "bytes": 648,
+      "sha256": "f82c6a46882b44f11406e212098f316d9193586ff7772eaba20c39507f128a6d"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/detectors/base_detector.py",
+      "bytes": 1157,
+      "sha256": "b6a908d28ae69ab31b45b8da44450afe7b7bed69831405290e55ca6d1e233217"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/detectors/clip_detector.py",
+      "bytes": 4899,
+      "sha256": "c78b588893f1d474bfe5fb02efcb28d41d0e764c0ad903d9ba0204b850b3f337"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/detectors/yolopv2_detector.py",
+      "bytes": 15684,
+      "sha256": "7a375461ee5e59710fbabab9c336db5fd99ea5779f1a7f0f16cdef405cee9b51"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/detectors/yolov8_detector.py",
+      "bytes": 2293,
+      "sha256": "cb673187f0cd10a1f17b597de64879017cc7d3616723e92f4b42e3ed02377012"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/env_config.py",
+      "bytes": 10423,
+      "sha256": "4b5af1e81057caecdc7f99a3ccacf1a4606f30f361820cbeab7708547a8b5f95"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/evaluate.py",
+      "bytes": 4739,
+      "sha256": "a35b00787a704b453adbfc3c7843e7736e3ef0b573f8bf9697dd178a94b9253a"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/closed_loop_test.py",
+      "bytes": 22648,
+      "sha256": "0a885e1f2313f26933c98db497f7c5e381605e41d99abc3a7e85091a3a262bcb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_camera_gimbal.py",
+      "bytes": 3677,
+      "sha256": "1fc33e7d59362515ec14b58841b1046e688a681e0cb53d514c6fb6ef143dd0ea"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_camera_transform.py",
+      "bytes": 1244,
+      "sha256": "a13e1bbd4c44d422ec29692e5863d645ebeeea956850b980ef431aed4437e5c4"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_arbitration.py",
+      "bytes": 4724,
+      "sha256": "71403d112570b97eccafe063a7e756266588d4e7d7c7dc3881ccb4f6d4ebd6ce"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_onboard.py",
+      "bytes": 3482,
+      "sha256": "bf5eb9616cab565e8847cad325165e5b5366a945da8bcec6b37eff2d137a0c16"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_scene_client.py",
+      "bytes": 9862,
+      "sha256": "747aab01498dd34cad1200d58f7074e05a95f682833b0e21aedfdb298a7850af"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_scene_http.py",
+      "bytes": 9123,
+      "sha256": "0a43da0d5593084030c7ab9b24acb7d0aec28be2954b12edd283fcbaac1523fd"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_scene_realtime.py",
+      "bytes": 8015,
+      "sha256": "8da456c9b2e631a7d13a7205fa030a5ef7f5396ff2acc1f7ab655bc99666f061"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_scene_worker.py",
+      "bytes": 5662,
+      "sha256": "5cdd5207545df0826f00e2aa325f7b36717eb9896b894ea402ce046e356ea9a2"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_scene_ws.py",
+      "bytes": 4164,
+      "sha256": "a0fd5c69f4c18389384e9268ea8d90ec7c884158797512d6db7de694facf5315"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_worker.py",
+      "bytes": 5818,
+      "sha256": "b10a9269cb874bdf41f99db75219dace14a5c85f7597c2979cac0308ab0d18e6"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_dashboard_launcher.py",
+      "bytes": 1726,
+      "sha256": "bb8612c34e472de7288eec338ad8d581163c3dcf379accefdf49bcbad1972883"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_dashboard_sensors.py",
+      "bytes": 2856,
+      "sha256": "ea5127659606a7478a3e9c2708199a1c47ebef2b53d8e5e1f821237907c40e90"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_hardware_mapping.py",
+      "bytes": 4975,
+      "sha256": "5a8d2db725f081eea54eede6d76a6ea6575bafef74eab139fee322563a219c3b"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_hardware_safety.py",
+      "bytes": 7930,
+      "sha256": "a0065a362a457c7927e7a465f326bf318423f61cbf6bbf8632217f12817634ea"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_lane_centering.py",
+      "bytes": 93211,
+      "sha256": "cd4df6fa3575b0e2fc5a6d854478e83acc772a7695ee87e965c28352686290ab"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_outer_loop_replay.py",
+      "bytes": 5228,
+      "sha256": "7b9d59e7616c4bac1d5fe9265e97ebff922565f9a7c1974dbb0d74ef45f71e43"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_outer_loop_trial.py",
+      "bytes": 8839,
+      "sha256": "fbf73022de0e9b3aa21ed3c5f7ad42890178e2f6c947c1d32dec2b7728e1836e"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_pwm30_defaults.py",
+      "bytes": 2463,
+      "sha256": "32b67e251a70c6063af1abeaad39c3a549f98267cd9d00992e43e17eb805ae65"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_rosmaster_transport.py",
+      "bytes": 8378,
+      "sha256": "0d2da19d1ee60489d9a4b70588fd9b4bd9f5a5eff7e27fe5b211b2876cd1d9c9"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_semantic_stability.py",
+      "bytes": 7024,
+      "sha256": "22a10ee6c6f68a361ab90e3b9245958f77940e66d13245a04fbba49141fc18f3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_vehicle_dashboard.py",
+      "bytes": 7716,
+      "sha256": "b102d572cd670b73a34b4f3f6c0eac2470c3f1980be41ef07eb5e79f8d15f456"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_wheel_check_launcher.py",
+      "bytes": 4863,
+      "sha256": "8956c298e16268af7cb5e57dc8f4c86a446c450d23fc8da5ae64f5e41c1a8296"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_yolopv2_objects.py",
+      "bytes": 1615,
+      "sha256": "626e45cb53e7bcb02ea1f082f35404f275778a7c07007fb63de1ed7c0ae76c01"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_yolopv2_primary.py",
+      "bytes": 10777,
+      "sha256": "0a56fdd4c1c047d808d9fdc9b2aeb51baf3f5b243da976e3ae5052233463ecd7"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_yolopv2_torch_input.py",
+      "bytes": 2392,
+      "sha256": "dcc5b73480d2e59594e48dcc48329e00e9fe41fe2ff1881b06497de1938f39d5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run.sh",
+      "bytes": 247,
+      "sha256": "bc1c321a45451c31eb2dc972794d53c00f493f0f803e136f0a12a91c06a3aa1d"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_jetson_yolopv2.sh",
+      "bytes": 622,
+      "sha256": "343234408cb5c0e1248a3dadac0625b2cf1de3a0c7fd067f684f1e31380f9532"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_outer_loop.sh",
+      "bytes": 2318,
+      "sha256": "7602b2922d969292a48a00d4ded7d11bf51d829d33236a068cb96614f0cf5a25"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_vehicle_dashboard.sh",
+      "bytes": 2264,
+      "sha256": "7ca198425a231633a433592ed5f1e5fe7ee2583fd7b7f798b730e9136ce62804"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_vehicle_experiment.sh",
+      "bytes": 1402,
+      "sha256": "28b11c7f99a8cb04b338e5d1ea0d211d771d4e6e7c5afe837d6a3d8a99835cd5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_wheel_check.sh",
+      "bytes": 2252,
+      "sha256": "8d9bc889320740f994190ffbf3021fb2f8407bcf016136c6de748879e39a1b11"
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "20261008_102919_383989_hardware",
+      "frames": 97,
+      "lossless_inputs": 31,
+      "files": [
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/annotated.mp4",
+          "bytes": 1512375,
+          "sha256": "012a60bd69dd5c50aea130ed58311a526de76d9b232bc9d411b40e949738dad6"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/onboard_log.csv",
+          "bytes": 41662,
+          "sha256": "e9428b42c294a91d8eb7c74fcf04dd4d48820a462d70b9388904078a1a059dfc"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/raw.mp4",
+          "bytes": 3364474,
+          "sha256": "ae76159207ee65d1e033b9e353a7edf1fe911de9825ca2d874c71b586b2df8cf"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/resolved_runtime_config.yaml",
+          "bytes": 6044,
+          "sha256": "81777be571f179837ae9bf61ae10757949470fd6c5f0fbcf677fd0a32b829f2c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/runtime_config.yaml",
+          "bytes": 14136,
+          "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000000.npz",
+          "bytes": 1076732,
+          "sha256": "dd8a7513d1d1b22ee4d34a9202fcaa3568d7a190300f780d35ad5b49948525a3"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000001.npz",
+          "bytes": 1076732,
+          "sha256": "845d34d364a5e082ef92fca195e5044d3d9c363e778b85831b33fed6546a25fa"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000051.npz",
+          "bytes": 1076732,
+          "sha256": "7f41134ed10382eaa8ef2c1193420f09a7e85ea5976b17a0247293751b9e6b73"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000052.npz",
+          "bytes": 1076732,
+          "sha256": "7d4c3728b3faf0d3c0664acd5da947b9c590b3be9fa38660e592178e3b161dab"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000054.npz",
+          "bytes": 1076732,
+          "sha256": "dba3f10050ebab4b4024aa5d9e1b6c4eb7621023ce1c741149350b4c7176d416"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000055.npz",
+          "bytes": 1076732,
+          "sha256": "76d3fad44fd539ce7264037460d91327abbcc62a6af5db5b1c8c5f21876ff286"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000057.npz",
+          "bytes": 1076732,
+          "sha256": "388d01df603caf571b5b0a107fcc8b0ab5b82ff4ddb86ebef7e5bf0b4765652d"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000058.npz",
+          "bytes": 1076732,
+          "sha256": "906a9e43510548af172873bd0a62232da9f6132ee8e15b65812c570765a67e8c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000060.npz",
+          "bytes": 1076732,
+          "sha256": "684658ce1dced4a1f4c0d7740330949bdaeacfb024882a5a3636509e2cf291e4"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000061.npz",
+          "bytes": 1076732,
+          "sha256": "eb32d49559f368a2797e6106910e8f4a24a3d056a8762087a28aaad308b5d2d6"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000063.npz",
+          "bytes": 1076732,
+          "sha256": "64e58b08f0b176dd0148ea4d0dcbbae55875b7aa7167bf204f37fcf2d418be68"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000064.npz",
+          "bytes": 1076732,
+          "sha256": "f0ce173f762cea53c172253533d00586109f57a057419151f432d151b1a6539f"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000066.npz",
+          "bytes": 1076732,
+          "sha256": "b4a0da16ac836d3198d2ae713ebb3bca1eb7c7114b35ebba11867fbe369b75ed"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000067.npz",
+          "bytes": 1076732,
+          "sha256": "a50c7300efbeae33b1f3e9e002ba6368f97b6e9e17626f933b903e172b37cdf7"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000069.npz",
+          "bytes": 1076732,
+          "sha256": "7da46f24ae2d1b5a0a84fd5a70d5dd5d7ee33005f1b6eaad980b561489ceb9e0"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000070.npz",
+          "bytes": 1076732,
+          "sha256": "67fd2edbf5aea39a9754043fd23a97c3e5371a5c1b5b61e46857d6e30c9a9f69"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000073.npz",
+          "bytes": 1076732,
+          "sha256": "6eae2136f76d8d89c8a0bf2bccb817af9eb5630c249592f1b6ce43d166db951b"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000074.npz",
+          "bytes": 1076732,
+          "sha256": "ef47dc71dd0029028fb8aae6c2e60b1530a22a62ae3680ca00beef1f12b00ce6"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000075.npz",
+          "bytes": 1076732,
+          "sha256": "473e0c3587928b42b23beb7dc628ef5e392ff088c0b41b3c44753f8431d0b2e2"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000076.npz",
+          "bytes": 1076732,
+          "sha256": "467fb0e1ccfb43a676ba6470f33ba9ca0f1f8ab839560e76f4b82cf9dfd28484"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000078.npz",
+          "bytes": 1076732,
+          "sha256": "c6c801ad1b8d156c826f4d9d785eaad06cdb8d1bcec12f7328e75e01929c051c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000080.npz",
+          "bytes": 1076732,
+          "sha256": "456ca39a7d60eafbc46c85d5644c6bcc4c9ad75edb71b477d1b4cbcc2bb5dc3c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000081.npz",
+          "bytes": 1076732,
+          "sha256": "c3d94afe8985fe648212c1ceedfb1e410ed5bd714393bb119234cc5ee09cd2aa"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000082.npz",
+          "bytes": 1076732,
+          "sha256": "a657a7b9350074d578dd0b409ea270c4cb6c2a322a26176a9f0b9dbb9917e3f8"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000084.npz",
+          "bytes": 1076732,
+          "sha256": "d0123510458e9c6550ae0be8939cd5f31fafb16e9615d42d10964085cd9c0c71"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000085.npz",
+          "bytes": 1076732,
+          "sha256": "9222ee15c3d42d5da44f1d9837cb78e39f86abb3eb42e42f1ea5e20b6ae8b1af"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000087.npz",
+          "bytes": 1076732,
+          "sha256": "59c9d7a80db737295f04a2bdb1bc7b4ec3de2885d4f1ae5ff0ae9ea9cd6bf38d"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000088.npz",
+          "bytes": 1076732,
+          "sha256": "36baba7361619eeaf03568801044286d62a5dbf8591aa33756461b3513a97ac5"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000090.npz",
+          "bytes": 1076732,
+          "sha256": "f8ebb1baeaea96b03fb6a0dbe968e195309b7d246c924e6c521d862de51ab621"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000092.npz",
+          "bytes": 1076732,
+          "sha256": "c8eed11dbe093229359ea8171769c9c90f7ce88815e4876c7f01d09b1f87bd75"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/semantic_inputs/00000094.npz",
+          "bytes": 1076732,
+          "sha256": "cc6ee6c4e692695d5b5e1ddd17a022d578b88e4fffda149697517caeae8c889a"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/status.json",
+          "bytes": 7638,
+          "sha256": "447cac532ab44dea10b9cb4768a571153b1b15cb8b63f15babd794a89b8e90cc"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261008_102919_383989_hardware/vehicle_profile.yaml",
+          "bytes": 3598,
+          "sha256": "521d044815819fbeac2c1d436777cd809492df4d6b4582d253f1c767f7be6643"
+        }
+      ]
+    },
+    {
+      "run_id": "20261009_062319_615690_hardware",
+      "frames": 94,
+      "lossless_inputs": 31,
+      "files": [
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/annotated.mp4",
+          "bytes": 1399251,
+          "sha256": "debba1b81a99a642fc144cde7df0c82074a7f938d6aa06563c64e106caf15bf7"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/onboard_log.csv",
+          "bytes": 40316,
+          "sha256": "f1c81ee8da9acf3f76eba0065b2f85945cd89056bfaf26686cab8fb00f8fbd8f"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/raw.mp4",
+          "bytes": 3109761,
+          "sha256": "1ebb6ee68d2d56f12cabfdf4f17779084ddf5d5f2ca33dc351fe4f50861c8f74"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/resolved_runtime_config.yaml",
+          "bytes": 6044,
+          "sha256": "81777be571f179837ae9bf61ae10757949470fd6c5f0fbcf677fd0a32b829f2c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/runtime_config.yaml",
+          "bytes": 14136,
+          "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000000.npz",
+          "bytes": 1076732,
+          "sha256": "59ad91671fdbc83e587988498045acdc99fe5cbef34fc03db8838c954d5fd80c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000001.npz",
+          "bytes": 1076732,
+          "sha256": "10784275bac5cfe5cb7143882c8bf138e57586373b7cb24658e131444d6454b2"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000051.npz",
+          "bytes": 1076732,
+          "sha256": "e78a67243f153d5af4f7b09a9c54f2a997b9be6a62cabb5f12a17f3c0a3e5803"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000052.npz",
+          "bytes": 1076732,
+          "sha256": "96667c27fb8a9e806b7a935289b6907b3c1625ac2f911291e79628e99a692d69"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000053.npz",
+          "bytes": 1076732,
+          "sha256": "2622e8ee635a7992b3f8adcd257a3f5eede1dce4aeff7f3b65900c0f66c2fa1a"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000055.npz",
+          "bytes": 1076732,
+          "sha256": "1b2d0b04ebfaf69857daf88275b659a023fd748d2f5d1087ecbeed65e134e182"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000056.npz",
+          "bytes": 1076732,
+          "sha256": "8b58327a34f2fad536fccd60eefb80e9fc8a2f866b8a6fcd99c3b103d1e28fb5"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000058.npz",
+          "bytes": 1076732,
+          "sha256": "bb62a462bd1c16dfbf91cbebce2447f0d104cb7a56d551fb143b30840d30f056"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000059.npz",
+          "bytes": 1076732,
+          "sha256": "77847ff158cca3445aaaa2b0348b19db9faf586905d2dc3abe53b814b849c404"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000061.npz",
+          "bytes": 1076732,
+          "sha256": "172d4b4392cef6de5fc8e9d9d638f4f0717a6acd95006c0662184ee4d144f1c9"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000062.npz",
+          "bytes": 1076732,
+          "sha256": "0234221dc9884e1a250e05c146cc9724b4c6474a1e0c345dbae83f441fbb936f"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000063.npz",
+          "bytes": 1076732,
+          "sha256": "e11ec3d7108cb0e5a0f10c7aea732037a9ff53b7f83c7a8c77708cb40b8c816f"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000065.npz",
+          "bytes": 1076732,
+          "sha256": "c3dd72c17ef1ac2253c04d2cc4da052ebca136f64814246eeeac3ef1e10e3046"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000066.npz",
+          "bytes": 1076732,
+          "sha256": "e87ccd17e4ee0733d012fdd9904968d966f927e1ec27482f9782273f64bc30a3"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000068.npz",
+          "bytes": 1076732,
+          "sha256": "64207e6302eb8fdd6e8fba43d1a8a4c2fa0bf2204370830c61851b524bc0f3fa"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000069.npz",
+          "bytes": 1076732,
+          "sha256": "f9d918e61f3f9a2c272b93d3a8a896cdd658f69bd8f8fd3282093ccabc2330f8"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000070.npz",
+          "bytes": 1076732,
+          "sha256": "51f2e73adbd56e0ae0f572f4e3a754243866aba0b3d69fbc731f10e85b80776e"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000071.npz",
+          "bytes": 1076732,
+          "sha256": "fa2005f19d0bc95741d976965c8da3fb32f1fb81bd967419f8fd8ab37c879b1f"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000073.npz",
+          "bytes": 1076732,
+          "sha256": "374c51cf1e0b32e79ee54fc65870b1560d3a58730b501386dfb230f7760dfef4"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000074.npz",
+          "bytes": 1076732,
+          "sha256": "4892429baea2bb64243b5567bbef232b013145ed765ba13d81e8eb606fb87128"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000076.npz",
+          "bytes": 1076732,
+          "sha256": "fe1bbd3833878609a18e0e718d30266134b19228396270e96357fd2b6986789e"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000077.npz",
+          "bytes": 1076732,
+          "sha256": "5c74bf7bf494076a1aed2925b90c4e12d1d383a36e31dbce18315d771237d6de"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000079.npz",
+          "bytes": 1076732,
+          "sha256": "435ad0c358c3975200b00ce342086fa7e6a8e5f639e3d77af18d3a59c7db5c4d"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000081.npz",
+          "bytes": 1076732,
+          "sha256": "4700ed86488f98154476a39388891295e36ce6acab1d81f711dfe1d0c7eababe"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000082.npz",
+          "bytes": 1076732,
+          "sha256": "d7fb23fa39186fab9916f3388594dfd3e986f2f1aba1865325085f9e8c1e01eb"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000083.npz",
+          "bytes": 1076732,
+          "sha256": "f185f64f5f9414fa0d567c53c45db6d8b51ee117eb1580d756d87eb890118b83"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000085.npz",
+          "bytes": 1076732,
+          "sha256": "15fcf8569162216788a785213e816e304aac6f50b0c693d99b5cf8e4c695a8a4"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000086.npz",
+          "bytes": 1076732,
+          "sha256": "487bf6b5246782e7de33cfa85fd8f2cffd63a717b1869119b89887f59f8bd821"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000088.npz",
+          "bytes": 1076732,
+          "sha256": "1208a1ac780e477821bc15908fbf6c69dd7425ba098a6bd33889002ed6958912"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000090.npz",
+          "bytes": 1076732,
+          "sha256": "c72ec5315f11df6e5249def1394a65cbd744353db1ab1d59b56a26189b59525d"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/semantic_inputs/00000091.npz",
+          "bytes": 1076732,
+          "sha256": "9188cd7283273414e7abfe4db0aa7495cbc3a3771fc2969159980249ca8b1eb9"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/status.json",
+          "bytes": 7626,
+          "sha256": "99640deddcb5891a2002e596d4dd1a4a128f1576f449e0cf0b84284e4e49047f"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062319_615690_hardware/vehicle_profile.yaml",
+          "bytes": 3598,
+          "sha256": "521d044815819fbeac2c1d436777cd809492df4d6b4582d253f1c767f7be6643"
+        }
+      ]
+    },
+    {
+      "run_id": "20261009_062434_232590_hardware",
+      "frames": 129,
+      "lossless_inputs": 55,
+      "files": [
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/annotated.mp4",
+          "bytes": 2263631,
+          "sha256": "194e7994d9f5805b77a2f9b8ac3534652ab8eb78bf7ba781ce2f219e13ce56be"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/onboard_log.csv",
+          "bytes": 55223,
+          "sha256": "257dadb39cfe46d0510fe4370f7efc6b783434a6ccdf721f2354b46012828938"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/raw.mp4",
+          "bytes": 4239480,
+          "sha256": "38212520c2bf96778814a9fee687465e5d1ca7ff22a39df4771e01ca26d6b5d4"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/resolved_runtime_config.yaml",
+          "bytes": 6044,
+          "sha256": "81777be571f179837ae9bf61ae10757949470fd6c5f0fbcf677fd0a32b829f2c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/runtime_config.yaml",
+          "bytes": 14136,
+          "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000000.npz",
+          "bytes": 1076732,
+          "sha256": "5d3dde16a94bcbabfd58c03a54c325c640d6bba68b9ea3eaae33e94f42b0c428"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000001.npz",
+          "bytes": 1076732,
+          "sha256": "a4c8885e0fed4d73564b69dff97a242df7de0b80dbda7588659576a48a2e5a5a"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000050.npz",
+          "bytes": 1076732,
+          "sha256": "b642dfe72cb39c119bd171afc108faa9b7c72ad7ed39cf883f2065a07f14f777"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000051.npz",
+          "bytes": 1076732,
+          "sha256": "78c8a9c8586f34ed50ef00abb0f221321e3a5b0e08af81a2e96033ba85834207"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000053.npz",
+          "bytes": 1076732,
+          "sha256": "7bb50abce3ef078727d24d88562b7c2d8401edfefa6e3de3300c6f98a7876103"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000054.npz",
+          "bytes": 1076732,
+          "sha256": "ac6fcad28fd24af5806b4c5de12481ad62defc21e9480c78c02919bc068e358f"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000056.npz",
+          "bytes": 1076732,
+          "sha256": "7267525106d7a7b5f5cd7ff891d7235a58d919ec67994a9ed4a09d2c5b03ea0b"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000057.npz",
+          "bytes": 1076732,
+          "sha256": "7b3a03d6dce282e3b9ee112a562896132064d90af6f88b1532b7d2e3c75aa6ef"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000059.npz",
+          "bytes": 1076732,
+          "sha256": "c099e87dd7e225649960b814ea98981927afc6178d549b9e9173dcaed1608ff0"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000060.npz",
+          "bytes": 1076732,
+          "sha256": "958e8fe8bdc155257c03cb55ca8f4874645fa308574a2fa711979fe53b11ee05"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000062.npz",
+          "bytes": 1076732,
+          "sha256": "fe5737c6e8e6d67532f4a7b0a0ab65931e6d500ad5697fa50f0854bcb81c36e2"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000063.npz",
+          "bytes": 1076732,
+          "sha256": "78d265398f27146eee069834a2b0de6bd5a0a351d2be26f641275bac363ffefd"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000065.npz",
+          "bytes": 1076732,
+          "sha256": "97de0b139815b3dcc37694d9de6d84fc152acb28f864a8443694408785494049"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000066.npz",
+          "bytes": 1076732,
+          "sha256": "7f43fd86b3ddda87698961e515091ac91c1fc4e0291c1128ccfac1251feccebd"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000068.npz",
+          "bytes": 1076732,
+          "sha256": "908d61e353f6269a254c4e4a9bf6a333bbefffc835c09483d9ee5f8506588f36"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000069.npz",
+          "bytes": 1076732,
+          "sha256": "fe748fceafd64947ceb12094bd4849dc2ea4d15ade740908c3af3fc16d6efafd"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000071.npz",
+          "bytes": 1076732,
+          "sha256": "f744ac5d49b65d41551c6d6eff295d93ba80bf29cb5c5393f3a02b8c3ad4619c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000072.npz",
+          "bytes": 1076732,
+          "sha256": "6266ad8ab761ffea5b9fb8627821d62d19cd21a189dff7134abe252e43e90328"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000074.npz",
+          "bytes": 1076732,
+          "sha256": "6bf25c59dd0058706a7e0d439a19dabe8d25fc1ba0eb97d3190ac390dd6ee0b5"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000075.npz",
+          "bytes": 1076732,
+          "sha256": "5505cd004759a8d659e1d7bd93a00ce570e7b2b57947bc62ab6edd96de2791fe"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000076.npz",
+          "bytes": 1076732,
+          "sha256": "60aee7c553927ee0534bb4b008ccf74dcd64c29cdd9b0303a70ff0196ced40e9"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000077.npz",
+          "bytes": 1076732,
+          "sha256": "e4b6e12ded556f10947166324d98f84037c8f7d39290f4269be348448c406b34"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000079.npz",
+          "bytes": 1076732,
+          "sha256": "509d6d42c089caafe648fbf448eb2f20b8d1e52a934902a1265c808bfa629ee8"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000080.npz",
+          "bytes": 1076732,
+          "sha256": "5ccc3d42b28ba4ebcc7a723191849ee56ef5b421c488a383a8af0ca9526bfaf3"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000082.npz",
+          "bytes": 1076732,
+          "sha256": "d97258e9157addbe15c17c20347d6e5dd4bf473462389eb2e79d6f96161fd4dd"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000083.npz",
+          "bytes": 1077296,
+          "sha256": "31402dbcb52dc40770c17da2af9c72636c8288ec8341703bea935611a647889a"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000085.npz",
+          "bytes": 1076732,
+          "sha256": "5f279706a2c6f1cf82b2c6ffee2ccb618c53ddcfa6eb0e1520697f7be1102143"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000086.npz",
+          "bytes": 1076732,
+          "sha256": "3df751c98eb11e514df405df5b92f98f3e43077898fc01b806a78717b877be0b"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000088.npz",
+          "bytes": 1076732,
+          "sha256": "e56aa4c3216d3dc46f4de81dfae58e014abc33f4092325a19f8064abb78e487b"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000089.npz",
+          "bytes": 1076732,
+          "sha256": "cd74cee89806839c6dd1515dd13b976c121aa2a7214e06c97ef261a491149129"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000091.npz",
+          "bytes": 1076732,
+          "sha256": "77e7862284e3b5d4e05802d49fdebac08193ac83d389c9a7ca095738983cb075"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000092.npz",
+          "bytes": 1076732,
+          "sha256": "63c28661b9a8665e464a4a219cd5bc933f8615dbff89c6d077ba838ceb0c83c0"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000093.npz",
+          "bytes": 1076732,
+          "sha256": "2c2156c32bf7013751cac9cbffcc6b52722ae9a96378ccc79665e0c19e3c5c6b"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000094.npz",
+          "bytes": 1076732,
+          "sha256": "1dbb6ad8c3bd24d4fb6089eb7dbac07dee6ea9856b3ab3e5357fe07c1e4885c2"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000096.npz",
+          "bytes": 1076732,
+          "sha256": "19a4bf1132061213a9ade8d7d57c675da869d37923664ae1b8edab3a1948dcb1"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000097.npz",
+          "bytes": 1076732,
+          "sha256": "8b2ead2d4764efa06847aa8fb1536b5685a30b5a30a7392337d3957b0190a386"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000099.npz",
+          "bytes": 1076732,
+          "sha256": "dc276d5ef4b385a8d9fb32d31b03724536b8f5ea2413059838df040d84f285ac"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000100.npz",
+          "bytes": 1076732,
+          "sha256": "30558c84e5d0e68ce6c9dac51494d4db9f0fcfdcff522e36d20d8d5f69582696"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000102.npz",
+          "bytes": 1076732,
+          "sha256": "5b7ed994c3df2c5d70ed29ac398727ac855a5e1e253eaf1b7179392ef876c6c4"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000104.npz",
+          "bytes": 1076732,
+          "sha256": "970007c599cf85393c0f65580d52f9238dad1bd05ae9c2fa0a98e4453dd72206"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000105.npz",
+          "bytes": 1076732,
+          "sha256": "8370563cd088837b78d1cf2de92529fca83c2be23777db40c4c7b9afe7abd647"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000106.npz",
+          "bytes": 1076732,
+          "sha256": "ef35a6bdbcfb9460087de37d33210880a3df34d45e307c1f789feabcc7612023"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000107.npz",
+          "bytes": 1076732,
+          "sha256": "5fbe15eca212cec6834d2d2c50f5fa03e42608c95d32328d45b19b4d3e1a36b5"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000109.npz",
+          "bytes": 1076732,
+          "sha256": "98abab7ac03e2b35a98715d1d56162f871348078cd8f82e9262a21487e0c9ac0"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000110.npz",
+          "bytes": 1076732,
+          "sha256": "dcf194f71cd191625238d9b047e3e81a4c0faa5b2319be76e17cebc9eb4c0413"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000112.npz",
+          "bytes": 1076732,
+          "sha256": "2bcd4c35735dd0c3589a1316da73df86c839d3f658cc054512b2a91afee7077c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000114.npz",
+          "bytes": 1076732,
+          "sha256": "75f93ae2b4a395a88d660fcc4e0e12b758f1f4356a4f6cd43acb4bc68e978c89"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000115.npz",
+          "bytes": 1076732,
+          "sha256": "cbec56fe8ad345b5daee2594c5266386a07911596964c413bc8d184b69bf433c"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000117.npz",
+          "bytes": 1076732,
+          "sha256": "930867706d2e63b9669c00aba2410eda57890d99404f0da7b5df9a48c949f54d"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000119.npz",
+          "bytes": 1076732,
+          "sha256": "f56040f94e84862f69d2798dd2555eec2575dd5ab07f2abdc026e00715d24676"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000120.npz",
+          "bytes": 1076732,
+          "sha256": "f860853678ba8410716c418e239bf2bf45cf75c3bf5ffde46e804adafc39d0be"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000122.npz",
+          "bytes": 1076732,
+          "sha256": "35318bc59534629fed27b536842557c00424ed188b2857a96981adfc32fd82ff"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000123.npz",
+          "bytes": 1076732,
+          "sha256": "4723e4063bf7caf9541d144e4732f58ec3b4cc47d451882967f1ae7f93b00395"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000125.npz",
+          "bytes": 1077284,
+          "sha256": "1525f6d6fe2510acb9ae174bf0ac6b737bc2176dbf022e3e5dce51ca42be0717"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/semantic_inputs/00000127.npz",
+          "bytes": 1076732,
+          "sha256": "870fa9b1e69657cdec10d642d5f3bf4df7ee5e5a070335da548903c9a214c111"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/status.json",
+          "bytes": 7685,
+          "sha256": "4f81f358dd9218584d1ca248a5ab36fb987bf51ccf4a2f21cbc3eb230c1d4694"
+        },
+        {
+          "path": "/home/jetson/VehicleCloudCollaboration/outputs/onboard_runtime/rosmaster_jetson_yolopv2/runs/20261009_062434_232590_hardware/vehicle_profile.yaml",
+          "bytes": 3598,
+          "sha256": "521d044815819fbeac2c1d436777cd809492df4d6b4582d253f1c767f7be6643"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/aspect-input-probe/results.json",
+      "bytes": 79663,
+      "sha256": "ec146b0ecdf3530eac91a9d60ce8953d1a010905c770fa13d7684f513ca7ff35"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/aspect-input-probe-console.log",
+      "bytes": 1222,
+      "sha256": "ca91ae03a7b0e5689b194dd625e7e3e3da0377fa8e110e7018ba2f32fdb77103"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/before/semantic_outer_route.py",
+      "bytes": 3664,
+      "sha256": "05c7e321be606508b6518346bc70455681c496fe1d0a263dcdde69ef358ff4c3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/before-live-source-manifest.json",
+      "bytes": 1252,
+      "sha256": "1883b37fdb06e1277df3e33d7283b878465625595c8c037161c372a0eef15d0a"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/failed-input-probe/results.json",
+      "bytes": 156392,
+      "sha256": "d1198b33cdcfd9ea329641c5e840c74abd68e6be988e8e5895962c10c099952c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/failed-input-probe-console.log",
+      "bytes": 1867,
+      "sha256": "cd8c81c7864984adff0032c577ff26f5563d7ddc9794f7d0e983278f461d4bdb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/failure-corridor.png",
+      "bytes": 1868,
+      "sha256": "93a75560c4e7c96e27e026daebac0bdb2a72eeaf654d347e02ff39cff6e13be3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/first-live-cycle-console.log",
+      "bytes": 8256,
+      "sha256": "712e26d8e6044ff2db222ca1de733ff506179b43360a5b19dde918f119a98e9b"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/first-live-review/raw-0.png",
+      "bytes": 358732,
+      "sha256": "2e3b5cc8b1f389dc2598e84a5ddb1136fb3a1d9ae824b1aee843f5de16b31764"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/first-live-review/raw-93.png",
+      "bytes": 468657,
+      "sha256": "70b0bf20629578093a9c9772552ffb24c7526d25cc336a549745451f1694f498"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/first-live-review/summary.json",
+      "bytes": 1407,
+      "sha256": "66b5541302fea22bc9b313ed052027cc3af2514bfdab9467825971d08c1c49d7"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/fragment-performance.json",
+      "bytes": 136,
+      "sha256": "d6731a2243ae08371d8c74f83527c5c665367b1da1fb0c1974ded9d031230f93"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/model-shapes-console.log",
+      "bytes": 1262,
+      "sha256": "abcc6735384be0114880a428fe90f1eb6c75f5ccd941fb30fb4309d3713bf86b"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/model-shapes.json",
+      "bytes": 1374,
+      "sha256": "dac91eab624e7e7030a1324c16b2801ce1e3f14612a44819596a5e22498d3924"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/moving-route-fix-replay/commands.json",
+      "bytes": 46658,
+      "sha256": "511a9f4cb5f4fca16af38307a0189be8248929033e575ed896ac835cbea08bba"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/moving-route-fix-replay/summary.json",
+      "bytes": 3854,
+      "sha256": "0be4ce34af7711ddd34dd81d1117bc647f18d26950a1f7a8ef13472663d87e66"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/moving-route-fix-replay-console.json",
+      "bytes": 3854,
+      "sha256": "0be4ce34af7711ddd34dd81d1117bc647f18d26950a1f7a8ef13472663d87e66"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/package_evidence.py",
+      "bytes": 9305,
+      "sha256": "ea882c3121b0848832e98ba729a5f87c597b0939a06d5df206d16275a803b1da"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/probe_aspect_inputs.py",
+      "bytes": 3200,
+      "sha256": "803a267bd6275a7f7c7e71c87af309abec5e7c9c629cce390cd94f3d24f80763"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/probe_failed_inputs.py",
+      "bytes": 3165,
+      "sha256": "ee9e6e09dda302890985cc5e10b57fd6a8ba376e0737eb4abf1dfcda44bfbd62"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/probe_shapes.py",
+      "bytes": 1350,
+      "sha256": "5794b0af854b14165215be8b519cebf6d3238d56a6d568a550a4e52c5192abe9"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/route-full-regression-tests.log",
+      "bytes": 316,
+      "sha256": "f9a95ef22e2f83a64a17edc8d7218f5f1c05d94d3cd439cfc962dbde86d1d60d"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/route-regression-tests.log",
+      "bytes": 225,
+      "sha256": "f40631c640b6d6e8baf4ea63ffb078b0dac04f97ae37c44157483714111f2d84"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/route-vectorized-tests.log",
+      "bytes": 121,
+      "sha256": "26ee1a1d9592b98a16c6ccb57ab3a631dec602c1dfbc756d64aa9a5b7f1be514"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-cycle-console.log",
+      "bytes": 11957,
+      "sha256": "16a220a9395a1eaa107d882ec697ecb71194b6ccb0f9514cf4bf80e9db76a3c8"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/mask-102.png",
+      "bytes": 515136,
+      "sha256": "807e88215941be191e2022356d899a9c1095f51943691faab2dc41df75d453f2"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/mask-104.png",
+      "bytes": 519048,
+      "sha256": "c262708e00481bdc653dde84315d530dd2ab5dfd226b824b35f1252cf3ebc5fc"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/mask-105.png",
+      "bytes": 532218,
+      "sha256": "8f6e0cb71f13743359b532f54d5552033f4e47718a1421d52b6baa03d6da0db3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/mask-106.png",
+      "bytes": 521998,
+      "sha256": "c3a692306c8ee94d4b371d2d87620496b727358415bbda74244a339ec71c1490"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/mask-127.png",
+      "bytes": 507840,
+      "sha256": "c456ac62d71d471a3c9076c12ad99faeca682e3f93d64a3d4056ae83ce5301eb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/raw-102.png",
+      "bytes": 565599,
+      "sha256": "5525197312d266d61ae82db71a6be1d8a4a813c405fd247d631fabb426648370"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/raw-104.png",
+      "bytes": 565447,
+      "sha256": "e431dec79d30e7d5cfee49c4feb97bdf5d1af93fea8db42adbb773a0738b1186"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/raw-105.png",
+      "bytes": 566251,
+      "sha256": "0b36c5e37882b722b3d6f3fc9ed267a2ea03992bfeadd583b89ba702c8a16f74"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/raw-106.png",
+      "bytes": 565979,
+      "sha256": "ca958cdbd2b15eb8e941322e4f77152199ae2200e4cfb39ea017a29512804aea"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/raw-127.png",
+      "bytes": 556594,
+      "sha256": "af6357a46078baef78f99eddfc9f194a4d604e136fe2cd60f662e56a70d51130"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/second-live-review/summary.json",
+      "bytes": 4708,
+      "sha256": "af40d44c17b9c7e5b6e8e6758f22f6f55497ee00df5920d81c179389d04efc5d"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/static-route-regression-console.json",
+      "bytes": 32439,
+      "sha256": "16302e81d225c0c0f52aae8a194b8456ed89c4ca2354bc78993c0fe37f0a46b6"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/static-route-regression-replay/commands.json",
+      "bytes": 287135,
+      "sha256": "6155582d4b0db538565c9f4a7f4c7885806cf319c6a1ce8bbc9107ac2873771a"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/static-route-regression-replay/summary.json",
+      "bytes": 32439,
+      "sha256": "16302e81d225c0c0f52aae8a194b8456ed89c4ca2354bc78993c0fe37f0a46b6"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261008_102919_383989_hardware-recorded-1791469777857459006/summary.json",
+      "bytes": 3976,
+      "sha256": "5b742321d6c8e9709eef4183926ad6efe10623976f79a14fc9773d46727aeb0f"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261008_102919_383989_hardware-recorded-1791469777857459006/commands.json",
+      "bytes": 46759,
+      "sha256": "861b627d799b8e5f4731dd471a87ef8ea01f79b382f8cfd96a2c02fc5e4ec638"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261008_102919_383989_hardware-recorded-1791469777857459006/replay_config.yaml",
+      "bytes": 6025,
+      "sha256": "dfe40a35662c360b17a3ccc243fec2e99eef1bc853b804ca5920206892bd1361"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261009_062319_615690_hardware-recorded-1791541418169937568/summary.json",
+      "bytes": 3923,
+      "sha256": "bcfd77823f228f4ea51a8a41e6bf3dc66c4ea7460023db15723ff278abecc481"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261009_062319_615690_hardware-recorded-1791541418169937568/commands.json",
+      "bytes": 45209,
+      "sha256": "02d1d1c30a42d8522a1b1f3378b54d23eea3e66dbdaf055f691975b9a9002582"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261009_062319_615690_hardware-recorded-1791541418169937568/replay_config.yaml",
+      "bytes": 6025,
+      "sha256": "dfe40a35662c360b17a3ccc243fec2e99eef1bc853b804ca5920206892bd1361"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261009_062434_232590_hardware-recorded-1791541494527684845/summary.json",
+      "bytes": 6162,
+      "sha256": "a46d8d932fc2c1add08ecfa39fad1669502ed9dad9f28de50ff93de4c624a325"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261009_062434_232590_hardware-recorded-1791541494527684845/commands.json",
+      "bytes": 63168,
+      "sha256": "64a34e2b4d98c193be11c2a790085c1b8b86b85636cb73b20f8627ef65adac31"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_replays/20261009_062434_232590_hardware-recorded-1791541494527684845/replay_config.yaml",
+      "bytes": 6025,
+      "sha256": "dfe40a35662c360b17a3ccc243fec2e99eef1bc853b804ca5920206892bd1361"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/moving-route-fix-replay/replay_config.yaml",
+      "bytes": 6025,
+      "sha256": "dfe40a35662c360b17a3ccc243fec2e99eef1bc853b804ca5920206892bd1361"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/static-route-regression-replay/replay_config.yaml",
+      "bytes": 6025,
+      "sha256": "dfe40a35662c360b17a3ccc243fec2e99eef1bc853b804ca5920206892bd1361"
+    }
+  ],
+  "model": {
+    "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/models/yolopv2.pt",
+    "bytes": 156380200,
+    "sha256": "f2a8c8374203ae3e67ff9c184e931f763957de92a993b23269e4e721627f1f8c"
+  },
+  "documents": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/coordination/2026-10-09-outer-loop-followup-report.md",
+      "bytes": 8371,
+      "sha256": "a37e3a918d12ed518f4c0bfca74af6b2353af284c6123f6e931cfae5aa636bdf"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/coordination/2026-10-09-yolopv2-field-evaluation-handoff.md",
+      "bytes": 3271,
+      "sha256": "cded8c1ceb1650be09b8fabc98fb36c2cf18a7ea842cc167bd6694a14aa9f312"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/docs/outer-loop-record-replay.md",
+      "bytes": 4791,
+      "sha256": "d400604bd50acecaaf249a4ef2d13c9372eeba8b9b170d2857027c38aabfc300"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/PROJECT_INDEX.md",
+      "bytes": 28754,
+      "sha256": "31b0f5834b77673ab991a639e6d05b6bb2aab997934156b4575af0442a0b441c"
+    }
+  ],
+  "source_snapshot": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/field-evaluation-bundle/source",
+  "samples": 117,
+  "annotations": "empty; no ground truth supplied",
+  "tests": {
+    "full_regression_count": 216,
+    "post_vectorization_focused_count": 22,
+    "logs": [
+      "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/route-full-regression-tests.log",
+      "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/route-vectorized-tests.log"
+    ]
+  },
+  "limitations": [
+    "No lap or line-clearance acceptance",
+    "No real cloud request",
+    "Counterfactual probes use synchronous timing",
+    "All included runs are development data",
+    "Transfer to local workstation not performed"
+  ],
+  "bundle": {
+    "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/field-evaluation-bundle.tar.gz",
+    "bytes": 101790153,
+    "sha256": "97cb8542a43ffceceda6329bd94f30306e3027592965b11a6be699743966827a",
+    "verified_members": 295
+  },
+  "closure_verification": {
+    "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261009/closure-verification.json",
+    "sha256": "b9f1784d78cd58271171a31d45d7ffe4ba7b131ce5c770c0cd4cbd26d560f3a8"
+  }
+}

@@ -1,0 +1,18 @@
+[Unit]
+Description=Vehicle passive battery IMU encoder monitoring (no serial TX)
+After=vehicle-dashboard.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=jetson
+WorkingDirectory=/home/jetson/VehicleCloudCollaboration
+ExecStart=/home/jetson/VehicleCloudCollaboration/run_vehicle_dashboard.sh serial
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

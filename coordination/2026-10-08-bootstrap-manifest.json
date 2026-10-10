@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-08",
+  "timezone": "Asia/Shanghai",
+  "source_workspace": "C:\\Users\\fushe\\Desktop\\thesis",
+  "source_head": "15a2b1d877215055832b54ca8947b3e83e67901a",
+  "source_version": "working-copy; file hashes identify the copied versions",
+  "source_index_sha256": "b50048e1d7a1d11f8bc1ba57f83e0c0f98995e06abcf864a27753c6aac73254d",
+  "source_rules_sha256": "3a0cce79ed799f039aa2f7fc7bdfb6d2d02b2037504c7f4fb9aa1fb1905ecb47",
+  "destination_host": "jetson-desktop-car-2",
+  "destination_root": "/home/jetson/VehicleCloudCollaboration",
+  "files": [
+    {
+      "destination": "AGENTS.md",
+      "source": "coordination/vehicle-bootstrap/car-AGENTS.md",
+      "sha256": "00b072dbf6b1201c5e78a88143ec4b6e35961aa2095df991e98d3a271f3663fc"
+    },
+    {
+      "destination": "PROJECT_INDEX.md",
+      "source": "coordination/vehicle-bootstrap/car-PROJECT_INDEX.md",
+      "sha256": "a6a503daf7fcfdc02e86d4b6fda6092bc56b8149ef743df1c8848af0ac92948e"
+    },
+    {
+      "destination": "coordination/2026-10-08-car-baseline.md",
+      "source": "coordination/2026-10-08-car-baseline.md",
+      "sha256": "2e63b12e04dbe251a8c0c182234a8b71502fb145a9c373254659d5f6eec6e787"
+    },
+    {
+      "destination": "skills/vehicle-cloud-thesis/SKILL.md",
+      "source": "skills/vehicle-cloud-thesis/SKILL.md",
+      "sha256": "b5241be6af8a7091f5a4b25343d7f33d989763a7928396da0c488f5dc13a568e"
+    },
+    {
+      "destination": "skills/vehicle-cloud-thesis/agents/openai.yaml",
+      "source": "skills/vehicle-cloud-thesis/agents/openai.yaml",
+      "sha256": "87ec62dd6e27e63f95f23222f94d05d0f7da7cf7f9427dbb5ba0cea05bfce9af"
+    },
+    {
+      "destination": "skills/thesis-handoff/SKILL.md",
+      "source": "skills/thesis-handoff/SKILL.md",
+      "sha256": "e75fec64f50dcf5f66fb7e233ffeb0e5f73c23f1d6c1681923ab0bc646c6fc53"
+    },
+    {
+      "destination": "skills/thesis-handoff/agents/openai.yaml",
+      "source": "skills/thesis-handoff/agents/openai.yaml",
+      "sha256": "834acb32c263819309d211812b7a4ce9831e692434211be21e5c8e6a348e64c8"
+    }
+  ]
+}

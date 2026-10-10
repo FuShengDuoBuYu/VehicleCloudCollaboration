@@ -18,6 +18,8 @@ from autodrive.camera.gimbal import (
     startup_pose_from_mapping,
 )
 from Raspbot_Lib import Raspbot
+from vehicle_control.factory import create_gimbal
+from vehicle_control.profile import load_vehicle_profile
 
 
 class FakeServoController:
@@ -26,6 +28,18 @@ class FakeServoController:
         self.closed = False
 
     def Ctrl_Servo(self, servo_id, angle):
+        self.commands.append((servo_id, angle))
+
+    def close(self):
+        self.closed = True
+
+
+class FakeRosmasterServoController:
+    def __init__(self):
+        self.commands = []
+        self.closed = False
+
+    def set_pwm_servo(self, servo_id, angle):
         self.commands.append((servo_id, angle))
 
     def close(self):
@@ -86,6 +100,23 @@ class CameraGimbalTests(unittest.TestCase):
         self.assertEqual(controller.commands, [(1, 90)])
         self.assertEqual(sleeps, [0.8])
         self.assertTrue(controller.closed)
+
+    def test_rosmaster_gimbal_uses_pwm_servo_backend(self):
+        _, profile = load_vehicle_profile("rosmaster_jetson")
+        low_level = FakeRosmasterServoController()
+        gimbal = create_gimbal(
+            profile,
+            require_gimbal_calibrated=False,
+            controller=low_level,
+        )
+        pose = CameraGimbalPose(pan_angle=30, tilt_angle=40, settle_time=0)
+
+        commands = pose.apply(gimbal)
+        gimbal.close()
+
+        self.assertEqual(commands, ((1, 30), (2, 40)))
+        self.assertEqual(low_level.commands, [(1, 30), (2, 40)])
+        self.assertTrue(low_level.closed)
 
 
 if __name__ == "__main__":

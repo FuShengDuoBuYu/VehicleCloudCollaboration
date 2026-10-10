@@ -1,0 +1,71 @@
+version: 1
+id: rosmaster_jetson
+backend: rosmaster
+description: Jetson Orin NX car using the Yahboom Rosmaster X3 serial controller
+
+# Keep these false until lifted-wheel and PTZ calibration has been recorded on
+# this physical vehicle. Normal runtime motor/servo output is rejected first.
+status:
+  motion_calibrated: false
+  gimbal_calibrated: false
+
+chassis:
+  serial_port: /dev/myserial
+  car_type: 1
+  delay: 0.002
+  debug: false
+  command_limit: 100
+  # Each native set_motor argument selects a logical FL/RL/FR/RR index.
+  # Verify this and wheel_signs with all wheels lifted.
+  motor_order: [0, 1, 2, 3]
+  wheel_signs: [1, 1, 1, 1]
+
+gimbal:
+  serial_port: /dev/myserial
+  car_type: 1
+  delay: 0.002
+  debug: false
+  pan_servo_id: 1
+  tilt_servo_id: 2
+  pan_limits: [0, 180]
+  # Keep the conservative limit used by the existing PTZ until measured.
+  tilt_limits: [0, 100]
+
+runtime_overrides:
+  camera:
+    index: 0
+    width: 640
+    height: 480
+    fps: 20
+    rotation_degrees: 0
+    flip_horizontal: false
+    flip_vertical: false
+    gimbal:
+      initialize_on_startup: false
+      pan_angle: null
+      tilt_angle: null
+      settle_time: 0.8
+  perception:
+    yolopv2:
+      enabled: false
+  perspective:
+    calibration: null
+  # Dry-run placeholders only. Replace them from lifted/grounded calibration
+  # before setting status.motion_calibrated=true.
+  wheels:
+    drive_mode: four-wheel-trim
+    pwm_limit: 20
+    minimum_moving_pwm: 5
+    front_left_base_pwm: 10
+    rear_left_base_pwm: 10
+    front_right_base_pwm: 10
+    rear_right_base_pwm: 10
+    front_steering_delta_pwm: 10
+    maximum_steering_delta_pwm: 5
+    tight_turn_start_steering: 0.50
+    tight_turn_full_steering: 0.70
+    tight_turn_outside_pwm: 15
+    tight_turn_inside_pwm: 0
+    transition_time: 0.25
+  runtime:
+    output_dir: outputs/onboard_runtime/rosmaster_jetson

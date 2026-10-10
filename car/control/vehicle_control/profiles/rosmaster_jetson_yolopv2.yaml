@@ -1,0 +1,130 @@
+# Wheel order/signs verified 2026-10-08. Operator confirmed ground forward/stop
+# at 30 PWM for 1 s and selected 30 as the testing/straight-running baseline.
+# Differential turns and full motion calibration remain unverified.
+# Do not enable motion solely because GPU inference succeeds.
+version: 1
+id: rosmaster_jetson_yolopv2
+backend: rosmaster
+description: Jetson Orin NX, fixed Astra RGB, full YOLOPv2 CUDA FP16; motion calibration
+  pending
+status:
+  motion_calibrated: false
+  gimbal_calibrated: false
+chassis:
+  serial_port: /dev/myserial
+  car_type: 1
+  delay: 0.002
+  debug: false
+  command_limit: 100
+  motor_order:
+  - 0
+  - 1
+  - 2
+  - 3
+  wheel_signs:
+  - 1
+  - 1
+  - 1
+  - 1
+gimbal:
+  serial_port: /dev/myserial
+  car_type: 1
+  delay: 0.002
+  debug: false
+  pan_servo_id: 1
+  tilt_servo_id: 2
+  pan_limits:
+  - 0
+  - 180
+  tilt_limits:
+  - 0
+  - 100
+runtime_overrides:
+  camera:
+    index: 0
+    width: 640
+    height: 480
+    fps: 20
+    rotation_degrees: 0
+    flip_horizontal: false
+    flip_vertical: false
+    gimbal:
+      initialize_on_startup: false
+      pan_angle: null
+      tilt_angle: null
+      settle_time: 0.8
+    stale_timeout: 0.25
+  perception:
+    mode: yolopv2
+    semantic_stability:
+      enabled: true
+      time_constant_seconds: 0.12
+      max_gap_seconds: 0.25
+      threshold: 0.65
+      reset_iou: 0.8
+    mask_width: 320
+    mask_height: 240
+    yolopv2:
+      enabled: true
+      backend: torchscript
+      weights: car/longtail/models/yolopv2.pt
+      device: cuda:0
+      half: true
+      img_size: 352
+      preserve_aspect_ratio: true
+      detect_objects: true
+      fast_mask: true
+      drivable_only: false
+      optimize_for_inference: false
+      torch_num_threads: 2
+      torch_interop_threads: 1
+      adaptive_precision: false
+      int8_weights: ''
+      asynchronous: true
+      max_result_age_seconds: 0.3
+      required_for_motion: true
+  # Camera-image coordinates; previous Pi BEV preview was outside the road at corners.
+  centerline:
+    top_ratio: 0.54
+    lookahead_ratio: 0.62
+    tight_turn_lookahead_ratio: 0.78
+    bottom_ratio: 0.94
+  cloud_arbitration:
+    enabled: false
+    trigger_observations: 3
+    resume_observations: 5
+    observation_max_age_seconds: 0.3
+    request_timeout_seconds: 8.0
+    response_max_age_seconds: 10.0
+    retry_seconds: 2.0
+    mask_change_threshold: 0.4
+  perspective:
+    calibration: null
+  wheels:
+    drive_mode: four-wheel-trim
+    pwm_limit: 30
+    # Retained interpolation floor, not a measured Jetson starting threshold.
+    # Sub-30 running/turning behavior still needs field verification.
+    minimum_moving_pwm: 5
+    front_left_base_pwm: 30
+    rear_left_base_pwm: 30
+    front_right_base_pwm: 30
+    rear_right_base_pwm: 30
+    front_steering_delta_pwm: 10
+    maximum_steering_delta_pwm: 5
+    tight_turn_start_steering: 0.5
+    tight_turn_full_steering: 0.7
+    tight_turn_outside_pwm: 30
+    tight_turn_inside_pwm: 0
+    transition_time: 0.25
+  runtime:
+    output_dir: outputs/onboard_runtime/rosmaster_jetson_yolopv2
+    route_hint: center
+    video_sample_every: 1
+  outer_loop:
+    enabled: false
+  safety:
+    resume_valid_frames: 5
+    resume_min_confidence: 0.5
+    corner_continuation:
+      enabled: false

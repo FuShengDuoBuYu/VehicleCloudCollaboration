@@ -7,15 +7,18 @@ import sys
 
 import cv2
 import numpy as np
-import yaml
 
 
 AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
 CAR_DIR = AUTODRIVE_DIR.parent
+CONTROL_DIR = CAR_DIR / "control"
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
+if str(CONTROL_DIR) not in sys.path:
+    sys.path.insert(0, str(CONTROL_DIR))
 
 from autodrive.perception.perspective import camera_pose_from_mapping
+from vehicle_control.profile import load_runtime_config
 
 
 CONFIG_DIR = AUTODRIVE_DIR / "config"
@@ -31,6 +34,13 @@ def build_parser():
         help="Pixel points: x1,y1;x2,y2;x3,y3;x4,y4 in TL,TR,BR,BL order",
     )
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
+    parser.add_argument(
+        "--vehicle-profile",
+        help=(
+            "Vehicle profile ID or YAML path; overrides vehicle.profile in "
+            "--runtime-config"
+        ),
+    )
     parser.add_argument(
         "--runtime-config",
         default=(
@@ -114,12 +124,10 @@ def main():
         raise ValueError(
             "--runtime-config is required so calibration is bound to a camera pose"
         )
-    runtime_config_path = Path(args.runtime_config).expanduser().resolve()
-    runtime_config = (
-        yaml.safe_load(runtime_config_path.read_text(encoding="utf-8")) or {}
+    runtime_config_path, runtime_config = load_runtime_config(
+        args.runtime_config,
+        vehicle_selector=args.vehicle_profile,
     )
-    if runtime_config.get("version") != 1:
-        raise ValueError("runtime config version must be 1")
     camera_pose = camera_pose_from_mapping(runtime_config.get("camera", {}))
     if (camera_pose["image_width"], camera_pose["image_height"]) != (
         width,

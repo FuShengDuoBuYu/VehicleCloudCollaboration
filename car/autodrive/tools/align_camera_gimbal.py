@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Move the Raspbot camera PTZ with an explicit safety confirmation."""
+"""Move the selected vehicle camera PTZ with an explicit confirmation."""
 
 import argparse
 from pathlib import Path
@@ -11,16 +11,18 @@ import cv2
 
 AUTODRIVE_DIR = Path(__file__).resolve().parents[1]
 CAR_DIR = AUTODRIVE_DIR.parent
-CONTROL_UTILS_DIR = CAR_DIR / "control" / "utils"
+CONTROL_DIR = CAR_DIR / "control"
 REPO_ROOT = CAR_DIR.parent
-if str(CONTROL_UTILS_DIR) not in sys.path:
-    sys.path.insert(0, str(CONTROL_UTILS_DIR))
+if str(CONTROL_DIR) not in sys.path:
+    sys.path.insert(0, str(CONTROL_DIR))
 
 if str(CAR_DIR) not in sys.path:
     sys.path.insert(0, str(CAR_DIR))
 
 from autodrive.camera.gimbal import CameraGimbalPose
 from autodrive.camera.transform import CameraTransformConfig, transform_frame
+from vehicle_control.factory import create_gimbal
+from vehicle_control.profile import DEFAULT_PROFILE, load_vehicle_profile
 
 
 CONFIRMATION = "CAMERA_GIMBAL_IS_CLEAR"
@@ -31,6 +33,11 @@ def build_parser():
         description="Move the camera pan/tilt servos and save a verification frame"
     )
     parser.add_argument(
+        "--vehicle-profile",
+        default=DEFAULT_PROFILE,
+        help="Vehicle profile ID or YAML path",
+    )
+    parser.add_argument(
         "--confirm-camera-gimbal-clear",
         default="",
         help=f"Required exact value: {CONFIRMATION}",
@@ -38,12 +45,12 @@ def build_parser():
     parser.add_argument(
         "--pan-angle",
         type=int,
-        help="S1 horizontal angle in [0, 180]; 90 is the usual center starting point",
+        help="Horizontal angle; exact safe range comes from the vehicle profile",
     )
     parser.add_argument(
         "--tilt-angle",
         type=int,
-        help="S2 vertical angle in the chassis-safe range [0, 100]",
+        help="Vertical angle; exact safe range comes from the vehicle profile",
     )
     parser.add_argument("--settle-time", type=float, default=0.8)
     parser.add_argument("--camera-index", type=int, default=0)
@@ -109,11 +116,21 @@ def main():
         settle_time=args.settle_time,
     )
 
-    from Raspbot_Lib import Raspbot
-
-    controller = Raspbot()
-    commands = pose.apply(controller)
-    print(f"Applied camera servo commands: {commands}", flush=True)
+    _, vehicle_config = load_vehicle_profile(args.vehicle_profile)
+    # This guarded alignment tool is permitted before a profile is marked as
+    # calibrated; the normal runtime remains blocked.
+    controller = create_gimbal(
+        vehicle_config,
+        require_gimbal_calibrated=False,
+    )
+    try:
+        commands = pose.apply(controller)
+    finally:
+        controller.close()
+    print(
+        f"Applied {vehicle_config['id']} camera servo commands: {commands}",
+        flush=True,
+    )
     if not args.no_preview:
         preview = capture_preview(args)
         print(f"Preview: {preview}", flush=True)

@@ -1,0 +1,52 @@
+version: 1
+id: raspbot_pi5
+backend: raspbot
+description: Raspberry Pi 5 car using the bundled Raspbot I2C controller
+
+status:
+  motion_calibrated: true
+  gimbal_calibrated: true
+
+chassis:
+  command_limit: 255
+  # Logical order: front-left, rear-left, front-right, rear-right.
+  motor_ids: [0, 1, 2, 3]
+  wheel_signs: [1, 1, 1, 1]
+
+gimbal:
+  pan_servo_id: 1
+  tilt_servo_id: 2
+  pan_limits: [0, 180]
+  tilt_limits: [0, 100]
+
+runtime_overrides:
+  camera:
+    index: 0
+    width: 640
+    height: 480
+    fps: 20
+    rotation_degrees: 0
+    flip_horizontal: false
+    flip_vertical: false
+    gimbal:
+      initialize_on_startup: true
+      pan_angle: 25
+      tilt_angle: null
+      settle_time: 0.8
+  perspective:
+    calibration: car/autodrive/config/onboard_calibration.yaml
+  wheels:
+    drive_mode: four-wheel-trim
+    pwm_limit: 35
+    minimum_moving_pwm: 10
+    front_left_base_pwm: 16
+    rear_left_base_pwm: 16
+    front_right_base_pwm: 20
+    rear_right_base_pwm: 20
+    front_steering_delta_pwm: 20
+    maximum_steering_delta_pwm: 10
+    tight_turn_start_steering: 0.50
+    tight_turn_full_steering: 0.70
+    tight_turn_outside_pwm: 30
+    tight_turn_inside_pwm: 0
+    transition_time: 0.25

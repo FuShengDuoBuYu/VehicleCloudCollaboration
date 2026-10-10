@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guarded side or individual-wheel checks for a lifted Raspbot chassis."""
+"""Guarded side or individual-wheel checks for any configured chassis."""
 
 import argparse
 import json
@@ -14,6 +14,9 @@ CONTROL_DIR = CAR_DIR / "control"
 REPO_ROOT = CAR_DIR.parent
 if str(CONTROL_DIR) not in sys.path:
     sys.path.insert(0, str(CONTROL_DIR))
+
+from vehicle_control.factory import create_chassis
+from vehicle_control.profile import DEFAULT_PROFILE, load_vehicle_profile
 
 CONFIRMATION = "WHEELS_ARE_LIFTED"
 WHEEL_LABELS = {
@@ -37,11 +40,16 @@ def build_parser():
         )
     )
     parser.add_argument(
+        "--vehicle-profile",
+        default=DEFAULT_PROFILE,
+        help="Vehicle profile ID or YAML path",
+    )
+    parser.add_argument(
         "--confirm-wheels-lifted",
         default="",
         help=f"Required exact value: {CONFIRMATION}",
     )
-    parser.add_argument("--pwm", type=int, default=12)
+    parser.add_argument("--pwm", type=int, default=30)
     parser.add_argument("--duration", type=float, default=0.4)
     target = parser.add_mutually_exclusive_group()
     target.add_argument(
@@ -131,29 +139,38 @@ def main():
     if not 0.1 <= args.duration <= 1.0:
         raise ValueError("--duration must be in [0.1, 1.0]")
 
-    from vehicle_control.hardware import RospbotChassis
-
-    chassis = RospbotChassis()
-    if args.wheel is not None:
-        run_individual_check(
-            chassis,
-            args.wheel,
-            args.pwm,
-            args.direction,
-            args.duration,
+    _, vehicle_config = load_vehicle_profile(args.vehicle_profile)
+    command_limit = int(vehicle_config.get("chassis", {}).get("command_limit", 0))
+    if args.pwm > command_limit:
+        raise ValueError(
+            f"--pwm exceeds {vehicle_config['id']} command limit {command_limit}"
         )
-        return 0
-    if args.all_wheels:
-        run_all_wheels_check(
-            chassis,
-            args.pwm,
-            args.direction,
-            args.duration,
-        )
-        return 0
-
-    observations = {}
+    # This guarded tool is how an uncalibrated profile becomes calibrated, so
+    # it may bypass the normal runtime gate after the explicit lifted check.
+    chassis = create_chassis(
+        vehicle_config,
+        require_motion_calibrated=False,
+    )
     try:
+        if args.wheel is not None:
+            run_individual_check(
+                chassis,
+                args.wheel,
+                args.pwm,
+                args.direction,
+                args.duration,
+            )
+            return 0
+        if args.all_wheels:
+            run_all_wheels_check(
+                chassis,
+                args.pwm,
+                args.direction,
+                args.duration,
+            )
+            return 0
+
+        observations = {}
         input("Confirm the vehicle is supported and all four wheels are clear. Press Enter.")
         for side, command in (
             ("left", (args.pwm, 0)),
@@ -167,9 +184,11 @@ def main():
                 f"Did positive PWM move the {side} wheels in the vehicle-forward direction?"
             )
     finally:
-        chassis.stop()
+        chassis.close()
 
     payload = {
+        "vehicle_profile": vehicle_config["id"],
+        "backend": vehicle_config["backend"],
         "pwm": args.pwm,
         "duration": args.duration,
         "observations": observations,
@@ -187,7 +206,10 @@ def main():
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"Saved: {output}")
-    print("Copy the suggested signs into config/onboard_runtime.yaml, then repeat dry-run.")
+    print(
+        "Copy the verified mapping/signs into the selected vehicle profile, "
+        "then repeat dry-run."
+    )
     return 0
 
 

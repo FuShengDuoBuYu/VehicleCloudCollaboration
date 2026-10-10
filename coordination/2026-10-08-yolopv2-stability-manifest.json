@@ -1,0 +1,234 @@
+{
+  "date_asia_shanghai": "2026-10-08T22:25:47.748925+08:00",
+  "repository": "/home/jetson/VehicleCloudCollaboration",
+  "head": "fce828b89b084eda293e83b99c8861f522858d8e",
+  "branch": "main",
+  "working_tree_status": " M README.md\n M car/autodrive/README.md\n M car/autodrive/camera/gimbal.py\n M car/autodrive/config/onboard_runtime.example.yaml\n M car/autodrive/config/onboard_runtime.yaml\n M car/autodrive/control/drive_runtime.py\n M car/autodrive/control/lane_centering.py\n M car/autodrive/perception/outer_loop.py\n M car/autodrive/perception/visualization.py\n M car/autodrive/perception/yolopv2_fusion.py\n M car/autodrive/perception/yolopv2_onnx.py\n D car/autodrive/run_lcc_web.py\n M car/autodrive/runtime/onboard.py\n M car/autodrive/tools/align_camera_gimbal.py\n M car/autodrive/tools/calibrate_perspective.py\n M car/autodrive/tools/capture_onboard.py\n M car/autodrive/tools/check_wheel_directions.py\n M car/autodrive/tools/pi_self_check.py\n M car/autodrive/web/__init__.py\n D car/autodrive/web/cli.py\n D car/autodrive/web/index.html\n D car/autodrive/web/server.py\n M car/control/README.md\n M car/control/vehicle_control/__init__.py\n M car/control/vehicle_control/hardware.py\n M car/longtail/detectors/__init__.py\n M car/longtail/detectors/yolopv2_detector.py\n M car/test/test_camera_gimbal.py\n M car/test/test_hardware_mapping.py\n D car/test/test_lcc_web.py\n M run.sh\n?? .agents/\n?? AGENTS.md\n?? PROJECT_INDEX.md\n?? car/autodrive/control/cloud_arbitration.py\n?? car/autodrive/control/cloud_worker.py\n?? car/autodrive/control/field_trial.py\n?? car/autodrive/perception/semantic_outer_route.py\n?? car/autodrive/perception/semantic_stability.py\n?? car/autodrive/perception/yolopv2_objects.py\n?? car/autodrive/perception/yolopv2_semantic.py\n?? car/autodrive/tools/replay_outer_loop.py\n?? car/autodrive/web/dashboard.css\n?? car/autodrive/web/dashboard.html\n?? car/autodrive/web/dashboard.js\n?? car/autodrive/web/dashboard.py\n?? car/autodrive/web/perception_monitor.py\n?? car/autodrive/web/sensor_publishers.py\n?? car/control/vehicle_control/base.py\n?? car/control/vehicle_control/factory.py\n?? car/control/vehicle_control/platforms/\n?? car/control/vehicle_control/profile.py\n?? car/control/vehicle_control/profiles/\n?? car/test/test_cloud_arbitration.py\n?? car/test/test_cloud_onboard.py\n?? car/test/test_cloud_worker.py\n?? car/test/test_dashboard_launcher.py\n?? car/test/test_dashboard_sensors.py\n?? car/test/test_hardware_safety.py\n?? car/test/test_outer_loop_replay.py\n?? car/test/test_outer_loop_trial.py\n?? car/test/test_pwm30_defaults.py\n?? car/test/test_rosmaster_transport.py\n?? car/test/test_semantic_stability.py\n?? car/test/test_vehicle_dashboard.py\n?? car/test/test_wheel_check_launcher.py\n?? car/test/test_yolopv2_objects.py\n?? car/test/test_yolopv2_primary.py\n?? car/test/test_yolopv2_torch_input.py\n?? coordination/\n?? deploy/\n?? docs/\n?? run_jetson_yolopv2.sh\n?? run_outer_loop.sh\n?? run_vehicle_dashboard.sh\n?? run_vehicle_experiment.sh\n?? run_wheel_check.sh\n?? skills/\n",
+  "scope": "Final static-camera YOLO postprocessing fix and recorded-mask replay; no motors in this fix validation",
+  "source_snapshot": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-source",
+  "source_files": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/semantic_stability.py",
+      "bytes": 2901,
+      "sha256": "2f3546bd05095734b44479dcdad02b465a90b2ce6eb4357e71b21843b87d7002"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/semantic_outer_route.py",
+      "bytes": 3664,
+      "sha256": "05c7e321be606508b6518346bc70455681c496fe1d0a263dcdde69ef358ff4c3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/yolopv2_semantic.py",
+      "bytes": 5617,
+      "sha256": "9c5b03a996e8c05fa548cdc5c999e2589aa6b440bb782fb803429c9a3e89fbcb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/perception/yolopv2_fusion.py",
+      "bytes": 26361,
+      "sha256": "9f349066ff0209aec5855512cbf569075ef9838c22616361d7542a53ebaa95cb"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/runtime/onboard.py",
+      "bytes": 80218,
+      "sha256": "0976a40fce8e308136c4bf97190aae56a770da19252e64cee92b0db4ad7fc81c"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/tools/replay_outer_loop.py",
+      "bytes": 17055,
+      "sha256": "422936508966280f8c82384ce073c9b25664c23c9ce01ba05da4b694faac6dff"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/field_trial.py",
+      "bytes": 3939,
+      "sha256": "66690f33d85f19e8f5357bda902e57aaf28c25c542c6d0d8a270ffd9fc4291ae"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/drive_runtime.py",
+      "bytes": 55557,
+      "sha256": "df920a3f8ac92ad4486a09af5feb744a1b3bfe9f7dd25479faad80869de34a67"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/autodrive/control/lane_centering.py",
+      "bytes": 20243,
+      "sha256": "3a348d9a02284e14e749a6a0230195190b68280074694ba0a7af06c0ed01f984"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2.yaml",
+      "bytes": 3238,
+      "sha256": "4c41779e255869edca698f540613a0640ddabc1dc90fdad41f51bc2364c226f7"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/control/vehicle_control/profiles/rosmaster_jetson_yolopv2_outer_trial.yaml",
+      "bytes": 3598,
+      "sha256": "521d044815819fbeac2c1d436777cd809492df4d6b4582d253f1c767f7be6643"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_semantic_stability.py",
+      "bytes": 7024,
+      "sha256": "22a10ee6c6f68a361ab90e3b9245958f77940e66d13245a04fbba49141fc18f3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_outer_loop_replay.py",
+      "bytes": 5228,
+      "sha256": "7b9d59e7616c4bac1d5fe9265e97ebff922565f9a7c1974dbb0d74ef45f71e43"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/car/test/test_outer_loop_trial.py",
+      "bytes": 6772,
+      "sha256": "6971d43485d14a4cf4386ae997ad1244abff1e7e4d6961436ca08a4847b04fc0"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_outer_loop.sh",
+      "bytes": 2318,
+      "sha256": "7602b2922d969292a48a00d4ded7d11bf51d829d33236a068cb96614f0cf5a25"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/run_vehicle_experiment.sh",
+      "bytes": 1402,
+      "sha256": "28b11c7f99a8cb04b338e5d1ea0d211d771d4e6e7c5afe837d6a3d8a99835cd5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/docs/outer-loop-record-replay.md",
+      "bytes": 3995,
+      "sha256": "071f48ad3e2154a7d6cd0ec76a3cffcdcf21b526f019a6e53749d17be968c676"
+    }
+  ],
+  "model": {
+    "path": "/home/jetson/VehicleCloudCollaboration/car/longtail/models/yolopv2.pt",
+    "bytes": 156380200,
+    "sha256": "f2a8c8374203ae3e67ff9c184e931f763957de92a993b23269e4e721627f1f8c"
+  },
+  "evidence": [
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/resolved_runtime_config.yaml",
+      "bytes": 6024,
+      "sha256": "ef984ae27edd93861c257970c3f897f930a0a0ec8330f483dc93ec344369e1b8"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/vehicle_profile.yaml",
+      "bytes": 3598,
+      "sha256": "521d044815819fbeac2c1d436777cd809492df4d6b4582d253f1c767f7be6643"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/runtime_config.yaml",
+      "bytes": 14136,
+      "sha256": "b050a42b4f563049062f712c4e62bd6575014ca04907baaea558ae1f979bb435"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/birdeye.mp4",
+      "bytes": 420897,
+      "sha256": "9034a65ab4a38cd7587730e5cc8dbea805437fd2484311c761e65a60ef53d4e3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/onboard_log.csv",
+      "bytes": 240371,
+      "sha256": "2ae2865c514f39002799ffb4cd6295b47a27ebbaf811f2beb521c2a7e86c1a51"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/status.json",
+      "bytes": 7645,
+      "sha256": "1345e2bb38ae1dc45983a298750ea5e31bce6548d7ef331fa4a9c80197d3e1b5"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/raw.mp4",
+      "bytes": 17403632,
+      "sha256": "5654ac5f943addeef0914d94642ed60db471c0ba4c4a3d3720e94901fd216c09"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/annotated.mp4",
+      "bytes": 9719441,
+      "sha256": "ebf412d72c2e0f59f3b612e9d4e0347aa58dc61c659578dc46be9dc9df90c1d7"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-recorded-replay-verified/replay.mp4",
+      "bytes": 10619536,
+      "sha256": "85789f84ae37f3f952fc7cedd4fa150fa118f42f76cee1ae20431282ce733e8b"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-recorded-replay-verified/commands.json",
+      "bytes": 287135,
+      "sha256": "6155582d4b0db538565c9f4a7f4c7885806cf319c6a1ce8bbc9107ac2873771a"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-recorded-replay-verified/summary.json",
+      "bytes": 32449,
+      "sha256": "c152fe3525e1fd894040b9ef3155e70e6cb971548ca5b1de65740a300617e26f"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-recorded-replay-verified/replay_config.yaml",
+      "bytes": 6025,
+      "sha256": "dfe40a35662c360b17a3ccc243fec2e99eef1bc853b804ca5920206892bd1361"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/paired-final-original-straight.json",
+      "bytes": 14115,
+      "sha256": "f27610f8e82ed9b8bedd3bffd179616ce9d3028d9a05d985d4a265ed21ebf9b9"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/paired-final-live.json",
+      "bytes": 31880,
+      "sha256": "deacdbb20cf45e660bdf71a9ffd3fdb2248c41b959bb89904b8f3d6c899fc31f"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/compare-stability.py",
+      "bytes": 2717,
+      "sha256": "ef69e4f21262a5afa39b77ea450616f1da0a6c2df2cba80437da6cfc0cdcc649"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/archive-write-benchmark.json",
+      "bytes": 163,
+      "sha256": "dd70f157f8a804a708d7ed2a1ba7f69b2af7c488ef88aa38de575e9e293897bd"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-tests-with-replay-completeness.log",
+      "bytes": 313,
+      "sha256": "8eca466405098946e26ad8943bbe2fb6a1f88876dfeb236de72cf6caddcd62f2"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live-console.log",
+      "bytes": 21126,
+      "sha256": "83841567eb7e9f1db5a1356b29206b718d17b918d86854da9defed52ca96a0b3"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-probe/results.json",
+      "bytes": 35251,
+      "sha256": "e1aafb717c8ec68aff57a9a12df7c0aac3f364d2ae4e427018448bbebecd7e73"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-probe.py",
+      "bytes": 2762,
+      "sha256": "8d7c6177a39e6da8113266c13b5330dfa6f610c094b4a5130c7fb577ef0dc649"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/verification.json",
+      "bytes": 1125,
+      "sha256": "eec44c05d8bfdc27e6829a62f5f691522b792a42ff022c1bde4d23eebf6a104d"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/replay-expectations.json",
+      "bytes": 472,
+      "sha256": "58766204dcd39ebf3f5e9a27470fab8bd5a3088ec0fb3145e25a21a85cefc284"
+    },
+    {
+      "path": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/review-frame.png",
+      "bytes": 419637,
+      "sha256": "851934d43bec46026aebf49fc546ca2faec9021130d1f514951be45feee0bb91"
+    }
+  ],
+  "lossless_inputs": {
+    "directory": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-live/runs/20261008_101844_471341_dryrun/semantic_inputs",
+    "count": 348,
+    "individual_hashes_in": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-recorded-replay-verified/summary.json"
+  },
+  "tests": {
+    "count": 213,
+    "passed": true,
+    "evidence": "/home/jetson/VehicleCloudCollaboration/outputs/outer_loop_trial/20261008/stability-final-tests-with-replay-completeness.log"
+  },
+  "limitations": [
+    "Static scene only, not a lap/no-line-crossing test",
+    "Temporal filter cannot fix persistent network errors",
+    "Recorded replay does not reproduce CPU/actuator/archive deadlines",
+    "Previous compressed archives with gaps invalid for complete temporal replay"
+  ]
+}

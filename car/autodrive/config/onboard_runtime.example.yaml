@@ -1,5 +1,9 @@
 version: 1
 
+vehicle:
+  # Available built-ins: raspbot_pi5, rosmaster_jetson.
+  profile: raspbot_pi5
+
 camera:
   index: 0
   width: 640
