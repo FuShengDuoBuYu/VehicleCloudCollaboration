@@ -129,6 +129,21 @@ runtime_overrides:
     response_max_age_seconds: 10.0
     retry_seconds: 2.0
     mask_change_threshold: 0.4
+  cloud_recovery:
+    enabled: true
+    frame_policy: sparse3
+    stall_seconds: 1.0
+    trigger_observations: 3
+    resume_observations: 3
+    observation_max_age_seconds: 0.6
+    request_timeout_seconds: 30.0
+    response_max_age_seconds: 10.0
+    retry_seconds: 2.0
+    max_attempts: 3
+    step_seconds: 0.15
+    step_yaw_degrees: 5.0
+    settle_seconds: 0.25
+    yaw_sign: -1
   perspective:
     calibration: null
   wheels:

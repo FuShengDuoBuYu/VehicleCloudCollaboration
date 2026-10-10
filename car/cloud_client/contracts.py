@@ -1,5 +1,6 @@
 """Contract selection is independent of transport; outputs never authorize motion."""
 from .schema import SCENE_SCHEMA, SYSTEM_PROMPT, validate_scene
+from .recovery_contract import RECOVERY_SCHEMA, RECOVERY_PROMPT, validate_recovery
 
 FEATURES = ['right_arrow','left_arrow','straight_arrow','crosswalk','parking_sign',
             'boundary_line','obstacle','occlusion','blur','horn_sign']
@@ -35,6 +36,7 @@ def validate_observation(value):
 
 
 CONTRACTS = {
+    'road-recovery-v1': (RECOVERY_SCHEMA,RECOVERY_PROMPT,validate_recovery,'road-recovery-prompt-v1'),
     'road-observation-fast-v1': (OBSERVATION_SCHEMA,OBSERVATION_PROMPT,validate_observation,'road-observation-prompt-v1'),
     'road-scene-v1': (SCENE_SCHEMA,SYSTEM_PROMPT,validate_scene,'road-scene-prompt-v1')}
 

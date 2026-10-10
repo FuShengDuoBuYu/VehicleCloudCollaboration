@@ -69,6 +69,8 @@ from vehicle_control.factory import (
 from vehicle_control.profile import load_runtime_config
 from autodrive.control.cloud_arbitration import CloudArbitrationConfig
 from autodrive.control.cloud_worker import CloudCoordinator
+from autodrive.control.cloud_recovery import RecoveryConfig, build_evidence
+from autodrive.control.recovery_worker import RecoveryCoordinator
 from autodrive.control.field_trial import (
     validate_field_trial_config, field_trial_recording_ready, validate_stationary_corner_config,
 )
@@ -804,6 +806,19 @@ class SurfaceOnlyDetector:
 
 def cloud_configuration(config):
     settings = CloudArbitrationConfig(**config.get("cloud_arbitration", {}))
+    recovery = RecoveryConfig(**config.get('cloud_recovery', {}))
+    if recovery.enabled:
+        if settings.enabled:
+            raise ValueError('choose cloud_recovery or legacy cloud_arbitration')
+        stationary=config.get('stationary_corner',{})
+        wheels=config.get('wheels',{})
+        if (config.get('perception',{}).get('mode')!='yolopv2'
+                or not config.get('perception',{}).get('track_colors',{}).get('enabled')
+                or not stationary.get('enabled') or not stationary.get('visual_feedback')
+                or wheels.get('pwm_limit',100)>30 or wheels.get('transition_time',0)!=0
+                or recovery.yaw_sign!=stationary.get('yaw_sign',-1)):
+            raise ValueError('recovery requires primary track-color YOLO, visual feedback, PWM<=30 and no ramp')
+        return recovery
     if settings.enabled and config.get("perception", {}).get("mode") != "yolopv2":
         raise ValueError("cloud arbitration requires primary YOLOPv2 observations")
     return settings
@@ -856,8 +871,8 @@ class StationaryCornerRuntime:
     """Deterministic adapter shared by live control and recorded-input replay.
 
     No clock or device reads occur here. ``external_motion_allowed`` feeds the
-    previous final cloud veto and current recording/watchdog gates back into
-    the controller. Cloud filtering remains the caller's final veto. A dry-run
+    current recording/watchdog gates into the controller, independent of cloud
+    waiting. Cloud filtering remains a separate final gate. A dry-run
     replay may set pivot_verified=True; physical callers must validate evidence.
     """
     def __init__(self, config, motion_gate, *, pivot_verified=False):
@@ -1204,9 +1219,11 @@ class StationaryCornerRuntime:
         return dict(self._state, controller=self.controller.get_state(), motion_gate=self.motion_gate.get_state())
 
 
-def apply_runtime_command(driver,command,stationary_runtime=None):
+def apply_runtime_command(driver,command,stationary_runtime=None,recovery=None):
     """Preserve a driver's final rejection for logs and recorded replay."""
-    if (stationary_runtime is not None and stationary_runtime.config.visual_feedback
+    if recovery is not None and recovery.motion_deadline is not None and command.action!='stop':
+        state=driver.apply(command,deadline=recovery.motion_deadline)
+    elif (stationary_runtime is not None and stationary_runtime.config.visual_feedback
             and command.action!='stop'):
         state=driver.apply(command,deadline=stationary_runtime.controller.get_state()['motion_deadline'])
     else:
@@ -1214,6 +1231,8 @@ def apply_runtime_command(driver,command,stationary_runtime=None):
     if stationary_runtime is not None and command.action!='stop' and state.get('action')=='stopped':
         command=stationary_runtime.apply_veto(state.get('reason') or 'driver rejected motion',
                                               now=time.monotonic())
+    if recovery is not None and command.action=='stop' and recovery.motion_deadline is not None:
+        recovery.veto(command.reason or 'final application stopped',time.monotonic())
     return command,state
 
 
@@ -1838,16 +1857,19 @@ def main():
     termination_reason = "runtime shutdown"
     try:
         cloud_settings = cloud_configuration(config)
+        recovery_enabled = isinstance(cloud_settings, RecoveryConfig) and cloud_settings.enabled
         cloud_client = None
         if cloud_settings.enabled:
             if not archive.enabled:
                 raise ValueError("cloud arbitration requires run evidence archival")
             from cloud_client.client import CloudClient
-            cloud_client = CloudClient(timeout=cloud_settings.request_timeout_seconds)
-            if getattr(cloud_client.config, "contract", "road-scene-v1") != "road-scene-v1":
+            cloud_client = CloudClient(timeout=cloud_settings.request_timeout_seconds,
+                **({'contract':'road-recovery-v1','provider':'qwen-realtime',
+                    'model':'qwen3.8-omni-flash-realtime'} if recovery_enabled else {}))
+            if not recovery_enabled and getattr(cloud_client.config, "contract", "road-scene-v1") != "road-scene-v1":
                 raise ValueError("vehicle arbitration requires CAR_CLOUD_CONTRACT=road-scene-v1")
             cloud_client._require_key()
-        cloud_coordinator = CloudCoordinator(
+        cloud_coordinator = (RecoveryCoordinator if recovery_enabled else CloudCoordinator)(
             cloud_settings, cloud_client, (archive.run_dir or output_dir) / "cloud"
         )
         (
@@ -2172,9 +2194,17 @@ def main():
                 command = stationary_runtime.filter(command, estimate, boundary_result,
                     now=control_now, imu_sample=imu_sample, frame_age_seconds=effective_frame_age,
                     perception_budget_valid=(inference_time+boundary_time <= max_inference),
-                    external_motion_allowed=bool(recording_ready and not watchdog.get_state()['tripped']
-                        and cloud_coordinator.get_state()['motion_allowed']))
-                if cloud_settings.enabled:
+                    external_motion_allowed=bool(recording_ready and not watchdog.get_state()['tripped']))
+                if recovery_enabled:
+                    evidence=build_evidence(detector.get_consumed_observation(),boundary_result,command,
+                        now=control_now,frame_age=effective_frame_age,
+                        external_allowed=bool(recording_ready and not watchdog.get_state()['tripped']),
+                        perception_valid=(inference_time+boundary_time<=max_inference),
+                        pivot_verified=stationary_runtime.pivot_verified,imu_sample=imu_sample,
+                        local_state=stationary_runtime.get_state())
+                    command=cloud_coordinator.filter(command,evidence,control_now,
+                        local_deadline=stationary_runtime.controller.get_state()['motion_deadline'])
+                elif cloud_settings.enabled:
                     command = cloud_coordinator.filter(command, detector.get_consumed_observation(),
                         local_safe=stationary_runtime.get_state()['local_safe'], reason=command.reason,
                         now=control_now)
@@ -2221,7 +2251,7 @@ def main():
                 if StationaryCornerRuntime._finite(imu_receipt) else None)
             application_reason = ''
             if stationary_runtime is not None:
-                active_pivot = stationary_runtime.get_state()['controller']['state'] == 'pivot-right'
+                active_pivot = command.action == 'pivot-right'
                 semantic_current = (StationaryCornerRuntime._finite(semantic_application_age)
                     and 0 <= semantic_application_age <= stationary_settings.semantic_max_age_seconds)
                 camera_current = (StationaryCornerRuntime._finite(frame_application_age)
@@ -2234,7 +2264,12 @@ def main():
                         if not imu_current else 'stationary corner: consumed semantic or camera frame expired before application')
                     command = stationary_runtime.apply_veto(application_reason,now=application_now)
             command_before_driver=command
-            command,wheel_state=apply_runtime_command(driver,command,stationary_runtime)
+            command,wheel_state=apply_runtime_command(driver,command,stationary_runtime,
+                recovery=cloud_coordinator if recovery_enabled else None)
+            if recovery_enabled and not cloud_coordinator.record_application(command,wheel_state,time.monotonic()):
+                command=cloud_coordinator.veto('recovery application archive failed',time.monotonic())
+                stationary_runtime.apply_veto(command.reason,now=time.monotonic())
+                wheel_state=driver.stop(command.reason)
             if command!=command_before_driver:
                 application_reason=command.reason
                 application_now=(stationary_runtime.controller.get_state()['stopped_at']

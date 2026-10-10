@@ -11,7 +11,7 @@ from .schema import SCHEMA_VERSION
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Analyze road images with Qwen; never imports vehicle hardware")
-    parser.add_argument("--image", action="append", required=True, help="JPEG/PNG/WebP; Realtime one image/event; HTTP may repeat chronologically")
+    parser.add_argument("--image", action="append", required=True, help="JPEG/PNG/WebP; Realtime recovery 1-3 ordered frames, other contracts one; HTTP up to 8")
     parser.add_argument("--context", type=Path, help="JSON object with run ID, frame timestamps, local observations")
     parser.add_argument("--env-file", type=Path, help="Local environment file; default repository .env")
     parser.add_argument("--provider", choices=["qwen-realtime", "qwen", "openai-compatible"])
@@ -19,7 +19,7 @@ def main(argv=None):
     parser.add_argument("--model")
     parser.add_argument('--workspace-id',help='Beijing business workspace ID for Realtime')
     parser.add_argument('--realtime-url',help='Full WSS URL, no credentials in URL')
-    parser.add_argument('--contract',choices=['road-observation-fast-v1','road-scene-v1'])
+    parser.add_argument('--contract',choices=['road-observation-fast-v1','road-scene-v1','road-recovery-v1'])
     parser.add_argument('--timeout',type=float,help='Network request timeout, seconds; independent of 2s speed target')
     parser.add_argument("--reasoning-effort", choices=["none", "low", "medium", "xhigh"])
     parser.add_argument("--output", type=Path, help="New JSON result file; existing files are never overwritten")
