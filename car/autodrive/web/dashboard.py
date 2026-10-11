@@ -26,10 +26,12 @@ VALUE_FIELDS = {
     'imu': ('gyro_rad_s', 'accel_m_s2', 'mag_sdk_units'),
     'attitude': ('radians',), 'encoder': ('native_ticks',),
 }
-CLOUD_FIELDS = ('status', 'event_id', 'request_id', 'trigger_reason', 'triggered_at', 'started_at',
-                'completed_at', 'latency_ms', 'provider', 'model', 'arbitration', 'error_code')
+CLOUD_FIELDS = ('status', 'event_id', 'last_event_id', 'request_id', 'trigger_reason', 'triggered_at', 'started_at',
+                'completed_at', 'latency_ms', 'provider', 'model', 'arbitration', 'error_code', 'fusion')
 SCENE_FIELDS = ('scene_summary', 'road_state', 'risk_level', 'recommendation', 'route_hint',
-                'uncertainties', 'reason', 'objects', 'signs')
+                'uncertainties', 'reason', 'objects', 'signs',
+                'schema_version', 'assessment', 'candidate_id', 'uncertain', 'hazards')
+FUSION_FIELDS = ('source', 'reason', 'deadline', 'event_id', 'candidate_id', 'sequence', 'policy_id')
 
 
 def boot_id():
@@ -255,34 +257,50 @@ class DashboardState:
         if not isinstance(cloud_source, dict) and isinstance(arbitration, dict):
             phase = arbitration.get('phase')
             cloud_source = dict(status=('disabled' if not arbitration.get('enabled') else
-                {'pending':'pending','validating':'completed','hold':'hold','driving':'idle'}.get(phase,'unknown')),
-                event_id=arbitration.get('event_id'), arbitration=_only(arbitration,
-                    ('phase','reason','motion_allowed','stable_observations','request_count','ignored_responses')))
-            event_id = arbitration.get('event_id')
+                {'pending':'pending','validating':'completed','hold':'hold','driving':'idle',
+                 'LOCAL_DRIVING':'idle','STALL_CONFIRM':'confirming','CLOUD_PENDING':'pending',
+                 'HOLD':'hold','REVALIDATE':'validating','PROBE_STEP':'probing','OBSERVE':'observing'}.get(phase,'unknown')),
+                event_id=arbitration.get('event_id'), last_event_id=arbitration.get('last_event_id'), arbitration=_only(arbitration,
+                    ('phase','reason','motion_allowed','stable_observations','request_count','ignored_responses',
+                     'attempts','selected_candidate_id','frame_policy','archive_error','journal',
+                     'diagnostic_only','response_status','last_event_reason','last_event_step_authorized')),
+                fusion=_only(arbitration.get('fusion'), FUSION_FIELDS))
+            event_id = arbitration.get('event_id') or arbitration.get('last_event_id')
             archive = runtime.get('run_archive')
-            if isinstance(event_id,str) and re.fullmatch(r'[a-f0-9]{32}',event_id) and isinstance(archive,str):
+            if (isinstance(event_id,str) and re.fullmatch(r'(?:[a-f0-9]{32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})',event_id)
+                    and isinstance(archive,str)):
                 # Read only the named event under this configured runtime's runs.
                 run = Path(archive).resolve()
                 runs_root = (folder/'runs').resolve()
                 if run.parent == runs_root:
                     event_folder = run/'cloud'/event_id
                     try:
+                        if event_folder.resolve().parent != (run/'cloud').resolve():
+                            raise ValueError('event directory escaped archive')
                         request = _read_json(event_folder/'request.json')
-                        if request.get('event_id') == event_id:
-                            cloud_source['trigger_reason'] = request.get('reason')
+                        context = request.get('context') or request
+                        if context.get('event_id') == event_id:
+                            cloud_source['trigger_reason'] = context.get('reason') or context.get('stop_code')
+                            cloud_source['arbitration']['diagnostic_only'] = bool(context.get('diagnostic_only'))
                         response = _read_json(event_folder/'response.json')
                         if response.get('event_id') == event_id:
-                            cloud_source['result'] = response.get('scene')
+                            result = response.get('result') or {}
+                            cloud_source['result'] = result.get('scene') or response.get('scene')
                             metadata = response.get('metadata') or {}
                             if isinstance(metadata,dict):
                                 cloud_source.update(request_id=metadata.get('request_id'),
                                     latency_ms=metadata.get('elapsed_ms'),provider=metadata.get('provider'),
                                     model=metadata.get('requested_model'))
                             cloud_source['error_code'] = response.get('error_type')
+                            if arbitration.get('response_status') in ('cancelled','timeout'):
+                                cloud_source['arbitration']['response_status'] = ('failed' if response.get('error_type')
+                                    else 'received_stopped' if arbitration.get('last_event_step_authorized')
+                                    else 'received_ignored')
                     except (OSError,ValueError,TypeError):
                         pass  # A pending event may not yet have an atomic response.
         if isinstance(cloud_source, dict):
             cloud = _only(cloud_source, CLOUD_FIELDS)
+            cloud['fusion'] = _only(cloud_source.get('fusion'), FUSION_FIELDS)
             cloud['result'] = _only(cloud_source.get('result'), SCENE_FIELDS)
             # Drop arbitrary nested provider contents; only documented scene fields leave the service.
             cloud['result']['objects'] = [_only(v, ('category','position','blocks_corridor','evidence')) for v in cloud['result'].get('objects',[])[:100] if isinstance(v,dict)] if isinstance(cloud['result'].get('objects',[]),list) else []

@@ -1,5 +1,7 @@
 """Exercise real local controller -> worker -> recovery -> final dry-run wheel mapping."""
 import json
+import os
+import shutil
 import contextlib
 from dataclasses import replace
 import io
@@ -97,6 +99,24 @@ class RecoveryRuntimeTests(unittest.TestCase):
             self.assertTrue(status['termination']['stopped']);self.assertTrue(status['cloud_arbitration']['closed'])
             self.assertEqual(status['cloud_arbitration']['fusion']['policy_id'],'rule-recovery-v1')
             self.assertTrue(any(r['fusion']['source']=='cloud_recovery' for r in records))
+            from autodrive.tools import replay_outer_loop
+            run=logs[0].parent.parent
+            with patch.object(replay_outer_loop,'analyze',side_effect=analyze), \
+                 patch('cloud_client.client.CloudClient') as replay_cloud, \
+                 patch.object(onboard,'create_chassis') as replay_hardware:
+                summary=replay_outer_loop.replay_recorded(run,root/'replay',profile='recorded')
+            replay_cloud.assert_not_called();replay_hardware.assert_not_called()
+            self.assertTrue(summary['cloud_recovery_replayed'])
+            self.assertGreater(summary['cloud_replay']['matched_events'],0)
+            self.assertEqual(summary['cloud_replay']['unmatched_events'],0)
+            self.assertEqual(summary['matched_action_rows'],summary['frames'])
+            self.assertEqual(summary['matched_pwm_rows'],summary['frames'])
+            evidence_dir=os.environ.get('CAR_TEST_REPLAY_EVIDENCE_DIR')
+            if evidence_dir:
+                destination=Path(evidence_dir)
+                destination.mkdir(parents=True,exist_ok=True)
+                shutil.copytree(run,destination/'synthetic-run')
+                shutil.copytree(root/'replay',destination/'synthetic-replay')
 
     def test_real_worker_current_geometry_final_pwm_and_stop(self):
         self.exercise_runtime(False)
@@ -147,6 +167,7 @@ class RecoveryRuntimeTests(unittest.TestCase):
             self.assertEqual(moves[-1][1],0)
             self.assertEqual(tick(1.4,6,external=False).action,'stop')
             self.assertEqual(client.calls,1)
+            coord.close()  # Drain asynchronous evidence before inspecting it.
             files=list((Path(tmp)/'cloud').glob('*/response.json'))
             self.assertEqual(len(files),1)
             saved=json.loads(files[0].read_text(encoding='utf-8'))

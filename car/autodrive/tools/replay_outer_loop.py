@@ -7,6 +7,7 @@ deadline/dropout timing or prove actual stopping/line clearance.
 """
 import argparse
 from collections import Counter
+from dataclasses import asdict
 import csv
 import hashlib
 import json
@@ -14,6 +15,7 @@ import math
 from pathlib import Path
 import sys
 import time
+from unittest.mock import patch
 
 import cv2
 import numpy as np
@@ -114,6 +116,7 @@ def replay(run_dir, output_dir=None, profile='rosmaster_jetson_yolopv2_outer_tri
         raise ValueError('stationary corner replay requires recorded masks and IMU; use --mode recorded')
     config['perception']['yolopv2']['asynchronous'] = False
     config['cloud_arbitration']['enabled'] = False
+    config.setdefault('cloud_recovery',{})['enabled'] = False
     config['camera']['gimbal']['initialize_on_startup'] = False
     (output / 'replay_config.yaml').write_text(yaml.safe_dump(config, sort_keys=False))
     cap = cv2.VideoCapture(str(video))
@@ -234,6 +237,28 @@ def replay_recorded(run, output_dir=None, profile='rosmaster_jetson_yolopv2_oute
     config['cloud_arbitration']['enabled'] = False
     config['camera']['gimbal']['initialize_on_startup'] = False
     stationary_enabled = config.get('stationary_corner', {}).get('enabled') is True
+    recovery = None
+    cloud_requested = config.get('cloud_recovery',{}).get('enabled') is True
+    cloud_journal = run/'cloud/decisions.jsonl'
+    if cloud_requested and cloud_journal.is_file():
+        from autodrive.runtime.onboard import cloud_configuration
+        from autodrive.tools.recorded_recovery import RecordedRecoveryCoordinator, read_records
+        recovery = RecordedRecoveryCoordinator(cloud_configuration(config),run)
+        applications = read_records(run/'cloud/applications.jsonl')
+        if len(recovery.decisions)!=len(rows) or len(applications)!=len(rows):
+            raise ValueError('incomplete cloud decision/application sequence')
+        for index,(decision,application) in enumerate(zip(recovery.decisions,applications)):
+            if ('decision_index' in decision and decision['decision_index']!=index
+                    or 'decision_index' in application and application['decision_index']!=index):
+                raise ValueError('cloud decision/application ordering mismatch')
+        journal = recorded_status.get('cloud_arbitration',{}).get('journal')
+        if journal is not None and (not journal.get('closed') or journal.get('error')
+                or journal.get('written')!=journal.get('enqueued')):
+            raise ValueError('incomplete cloud asynchronous journal')
+    elif cloud_requested:
+        if profile=='recorded' or recorded_status.get('cloud_arbitration',{}).get('enabled'):
+            raise ValueError('cloud-enabled recording is missing its cloud journals')
+        config['cloud_recovery']['enabled']=False
     stationary_inputs = ([recorded_stationary_inputs(row) for row in rows]
                          if stationary_enabled else None)
     application_inputs=([recorded_application_inputs(row) for row in rows]
@@ -309,11 +334,35 @@ def replay_recorded(run, output_dir=None, profile='rosmaster_jetson_yolopv2_oute
             applied = (stationary_runtime.filter(proposed, estimate, boundary,
                                                 **stationary_inputs[index])
                        if stationary_runtime is not None else gate.filter(proposed,estimate,boundary))
+            if recovery is not None:
+                from autodrive.control.cloud_recovery import build_evidence
+                inputs=stationary_inputs[index]
+                control_now=float(recovery.decisions[index]['now'])
+                if abs(control_now-inputs['now'])>1e-6:
+                    raise ValueError('cloud journal and local control clocks do not match')
+                if recovery.decisions[index].get('sequence')!=sequence:
+                    raise ValueError('cloud journal and semantic sequence do not match')
+                evidence=build_evidence(detector.get_consumed_observation(),boundary,applied,
+                    now=control_now,frame_age=inputs['frame_age_seconds'],
+                    external_allowed=inputs['external_motion_allowed'],
+                    perception_valid=inputs['perception_budget_valid'],
+                    pivot_verified=stationary_runtime.pivot_verified,
+                    imu_sample=inputs['imu_sample'],local_state=stationary_runtime.get_state())
+                applied=recovery.filter(applied,evidence,control_now,
+                    local_deadline=stationary_runtime.controller.get_state()['motion_deadline'])
+                detector.update_route_state(boundary,applied)
             application=application_inputs[index]
             if application is not None and not application['allowed']:
                 applied=stationary_runtime.apply_veto(application['reason'] or 'recorded final application veto',
                     now=application.get('stationary_application_monotonic'))
-            state = driver.apply(applied)
+                if recovery is not None:
+                    applied=recovery.veto(applied.reason,application.get('stationary_application_monotonic') or control_now)
+            if recovery is not None:
+                from autodrive.runtime.onboard import apply_runtime_command
+                applied_at=(application or {}).get('stationary_application_monotonic') or control_now
+                with patch('autodrive.control.drive_runtime.time.monotonic',return_value=applied_at):
+                    applied,state=apply_runtime_command(driver,applied,stationary_runtime,recovery)
+            else:state = driver.apply(applied)
             pwm = [state[key] for key in ('front_left_pwm','rear_left_pwm','front_right_pwm','rear_right_pwm')]
             if writer is None:
                 writer = cv2.VideoWriter(str(output/'replay.mp4'),cv2.VideoWriter_fourcc(*'mp4v'),
@@ -333,7 +382,11 @@ def replay_recorded(run, output_dir=None, profile='rosmaster_jetson_yolopv2_oute
                     'ego_yellow_ratio':boundary.ego_yellow_ratio},
                 'stationary_corner': (None if stationary_runtime is None
                                       else stationary_runtime.get_state()),
-                'recorded_application':application})
+                'recorded_application':application,
+                'fusion':None if recovery is None else asdict(recovery.fusion.last_decision),
+                'cloud_recovery':None if recovery is None else recovery.get_state(),
+                'recorded_pwm':[float(recorded.get(key) or 0) for key in
+                    ('front_left_pwm','rear_left_pwm','front_right_pwm','rear_right_pwm')]})
         if not results: raise RuntimeError('empty recorded run')
         checks = []
         for expected in expectations or []:
@@ -341,7 +394,12 @@ def replay_recorded(run, output_dir=None, profile='rosmaster_jetson_yolopv2_oute
             checks.append({'expectation':expected,'frames':len(selected),
                            'passed':bool(selected) and all(r['action'] in expected['actions'] for r in selected)})
         summary = {'input_run':str(run),'output_dir':str(output),'frames':len(results),
-            'mode':'recorded lossless model inputs/masks with recorded sequence and age; motors/cloud disabled',
+            'mode':'recorded lossless inputs/masks and reply timing; motors/network disabled',
+            'cloud_recovery_replayed':recovery is not None,
+            'cloud_replay':None if recovery is None else recovery.get_state()['recorded_replay'],
+            'cloud_limitation':('No recorded cloud evidence; local-only replay' if cloud_requested and recovery is None else None),
+            'matched_action_rows':sum(r['action']==r['recorded_action'] for r in results),
+            'matched_pwm_rows':sum(r['pwm']==r['recorded_pwm'] for r in results),
             'unique_semantic_inputs':len(source_hashes),'semantic_input_sha256':source_hashes,
             'configuration':config_evidence,
             'sequence_complete':True,

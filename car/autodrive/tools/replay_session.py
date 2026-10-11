@@ -138,7 +138,9 @@ def replay_session(run,output,profile='recorded',allow_incomplete_sensors=False,
         'control/visual_feedback.py','control/stationary_corner.py','control/drive_runtime.py',
         'control/lane_centering.py','perception/semantic_outer_route.py',
         'perception/semantic_stability.py','perception/yolopv2_semantic.py',
-        'perception/yolopv2_fusion.py','perception/yolopv2_objects.py']
+        'perception/yolopv2_fusion.py','perception/yolopv2_objects.py',
+        'tools/recorded_recovery.py','control/cloud_recovery.py',
+        'control/decision_fusion.py','control/recovery_worker.py']
     manifest=dict(schema_version=1,input_run=str(run),created_at=time.time(),
         raw_sources=before,sensor_health=health,all_raw_streams_complete=complete,
         uart_tx_required=tx_required,

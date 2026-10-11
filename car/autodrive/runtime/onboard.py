@@ -838,6 +838,7 @@ VISUAL_CORNER_DIAGNOSTICS = (
     'visual_forward_clear',
     'visual_rotation_margin_px',
     'visual_rotation_required_margin_px','visual_rotation_origin_x_px','visual_rotation_origin_y_px',
+    'visual_turn_margin_loss_px','visual_turn_margin_safe',
 )
 
 
@@ -892,6 +893,8 @@ class StationaryCornerRuntime:
         self._visual_exit_count = 0
         self._visual_exit_capture = None
         self._visual_last_turn_at = None
+        self._visual_turn_start_margin = None
+        self._visual_turn_margin_loss = 0.
         self._visual_exit_released_this_cycle = False
 
     @staticmethod
@@ -1039,9 +1042,9 @@ class StationaryCornerRuntime:
                         and abs(estimate.lateral_error) <= .35)
         front_observed = getattr(boundary, 'semantic_front_observed', False) is True
         front_ratio = getattr(boundary, 'semantic_observed_front_ratio', None)
-        front_near = front_observed and (not self._finite(front_ratio)
-                                         or front_ratio >= self.config.front_near_ratio
-                                         or getattr(boundary,'semantic_turn_entry_ready',False) is True)
+        # A far preview reaching the planner lookahead is not an in-place
+        # turning location. Approach using current visible front distance.
+        front_near = front_observed and self._finite(front_ratio) and front_ratio >= self.config.front_near_ratio
         exit_heading=getattr(boundary,'semantic_exit_heading_error',None)
         rotation_heading=getattr(boundary,'semantic_rotation_heading_error',None)
         rotation_candidate=bool(self.config.visual_corner_guard
@@ -1058,6 +1061,7 @@ class StationaryCornerRuntime:
                       and self._finite(command.steering) and abs(command.steering) <= .35
                       and command.action in ('forward', 'turn-left', 'turn-right'))
         clearance = {};rotation={};phase='cruise';corner_reason='guard disabled';exit_confirm=False
+        forward_in_corner=False;turn_margin_safe=True
         if self.config.visual_corner_guard:
             from autodrive.perception.visual_clearance import assess_visible_clearance,assess_rotation_clearance
             clearance=assess_visible_clearance(getattr(boundary,'corridor_mask',None),
@@ -1073,7 +1077,41 @@ class StationaryCornerRuntime:
                 (before['last_control_monotonic'] is None or now>=before['last_control_monotonic']))
             rotation=assess_rotation_clearance(getattr(boundary,'semantic_rotation_mask',None),
                 getattr(boundary,'semantic_yellow_mask',None))
+            # When forward support actually ends, a verified nearby exit can
+            # require rotation before the normal approach distance is reached.
+            # Check a straight trace independently of a failed fitted path.
+            rotation_mask=getattr(boundary,'semantic_rotation_mask',None)
+            if (not rotation_candidate and self.pivot_verified and imu_valid
+                    and front_observed and getattr(boundary,'semantic_turn_entry_ready',False) is True
+                    and getattr(boundary,'semantic_right_exit_observed',False) is True
+                    and self._finite(exit_heading) and exit_heading>self.config.visual_pivot_heading
+                    and rotation['rotation_clear'] and rotation_mask is not None):
+                h,w=rotation_mask.shape
+                straight=assess_visible_clearance(rotation_mask,getattr(boundary,'semantic_yellow_mask',None),
+                    np.array([[w//2,int(h*.98)],[w//2,int(h*.78)]]),self.config.visual_path_margin_ratio)
+                if straight['minimum_margin_px'] is not None and not straight['forward_clear']:
+                    rotation_candidate=True;local_safe=bool(evidence_safe)
+            margin=rotation.get('minimum_margin_px');required=rotation.get('required_margin_px')
+            if (new and ordered and capture_ordered and clock_ordered
+                    and self._finite(captured) and self._visual_last_turn_at is not None
+                    and captured>self._visual_last_turn_at and self._finite(margin)
+                    and self._visual_turn_start_margin is not None):
+                # Reserve at least the visible margin consumed by the last
+                # small turn. This is an image-space warning, not a body model.
+                # Recompute on the current frame: one transient segmentation
+                # gap must not latch its worst margin after support recovers.
+                self._visual_turn_margin_loss=max(self._visual_turn_start_margin-margin,0.)
+            if self._finite(margin) and self._finite(required):
+                turn_margin_safe=margin-self._visual_turn_margin_loss>=required
+            forward_in_corner=bool(self._visual_corner_active and clearance['path_safe']
+                and clearance['forward_clear'] and estimate.valid is True and command.action!='stop'
+                and getattr(boundary,'semantic_forward_road_valid',True) is True
+                and (near_aligned or not turn_margin_safe))
+            if forward_in_corner:
+                rotation_candidate=False
+                local_safe=bool(evidence_safe)
             local_safe=local_safe and (rotation['rotation_clear'] if rotation_candidate else clearance['path_safe']) and ordered and capture_ordered and clock_ordered
+            if rotation_candidate and not turn_margin_safe:local_safe=False
             if rotation_candidate:cruise=False
             corner_reason=clearance['reason']
             # A briefly straight-looking patch after a pivot is not a corner
@@ -1096,6 +1134,8 @@ class StationaryCornerRuntime:
                         self._visual_exit_count=0;self._visual_exit_capture=None
                     if self._visual_exit_count>=2:
                         self._visual_corner_active=False;exit_confirm=False
+                        forward_in_corner=False
+                        self._visual_turn_start_margin=None;self._visual_turn_margin_loss=0.
                         self._visual_exit_released_this_cycle=True
             cruise=cruise and not front_observed and not self._visual_corner_active
             phase=('turn' if self._visual_corner_active else
@@ -1107,8 +1147,13 @@ class StationaryCornerRuntime:
                   and not front_near and not self._visual_corner_active)
         if exit_confirm:
             desired='stop';corner_reason='visual-await-post-stop-exit-observations'
+        elif forward_in_corner:
+            desired='forward';cruise=False
+            corner_reason=('visual-forward-preserve-turn-margin' if not turn_margin_safe
+                           else 'visual-current-near-path-forward')
         elif rotation_candidate:
-            desired='pivot-right';corner_reason='visual-current-rotation-support'
+            desired='pivot-right';corner_reason=('visual-current-rotation-support' if turn_margin_safe
+                                                else 'visual-turn-margin-shrinking')
         elif approach:
             desired='forward';local_safe=local_safe and clearance['forward_clear']
             if not clearance['forward_clear']:corner_reason='visual-forward-approach-not-clear'
@@ -1146,6 +1191,9 @@ class StationaryCornerRuntime:
             desired_action=desired, local_valid=bool(local_safe and self._startup_ready),
             yaw_rad=yaw, imu_timestamp=stamp, imu_valid=bool(imu_valid), continuous=cruise)
         if self.config.visual_corner_guard and decision.action=='pivot-right':
+            if before['action']!='pivot-right':
+                self._visual_turn_start_margin=rotation.get('minimum_margin_px')
+                self._visual_turn_margin_loss=0.
             self._visual_corner_active=True;self._visual_exit_count=0;self._visual_exit_capture=None
             self._visual_last_turn_at=now;phase='turn'
         if decision.action != 'stop' and self.controller.get_state()['continuous']:
@@ -1179,6 +1227,8 @@ class StationaryCornerRuntime:
         self._state['visual_rotation_required_margin_px']=rotation.get('required_margin_px')
         self._state['visual_rotation_origin_x_px']=rotation.get('origin_x_px')
         self._state['visual_rotation_origin_y_px']=rotation.get('origin_y_px')
+        self._state['visual_turn_margin_loss_px']=self._visual_turn_margin_loss
+        self._state['visual_turn_margin_safe']=turn_margin_safe
         self._state.update({field: getattr(boundary, field, None) for field in STATIONARY_BOUNDARY_DIAGNOSTICS})
         self._state.update({field: getattr(boundary, field, None) for field in
             ('semantic_front_boundary_ratio', 'semantic_right_exit_observed', 'semantic_hard_safe')})

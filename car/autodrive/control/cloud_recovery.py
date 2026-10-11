@@ -56,7 +56,9 @@ def build_evidence(observation,boundary,command,*,now,frame_age,external_allowed
     Gray/white floor must be supported by THIS model frame or the existing
     bounded-track observation. Pixel margins are not a metric body footprint.
     """
-    evidence=dict(observation=observation,hard_safe=False,candidates=[],stop_code='hard_veto',imu={},
+    evidence=dict(observation=observation,hard_safe=False,observation_ready=False,
+                  motion_veto_reason='invalid or unavailable current evidence',
+                  candidates=[],stop_code='hard_veto',imu={},
                   local_route_valid=local_state.get('local_safe') is True)
     if not isinstance(observation,dict) or boundary is None: return evidence
     sequence=observation.get('sequence');captured=observation.get('captured_at')
@@ -64,21 +66,30 @@ def build_evidence(observation,boundary,command,*,now,frame_age,external_allowed
             or not 0<=now-captured<=.6 or sequence!=getattr(boundary,'semantic_sequence',None)
             or captured!=getattr(boundary,'semantic_captured_at',None)
             or not finite(frame_age) or not 0<=frame_age<=.25
-            or external_allowed is not True or perception_valid is not True
-            or getattr(boundary,'semantic_hard_safe',False) is not True
-            or getattr(boundary,'yellow_hazard',False) is not False): return evidence
+            or external_allowed is not True or perception_valid is not True): return evidence
     from autodrive.perception.track_colors import observe_track_surface, classify_track_paint
     from autodrive.perception.visual_clearance import assess_visible_clearance, assess_rotation_clearance
     try:
         road=np.asarray(observation['mask']);lane=np.asarray(observation['lane_mask'])
         if (road.ndim!=2 or road.shape!=lane.shape or min(road.shape)<16
                 or not np.isfinite(road).all() or not np.isfinite(lane).all()): return evidence
-        # Broad current near-field detection veto covers both candidate types.
+        frame=np.asarray(observation['frame'])
+        if frame.ndim!=3 or frame.shape[2]!=3 or frame.dtype!=np.uint8 or min(frame.shape[:2])<16:
+            return evidence
+        obstacle=False
+        # Validate all detection records before allowing an observation upload.
         for detection in observation['detections']:
             x1,y1,x2,y2=detection['box'];confidence=detection['confidence']
             if not all(finite(x) for x in (x1,y1,x2,y2,confidence)): return evidence
             if not (0<=x1<=x2<=1 and 0<=y1<=y2<=1 and 0<=confidence<=1): return evidence
-            if confidence>=.3 and y2>.65 and x1<.8 and x2>.2: return evidence
+            if confidence>=.3 and y2>.65 and x1<.8 and x2>.2: obstacle=True
+        evidence['observation_ready']=True
+        if getattr(boundary,'yellow_hazard',False) is not False:
+            evidence['motion_veto_reason']='yellow boundary in near-vehicle region';return evidence
+        if obstacle:
+            evidence['motion_veto_reason']='near-field obstacle';return evidence
+        if getattr(boundary,'semantic_hard_safe',False) is not True:
+            evidence['motion_veto_reason']='semantic motion evidence rejected';return evidence
         surface=observe_track_surface(road,observation['frame'])
         supported=((road>0)|(surface['mask']>0)).astype(np.uint8)
         paint=classify_track_paint(supported,lane,observation['frame'])
@@ -96,7 +107,8 @@ def build_evidence(observation,boundary,command,*,now,frame_age,external_allowed
     stamp=sample.get('received_monotonic')
     imu_valid=(sample.get('valid') is True and sample.get('stale') is False
                and finite(yaw) and finite(stamp) and 0<=now-stamp<=.2)
-    evidence.update(hard_safe=True,imu=dict(yaw_rad=yaw,imu_timestamp=stamp,imu_valid=bool(imu_valid)))
+    evidence.update(hard_safe=True,motion_veto_reason=None,scene_support=allowed,
+                    imu=dict(yaw_rad=yaw,imu_timestamp=stamp,imu_valid=bool(imu_valid)))
     if forward['path_safe'] and forward['forward_clear']:
         hsv=cv2.cvtColor(observation['frame'],cv2.COLOR_BGR2HSV)
         white=cv2.resize(((hsv[:,:,1]<=55)&(hsv[:,:,2]>=170)).astype(np.float32),(w,h),interpolation=cv2.INTER_AREA)>.8
@@ -107,7 +119,8 @@ def build_evidence(observation,boundary,command,*,now,frame_age,external_allowed
             description='当前近场中心短直行，当前road或有界地面支持，白色排除可重解释，黄线保留；范围图像高度78%-98%、中心左右6%',
             margin_px=forward['minimum_margin_px']))
     heading=rotation['heading_error']
-    if pivot_verified is True and imu_valid and rotation['rotation_clear'] and finite(heading) and heading>.18:
+    if (pivot_verified is True and imu_valid and rotation['rotation_clear'] and finite(heading) and heading>.18
+            and local_state.get('visual_turn_margin_safe',True) is True):
         evidence['candidates'].append(dict(candidate_id='pivot-right',action='pivot-right',assessment='right_corner',
             description='当前位置小幅右旋；当前连通地面右方出口支持，近车旋转原点及黄线余量通过，需实时IMU',
             heading_error=heading,margin_px=rotation['minimum_margin_px']))
@@ -132,6 +145,9 @@ class RecoveryEngine:
         self._stall_at=None;self._stall_count=0;self._resume_count=0;self._retry_at=0.
         self._observe_after=None;self._selected=None;self._event_mask=None;self._event_capture=None
         self.transitions=[]
+        self.response_status='not_requested'
+        self.last_event_id=None;self.last_event_reason=None;self.last_event_step_authorized=False
+        self._event_support=None;self._event_image=None;self._event_yaw=None
 
     @property
     def motion_deadline(self): return self.controller.get_state()['motion_deadline'] if self.phase=='PROBE_STEP' else None
@@ -145,6 +161,8 @@ class RecoveryEngine:
         was_probe=self.phase=='PROBE_STEP'
         observing=self.phase=='OBSERVE'
         self.controller.veto(reason,now=now)
+        if self._event:
+            self.response_status='cancelled';self.last_event_reason=reason
         self._reply=None;self._selected=None;self._event=None;self.request=None
         self._stall_at=None;self._stall_count=0;self._resume_count=0
         self._retry_at=now+self.config.retry_seconds
@@ -163,14 +181,21 @@ class RecoveryEngine:
                     if all(x['sequence']!=nearest['sequence'] for x in selected):selected.append(nearest)
         return sorted(selected,key=lambda x:x['sequence'])
 
-    def _begin(self,evidence,now):
+    def _begin(self,evidence,now,diagnostic_only=False):
         obs=evidence['observation'];self.attempts+=1;self._event=str(uuid.uuid4())
+        self.last_event_id=self._event;self.last_event_reason=None;self.last_event_step_authorized=False
+        support=evidence.get('scene_support')
+        self._event_support=None if support is None else np.array(support,dtype=bool,copy=True)
+        self._event_image=cv2.resize(obs['frame'],(64,48),interpolation=cv2.INTER_AREA).astype(np.int16)
+        imu=evidence.get('imu') or {}
+        self._event_yaw=imu.get('yaw_rad') if imu.get('imu_valid') is True else None
         self._event_mask=np.array(obs['mask']>0,copy=True);self._event_capture=obs['captured_at']
         frames=self._frames(obs)
         context=dict(run_id=self.run_id,event_id=self._event,frame_id=str(obs['sequence']),
             candidate_version='local-recovery-v1',stop_code=evidence['stop_code'],
             stall_seconds=now-self._stall_at,attempt=self.attempts,frame_policy=self.config.frame_policy,
-            candidates=copy.deepcopy(evidence['candidates']),
+            diagnostic_only=diagnostic_only,motion_veto_reason=evidence.get('motion_veto_reason'),
+            candidates=[] if diagnostic_only else copy.deepcopy(evidence['candidates']),
             frames=[dict(sequence=x['sequence'],captured_at=x['captured_at'],
                          relative_seconds=x['captured_at']-obs['captured_at']) for x in frames])
         import json
@@ -179,13 +204,21 @@ class RecoveryEngine:
         context['road_mask_sha256']=hashlib.sha256(np.ascontiguousarray(obs['mask']).tobytes()).hexdigest()
         self.request=dict(context=context,frames=[x['frame'].copy() for x in frames],started=now)
         self._reply=None;self._retry_at=now+self.config.request_timeout_seconds
-        self._phase('CLOUD_PENDING','request current stall',now)
+        self.response_status='pending'
+        self._phase('CLOUD_PENDING','observe current hard stop' if diagnostic_only else 'request current stall',now)
 
     def receive(self,event_id,scene,now,error=None):
         if event_id!=self._event or self.phase!='CLOUD_PENDING':return
         if error or now>self._retry_at:
             self._reply=None;self._retry_at=now+self.config.retry_seconds
+            self.response_status='failed'
             self._phase('HOLD','cloud failed or timed out',now);return
+        self.response_status='received'
+        if self.request['context'].get('diagnostic_only'):
+            # An observation-only request can never become a motion permit,
+            # even if the model invents a candidate or the hazard later clears.
+            self._reply=None;self._retry_at=now+self.config.retry_seconds
+            self._phase('HOLD','cloud observation received; local motion veto remains',now);return
         try:
             scene=validate_recovery(scene)
             selected=next((c for c in self.request['context']['candidates'] if c['candidate_id']==scene['candidate_id']),None)
@@ -196,6 +229,41 @@ class RecoveryEngine:
         self._reply=copy.deepcopy(scene);self._reply_at=now
         self._phase('REVALIDATE','await newer current evidence',now)
 
+    def _stable_current_scene(self,evidence):
+        """Distinguish raw model flicker from a changed request scene.
+
+        All support is rebuilt from the current matched frame. This exception
+        requires stable locally checked candidate geometry, current IMU,
+        stable visible floor and stable RGB, never just an old good mask.
+        """
+        support=evidence.get('scene_support');imu=evidence.get('imu') or {}
+        yaw=imu.get('yaw_rad')
+        if (self._event_support is None or support is None or not self.request
+                or not evidence['candidates']
+                or imu.get('imu_valid') is not True or not finite(yaw) or not finite(self._event_yaw)
+                or abs(math.atan2(math.sin(yaw-self._event_yaw),math.cos(yaw-self._event_yaw)))>math.radians(2)):
+            return False
+        original={c['candidate_id']:c for c in self.request['context']['candidates']}
+        current={c['candidate_id']:c for c in evidence['candidates']}
+        if original.keys()!=current.keys():return False
+        for key,old in original.items():
+            candidate=current[key]
+            if any(candidate.get(k)!=old.get(k) for k in ('action','assessment')):return False
+            # Allow pixel quantization, not a different corridor/turn. Every
+            # candidate already passed this frame's clearance checks.
+            for field,tolerance in (('margin_px',2.),('heading_error',.025)):
+                before=old.get(field);after=candidate.get(field)
+                if before is None and after is None:continue
+                if not finite(before) or not finite(after) or abs(after-before)>tolerance:return False
+        support=np.asarray(support,dtype=bool)
+        if support.shape!=self._event_support.shape:return False
+        union=np.count_nonzero(support|self._event_support)
+        if not union or 1.-np.count_nonzero(support&self._event_support)/union>.1:
+            return False
+        image=cv2.resize(evidence['observation']['frame'],(64,48),interpolation=cv2.INTER_AREA).astype(np.int16)
+        change=np.abs(image-self._event_image)
+        return bool(np.mean(change)<=8. and np.mean(np.max(change,axis=2)>20)<=.05)
+
     def tick(self,command,evidence,now,worker_busy=False):
         if not self.config.enabled:return command
         if not finite(now) or self._now is not None and now<self._now:
@@ -204,22 +272,34 @@ class RecoveryEngine:
         obs=evidence.get('observation') or {};seq=obs.get('sequence');capture=obs.get('captured_at')
         fresh=(type(seq) is int and seq>=0 and finite(capture) and 0<=now-capture<=self.config.observation_max_age_seconds
                and (self._sequence is None or seq>=self._sequence) and (self._capture is None or capture>=self._capture))
-        if not fresh or evidence.get('hard_safe') is not True:return self.veto('current evidence hard veto',now)
+        if not fresh or (evidence.get('hard_safe') is not True and evidence.get('observation_ready') is not True):
+            return self.veto('current evidence hard veto',now)
         new=(self._sequence is None or seq>self._sequence) and (self._capture is None or capture>self._capture)
         if new:
             self._sequence=seq;self._capture=capture
             if not self._history or capture-self._history[-1]['captured_at']>=.1:
                 self._history.append(dict(sequence=seq,captured_at=capture,frame=obs['frame'].copy()))
             while self._history and capture-self._history[0]['captured_at']>3.:self._history.popleft()
+        if evidence.get('hard_safe') is not True:
+            return self._observe_hard_stop(evidence,now,new,worker_busy)
+        if self.request and self.request['context'].get('diagnostic_only'):
+            # Fresh locally safe evidence must recover locally; a diagnostic
+            # response is never reinterpreted as a driving recommendation.
+            self.response_status='cancelled';self.last_event_reason='local evidence restored after observation-only hold'
+            self._event=None;self.request=None;self._reply=None
+            self._stall_at=None;self._stall_count=0
+            self._phase('HOLD','local evidence restored after observation-only hold',now)
         if self.phase in ('CLOUD_PENDING','REVALIDATE','PROBE_STEP'):
             mask=np.asarray(obs['mask'])>0
             if mask.shape!=self._event_mask.shape:
                 return self.veto('scene changed',now)
             union=np.count_nonzero(mask|self._event_mask)
             diff=1.-np.count_nonzero(mask&self._event_mask)/max(1,union)
-            if diff>self.config.mask_change_threshold:return self.veto('scene changed',now)
+            if diff>self.config.mask_change_threshold and not self._stable_current_scene(evidence):
+                return self.veto('scene changed',now)
         if self.phase=='CLOUD_PENDING':
             if now>self._retry_at:
+                self.response_status='timeout';self.last_event_reason='cloud timeout'
                 self._retry_at=now+self.config.retry_seconds;self._phase('HOLD','cloud timeout',now)
             return stopped(self.reason)
         if self.phase in ('REVALIDATE','PROBE_STEP'):
@@ -237,6 +317,8 @@ class RecoveryEngine:
                     self._phase('OBSERVE',decision.reason,now)
                 return stopped(decision.reason)
             self._phase('PROBE_STEP','cloud selected current local candidate',now)
+            self.response_status='step_authorized';self.last_event_step_authorized=True
+            self.last_event_reason='current local candidate revalidated for bounded step'
             return DifferentialDriveCommand(decision.action,1. if decision.action=='pivot-right' else 0.,
                     .3,-.3 if decision.action=='pivot-right' else .3,.5,self.reason,0.)
         if self.phase=='OBSERVE':
@@ -267,8 +349,36 @@ class RecoveryEngine:
         elif self.phase=='LOCAL_DRIVING':self._phase('STALL_CONFIRM','persistent perception stop confirmation',now)
         return stopped(self.reason)
 
+    def _observe_hard_stop(self,evidence,now,new,worker_busy):
+        self.controller.veto('current evidence hard veto',now=now)
+        self._reply=None;self._resume_count=0
+        if self.request and not self.request['context'].get('diagnostic_only'):
+            self.response_status='cancelled';self.last_event_reason='motion request cancelled by current hazard'
+            self._event=None;self.request=None;self._stall_at=None;self._stall_count=0
+            self._phase('HOLD','motion request cancelled by current hazard',now)
+        if self.phase=='CLOUD_PENDING':
+            if now>self._retry_at:
+                self.response_status='timeout';self._retry_at=now+self.config.retry_seconds
+                self._phase('HOLD','cloud observation timeout; local motion veto remains',now)
+            return stopped(self.reason)
+        if new:
+            if self._stall_at is None:self._stall_at=now
+            self._stall_count+=1
+        if self.attempts>=self.config.max_attempts:
+            self._phase('HOLD','observation attempt budget exhausted; local motion veto remains',now)
+        elif (self._stall_at is not None and now-self._stall_at>=self.config.stall_seconds
+                and self._stall_count>=self.config.trigger_observations):
+            if now>=self._retry_at and not worker_busy:self._begin(evidence,now,diagnostic_only=True)
+        elif not self.attempts:
+            self._phase('STALL_CONFIRM','confirm persistent hard stop for cloud observation',now)
+        return stopped(self.reason)
+
     def get_state(self):
         return dict(enabled=self.config.enabled,phase=self.phase,reason=self.reason,event_id=self._event,
             selected_candidate_id=None if self._reply is None else self._reply['candidate_id'],
             attempts=self.attempts,frame_policy=self.config.frame_policy,motion_allowed=self.phase=='LOCAL_DRIVING',
-            controller=self.controller.get_state(),candidate_version='local-recovery-v1')
+            controller=self.controller.get_state(),candidate_version='local-recovery-v1',
+            response_status=self.response_status,
+            last_event_id=self.last_event_id,last_event_reason=self.last_event_reason,
+            last_event_step_authorized=self.last_event_step_authorized,
+            diagnostic_only=bool(self.request and self.request['context'].get('diagnostic_only')))

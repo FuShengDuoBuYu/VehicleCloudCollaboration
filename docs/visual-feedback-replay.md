@@ -14,7 +14,7 @@ visual模式在执行前完成道路和门禁计算，执行后再画同一消�
 
 ## 页面启停的部署方式
 
-已按用户本次明确授权重载现有网页和传感器服务，并通过临时用户服务启动实车模式supervisor，当前待机，用户点击才启动。部署需要在允许操作服务的时间窗口重新加载 `vehicle-dashboard.service` 和 `vehicle-sensors.service`。后者运行在现有容器中，加载完整雷达/深度记录代码。无需安装依赖、修改服务unit或启动电机。
+初版按用户当次授权通过临时用户服务加载实车模式supervisor，临时unit不会随重启恢复。2026-10-10用户进一步要求恢复并开机启动，改为持久系统级 `vehicle-autodrive-panel.service`，以jetson用户运行。开机仅建立本机socket并进入hardware/idle，点击开始才运行硬件，不续跑旧会话。使用 `systemctl status vehicle-autodrive-panel` 查看，不能沿用旧 `systemctl --user` 命令。源码unit在 `deploy/vehicle-autodrive-panel.service`；部署和只读验收记录见 `coordination/2026-10-10-panel-autostart-restoration.md`。相机/串口/雷达/深度及供电未恢复时，按钮就绪不等于具备实车条件。
 
 终端中启动独立启停程序：
 
@@ -60,6 +60,12 @@ outputs/field_yolopv2/venv/bin/python -B car/autodrive/tools/replay_session.py \
 
 默认读取当次 `resolved_runtime_config.yaml`，使用当前控制代码。它不打开相机、串口、ROS订阅、GPU模型或云接口，不创建实体底盘。要比较候选配置，在命令后添加 `--profile <候选profile ID或YAML路径>`；原配置保留，候选的完整解析配置与hash也保存。
 
+2026-10-11新增云端恢复回放，沿用上述命令。驾驶归档现在包含`cloud/decisions.jsonl`、`applications.jsonl`及每个事件的`request.json`、`response.json`和输入PNG。决策日志保存实际收到云回复的控制时刻，执行日志带对应决策序号。两份日志通过有界后台队列顺序保存，队列满或写入失败仍停车；结束时先停车，再排空日志。
+
+回放使用当前本地算法、同帧道路/黄线、记录IMU和执行时效重新生成候选，按记录时刻注入已保存的云回复，不产生新的API费用。仅请求帧序号/采集时间、road mask、候选hash及输入原图均匹配时复用回复；改变算法导致请求不匹配时保持停车，并报告`unmatched_events`，不冒用历史建议。云回复的当前帧复核、短步截止和最终driver拒绝也参与回放。旧同步归档没有消费时刻时会注明使用worker完成时间近似，不能称精确时序复现。云启用的原始run缺云日志或异步日志未完整关闭时拒绝；不带云记录的旧本地run仍只能做明确标记的本地回放。
+
+`controller/commands.json`增加fusion、云状态和记录PWM；summary增加云事件匹配/回复数量、动作及四轮PWM一致行数。它验证固定记录视角下的算法输出，不推导改变动作后的新视角或物理轨迹。模拟25周期/2个云事件的开发检查已实现动作和四轮输出25/25一致，不是当前场地自主过弯结果。
+
 输出：`controller/commands.json` 每行决策/PWM/理由/状态；`controller/summary.json` 动作和停车原因统计；`decision_changes.json` 与历史动作不同的行；`sensor_timeline.jsonl` 每个控制时刻之前最近的各路原始样本引用、年龄与缺失；`manifest.json` 原始文件hash、数据完整性与回放代码hash。不会拿未来样本填入过去。`.5`秒新鲜标识只用于索引，实际控制时效门禁使用其独立配置。
 
 完整性失败默认拒绝。旧运行缺少原始雷达/深度时可明确添加 `--allow-incomplete-sensors`，结果标记为历史部分回放。日志序号缺口、未终止运行、缺失模型输入和路径越界仍拒绝。输入数据保持原样，输出目录不能在原始run内部、不能覆盖已有目录。
@@ -85,3 +91,7 @@ outputs/field_yolopv2/venv/bin/python -B car/autodrive/tools/replay_session.py \
 最终同输入改版回放1183周期：995停/131前进/0pivot→697停/395前进/48短pivot，两个弯均产生右转输出，但第二弯仍有道路余量拒绝，不能算新实车正确过弯。报告 `coordination/2026-10-10-b6c-policy-fix.md`；一倍对照视频 `outputs/visual_feedback/20261010/b6c-policy-fix/candidate-reference-1x.mp4`；最终逐行输出在 `final-verified-replay/`，旧卡弯完整对照在 `final-c92-replay/`。下一用户Start加载已修改的profile，本轮没有新实车运动。
 
 2026-10-10再修正第二弯：原地小转使用最近可见地面的当前支持/连通方向，与前进近路径检查分开。补充的浅黄只能与当前源图强黄块连通，不连接缺失像素；模型已有灰白路面可去除lane纹理，无当前黄边界时不增加模型缺口。最终目录为`outputs/visual_feedback/20261010/b6c-second-corner-fix/final-source-replay/`与`final-source-c92-replay/`，其他目录是保留的迭代结果。第二弯940–1021的道路拒绝37→0，前拱与新帧出弯确认后恢复连续行驶；接近段仍15条拒绝/恢复等待，不能把整条参考轨迹称为已完全匹配。报告`coordination/2026-10-10-b6c-second-corner-fix.md`，对应100.8s一倍速视频在同派生目录。67项针对CPU检查与无设备启动校验通过，本轮没有重启程序或新实车验证。
+
+2026-10-11 c8a60d2b自主失败修正：远处出口达到规划前视点不再单独启动原地转；当前前方仍可短进时继续接近，前进支持确实不足而当前右出口/旋转余量有效时仍可小转。弯中重新比较近场前拱与右旋，并记录`visual_turn_margin_loss_px/visual_turn_margin_safe`，按新观测更新余量，不锁存最坏历史帧。黄线停车可触发仅观察云请求，回复不授予运动许可；回放请求签名包含diagnostic_only，不能把观察回复复用成运动建议。旧run没有对应回复时显示unmatched_events，不自动联网或伪造云回复。修正后的命令不能改变源录像末尾已经贴线的视角，不能要求把这些帧也判成可行驶。
+
+2026-10-11 05a3修正：斜侧边缘未通过横向前沿检验时不再标记front_observed，避免错误approach覆盖回中纠偏。云请求遇到原始road大变时，只有当前合法候选类型相同、几何差在像素容差内、同帧地面支持稳定、RGB与IMU稳定才保留请求；黄线、障碍、新鲜度和最终执行门禁不变。候选余量容差2px、方向误差容差.025、地面1-IoU≤.1、64×48图像平均通道差≤8/255且最大通道差>20的像素占比≤5%、IMU差≤2°；这些是开发门禁，非运动路径脚本或已标定物理余量。取消仍消耗一次请求预算，未放开无限重试。固定视角整段回放与原云事件窗口复核分别保存，不能把独立窗口短步相加称为一条新实车轨迹。

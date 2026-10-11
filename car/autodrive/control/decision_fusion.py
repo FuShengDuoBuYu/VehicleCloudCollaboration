@@ -133,7 +133,8 @@ class DecisionFusionAdapter:
                 or type(sequence) is not int or sequence<0
                 or self._sequence is not None and sequence<self._sequence
                 or not finite(captured) or not 0<=inputs.now-captured<=.6
-                or inputs.evidence.get('hard_safe') is not True):
+                or (inputs.evidence.get('hard_safe') is not True
+                    and inputs.evidence.get('observation_ready') is not True)):
             return self.veto('fusion current evidence veto',inputs.now)
         self._now=inputs.now;self._sequence=sequence
         try:
@@ -148,6 +149,8 @@ class DecisionFusionAdapter:
                 decision=replace(decision,command=stopped(decision.reason),source='hold',deadline=None,candidate_id=None)
                 self._active_cloud_event=None;self._cloud_deadline=None
             else:
+                if inputs.evidence.get('hard_safe') is not True:
+                    raise ValueError('observation-only evidence cannot permit motion')
                 if not finite(decision.deadline) or decision.deadline<=inputs.now:raise ValueError('expired motion permit')
                 if decision.source=='local':
                     if command!=inputs.local_command or not finite(inputs.local_deadline):raise ValueError('invented local command')

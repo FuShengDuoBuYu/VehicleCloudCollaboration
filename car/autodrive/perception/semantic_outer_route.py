@@ -89,12 +89,14 @@ class SemanticOuterRoute:
         if np.mean(usable) < .9:
             return None
         heights = front[usable]
-        self.front_observed = True
         self.observed_front_ratio = float(np.median(heights)/h)
         self.front_spread_ratio = float((np.percentile(heights,90)-np.percentile(heights,10))/h)
         if np.percentile(heights,90)-np.percentile(heights,10) > h*.12:
             self.corner_reject_reason = 'front-spread-too-large'
             return None
+        # A sloping side edge is not a transverse front boundary. Marking it
+        # observed would replace lane recentering with equal-wheel approach.
+        self.front_observed = True
         if self.stationary_corners:
             # The current transverse edge remains observed when the exit head
             # drops pixels. Exit confirmation is a separate condition for pivot.
