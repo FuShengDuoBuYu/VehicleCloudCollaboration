@@ -1,0 +1,27 @@
+Static checks: 156 Python files, 9 shell scripts
+Explicitly excluded optional groups: test_cloud_scene_http, test_cloud_scene_ws, test_vehicle_dashboard
+..........................................F..........................................................................................................................................................................................................................................................................................................................................................................Saved: /tmp/tmp85_yhfc_/runs/20261012T074004_806497Z_0b310284
+.Saved: /tmp/tmpc18xh072/runs/20261012T074005_443712Z_6f0ccd39
+Saved: /tmp/tmpl953b_ll/runs/20261012T074006_177512Z_42a7037b
+..Saved: /tmp/tmpaov7gc64/runs/20261012T074006_907576Z_39647567
+........Saved: /tmp/tmp3nokyxwl/runs/20261012T074008_336107Z_e7a59fe5
+....Saved: /tmp/tmpxv3h9x0t/runs/20261012T074008_974983Z_02b24ccc
+..Saved: /tmp/tmp3q0f64v7/runs/20261012T074009_569561Z_019d4295
+....Saved: /tmp/tmpf7zrj32y/runs/20261012T074010_644981Z_3f12b613
+.Saved: /tmp/tmpn5rkiia3/runs/20261012T074011_237430Z_a35e195d
+.Saved: /tmp/tmp0wfis2a5/runs/20261012T074011_779041Z_073bfee1
+.....Saved: /tmp/tmpvvaw0lzl/runs/20261012T074013_565252Z_f7fdc3b6
+...Saved: /tmp/tmpyqdgu9y8/runs/20261012T074014_142440Z_90a46f96
+..............................................................................................................
+======================================================================
+FAIL: test_onboard_main_archives_recovery_and_never_creates_hardware (car.test.test_cloud_recovery_runtime.RecoveryRuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery_runtime.py", line 96, in test_onboard_main_archives_recovery_and_never_creates_hardware
+    self.assertTrue(any(r['wheels']['front_left_pwm']>0 for r in records))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 546 tests in 68.001s
+
+FAILED (failures=1)

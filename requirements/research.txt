@@ -1,0 +1,9 @@
+-r runtime.txt
+# Offline classification/benchmark tools only; use a separate environment.
+scipy>=1.7,<1.11
+scikit-learn>=1.0,<1.4
+tqdm>=4.64,<5
+transformers>=4.30,<4.47
+ultralytics>=8.0
+onnxruntime>=1.15,<1.20
+# Select compatible torch/torchvision builds for the research machine explicitly.

@@ -1,0 +1,51 @@
+.......................................................................................E.................................................................................................................................................................................................................................................................................................................F.......................Saved: /tmp/tmpalxl9ukh/runs/20261012T072834_348256Z_830e35db
+.Saved: /tmp/tmp2z1u7hjk/runs/20261012T072834_980927Z_b3701f61
+Saved: /tmp/tmpa1pyu2_y/runs/20261012T072835_663251Z_e7d303e8
+..Saved: /tmp/tmplf81rsp4/runs/20261012T072836_363562Z_09a8e62f
+........Saved: /tmp/tmptmr56vwm/runs/20261012T072837_744755Z_2f0a2bb6
+....Saved: /tmp/tmpgzaa5eg0/runs/20261012T072838_382723Z_bf5bf2ba
+..Saved: /tmp/tmpat4uf7cp/runs/20261012T072838_968101Z_129a3eda
+....Saved: /tmp/tmpvvx1i340/runs/20261012T072840_019158Z_3e19562b
+.Saved: /tmp/tmp4hkwqrej/runs/20261012T072840_603639Z_bae04ca5
+.Saved: /tmp/tmplb3n8dco/runs/20261012T072841_189694Z_f6a8cad9
+.....Saved: /tmp/tmpgmq597tc/runs/20261012T072842_969064Z_ba931b86
+...Saved: /tmp/tmpnrt3b_sv/runs/20261012T072843_510628Z_2b4f01fe
+....E................................................................................................................
+======================================================================
+ERROR: test_cloud_scene_ws (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cloud_scene_ws
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_ws.py", line 13, in <module>
+    from websockets.sync.server import serve
+ModuleNotFoundError: No module named 'websockets'
+
+
+======================================================================
+ERROR: test_lossless_replay_uses_recorded_color_config_without_model_or_chassis (test_track_colors.TrackColorsTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_track_colors.py", line 125, in test_lossless_replay_uses_recorded_color_config_without_model_or_chassis
+    replay(run,root/'derived',profile='recorded',mode='recorded')
+  File "/tmp/vcc-repository-refactor/car/autodrive/tools/replay_outer_loop.py", line 107, in replay
+    return replay_recorded(run, output_dir, profile, expectations)
+  File "/tmp/vcc-repository-refactor/car/autodrive/tools/replay_outer_loop.py", line 260, in replay_recorded
+    raise ValueError('cloud-enabled recording is missing its cloud journals')
+ValueError: cloud-enabled recording is missing its cloud journals
+
+======================================================================
+FAIL: test_sloped_front_is_diagnostic_only_and_resets_with_new_frame (test_stationary_corner_perception.StationaryCornerPerceptionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_stationary_corner_perception.py", line 59, in test_sloped_front_is_diagnostic_only_and_resets_with_new_frame
+    self.assertTrue(selector.front_observed)
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 565 tests in 39.856s
+
+FAILED (failures=1, errors=2)

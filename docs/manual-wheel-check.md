@@ -4,7 +4,7 @@
 
 ```bash
 cd /home/jetson/VehicleCloudCollaboration
-bash run_wheel_check.sh --confirm-wheels-lifted WHEELS_ARE_LIFTED --all-wheels --pwm 30 --duration 1
+./vehicle wheel-check --confirm-wheels-lifted WHEELS_ARE_LIFTED --all-wheels --pwm 30 --duration 1
 ```
 
 用户已确认落地30 PWM/1秒能前进并停住，随后明确要求以后按30 PWM测试与运行。因此默认测试PWM和当前Jetson YOLO配置的四轮直行基准均改为30，不再安排20/24/28逐档起步测试。上面的命令仍仅用于架空轮测，不能把确认文字当成地面测试条件。持续时间继续显式指定；未指定时工具原默认0.4秒不变。
@@ -23,7 +23,7 @@ bash run_wheel_check.sh --confirm-wheels-lifted WHEELS_ARE_LIFTED --all-wheels -
 逐轮模式用 `--wheel N` **替换** `--all-wheels`，不要同时传入。例如：
 
 ```bash
-bash run_wheel_check.sh --confirm-wheels-lifted WHEELS_ARE_LIFTED --wheel 0 --pwm 30 --duration 1 --direction forward
+./vehicle wheel-check --confirm-wheels-lifted WHEELS_ARE_LIFTED --wheel 0 --pwm 30 --duration 1 --direction forward
 ```
 
 程序到时或 Ctrl+C 时执行已有工具的 stop/close；这不是硬件独立急停，进程卡死、断电/串口故障时不能保证停车。异常持续转动应现场急停。放回地面后不要继续使用架空确认参数；地面起步/停止标定是后续独立步骤。
@@ -34,4 +34,4 @@ bash run_wheel_check.sh --confirm-wheels-lifted WHEELS_ARE_LIFTED --wheel 0 --pw
 
 后续记录30 PWM下的时长、是否偏转、轮子和停止现象。转弯仍需左右差速，最大输出30、停车0；内侧低于30的运行能力和转弯半径尚未实测。`motion_calibrated`仍为false，不因一次直行点动就开放自动绕圈。
 
-验证：`bash -n run_wheel_check.sh`；`bash run_wheel_check.sh --help`；`python3 -B -m unittest car.test.test_wheel_check_launcher`（7 项通过，串口/电机/服务均为模拟）。交付入口时未再次执行真实点动。
+原点动入口已于2026-10-12收敛为 `./vehicle wheel-check`，服务租用与信号清理由公共生命周期模块负责。原7项无硬件回归迁移到统一入口，最终结果见当次入口收敛记录。帮助不访问设备或服务；本轮没有再次执行真实点动。

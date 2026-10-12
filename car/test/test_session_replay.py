@@ -54,7 +54,7 @@ class SessionReplayTests(unittest.TestCase):
                 ros.submit(sensor,{'received_monotonic':1.96},np.array([0,1],np.uint8))
             ros.close()
             before=bundle.inventory(run)
-            with patch('longtail.detectors.yolopv2_detector.YOLOPv2Detector') as gpu, \
+            with patch('autodrive.perception.yolopv2_torch.YOLOPv2Detector') as gpu, \
                  patch('autodrive.runtime.onboard.create_chassis') as chassis, \
                  patch.object(replay,'analyze',wraps=replay.analyze) as analyzed:
                 result=bundle.replay_session(run,root/'derived')

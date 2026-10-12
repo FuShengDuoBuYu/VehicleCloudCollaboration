@@ -38,7 +38,7 @@ class DriveSessionManager:
         self._thread.start()
 
     def _command(self,folder):
-        result=['bash',str(ROOT/'run_vehicle_experiment.sh'),
+        result=['bash',str(ROOT/'vehicle'),'drive',
             '--vehicle-profile','rosmaster_jetson_yolopv2_visual_feedback',
             '--output-dir',str(folder/'runtime'),'--panel-session-dir',str(folder/'control'),
             '--max-runtime-seconds','0']

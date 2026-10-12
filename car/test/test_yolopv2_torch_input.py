@@ -16,7 +16,7 @@ class TorchInputTests(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as weights:
             config = YOLOPv2FusionConfig(weights=weights.name, asynchronous=False,
                                          torch_num_threads=0, torch_interop_threads=torch.get_num_interop_threads())
-            with patch('longtail.detectors.yolopv2_detector.YOLOPv2Detector'), patch('torch.set_num_interop_threads') as setter:
+            with patch('autodrive.perception.yolopv2_torch.YOLOPv2Detector'), patch('torch.set_num_interop_threads') as setter:
                 first = YOLOPv2FusionDetector(config); first.close()
                 second = YOLOPv2FusionDetector(config); second.close()
                 setter.assert_not_called()

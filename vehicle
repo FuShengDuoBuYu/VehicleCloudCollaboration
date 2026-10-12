@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Single public entry. Python dispatch imports only the standard library.
+set -euo pipefail
+VEHICLE_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+cd "$VEHICLE_ROOT"
+exec python3 -B -m tools.vehicle_cli "$@"

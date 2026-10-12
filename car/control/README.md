@@ -29,12 +29,12 @@ FourWheelChassis (FL, RL, FR, RR)
 
 | Profile | 底层协议 | 当前状态 |
 | --- | --- | --- |
-| `raspbot_pi5` | `/dev/i2c-1`，`Ctrl_Muto`/`Ctrl_Servo` | 沿用已有实车标定 |
-| `rosmaster_jetson` | `/dev/myserial`，`set_motor`/`set_pwm_servo` | 相机可 dry-run；轮序、方向、云台和透视待标定 |
+| `raspbot_pi5` | `/dev/i2c-1`，`Ctrl_Muto`/`Ctrl_Servo` | 历史 Pi 配置；不自动适用于当前 Jetson |
+| `rosmaster_jetson` | `/dev/myserial`，`set_motor`/`set_pwm_servo` | 基础车型配置，完整标定标志仍为 false |
+| `rosmaster_jetson_yolopv2_visual_feedback` | 同上 | 当前面板驾驶配置；视觉反馈及云辅助恢复 |
 
 Jetson profile 的 `status.motion_calibrated` 和 `status.gimbal_calibrated` 默认是
-`false`。正常运行即使传入 `--enable-motors` 也会拒绝输出。只有带现场确认字符串的
-架空轮和云台工具允许在标定前创建硬件后端。
+`false`。正常运行即使传入 `--enable-motors` 也会拒绝输出。架空轮/云台工具及受单独限制的 field-trial 入口有各自确认与门禁；当前面板使用已配置的 field-trial 过程，不能把 `motion_calibrated=false` 误解为所有入口绝不运动。见[运行说明](../../docs/operations/runtime.md)。
 
 ## 选择车型
 
@@ -49,19 +49,18 @@ python3 car/autodrive/run_onboard.py \
 只读实时面板（HTTP服务已运行时直接访问，无需重复启动）：
 
 ```bash
-./run.sh
+./vehicle dashboard
 ```
 
 Jetson 实验通过统一入口协调监控设备占用，默认电机禁用：
 
 ```bash
-./run_vehicle_experiment.sh --max-runtime-seconds 30
+./vehicle drive --max-runtime-seconds 30
 ```
 
-`run.sh` 只读取状态文件；旧网页电机启停功能已删除。真实运动使用命令行入口并遵循当次
-现场安排、确认参数及 profile 标定门禁，详见 [面板说明](../../docs/vehicle-dashboard.md)。
+`vehicle dashboard` 启动 HTTP 面板，本身不连接设备。当前页面通过独立 supervisor 接受会话开始/结束/心跳；开始可按 supervisor 模式调用硬件入口。页面不直接提交 PWM。遵循当次现场安排、确认参数及门禁，详见[运行说明](../../docs/operations/runtime.md)。
 
-## Jetson 标定顺序
+## 完整标定流程（仍需独立现场验收）
 
 1. 保持 profile 的两个 calibrated 标志为 `false`，先运行自检和相机 dry-run。
 2. 架空四轮后，使用 `check_wheel_directions.py --vehicle-profile

@@ -2,13 +2,16 @@
 
 ## 来源与入口
 
-- 本文件是本地毕业论文项目 `C:\Users\fushe\Desktop\thesis` 协作规则的车端适配副本，准备日期为 2026-10-08（Asia/Shanghai）。来源版本与 SHA-256 见 `coordination/2026-10-08-bootstrap-manifest.json`。
+- 本文件是本仓库唯一的协作规则正文。最初于2026-10-08从电脑论文项目适配；原始来源见 `coordination/2026-10-08-bootstrap-manifest.json`，2026-10-12收敛记录见 `coordination/2026-10-12-entrypoint-consolidation.md`。
 - 本项目为 `/home/jetson/VehicleCloudCollaboration`。车端负责实际代码、环境、运行验证与原始证据；论文正文、研究统筹和数据分析主要由电脑上的论文项目负责。
 - 先读本仓库 `PROJECT_INDEX.md`，它是有日期和来源的车端摘要，不是整份论文资料库。不要假定本地论文、完整实验计划或全部聊天历史已同步到小车。
-- 车端代码、环境和实验任务按需使用 `skills/vehicle-cloud-thesis/SKILL.md`；跨主机或跨聊天交接使用 `skills/thesis-handoff/SKILL.md`。这些技能正文从本地项目复制，`.agents/skills/` 提供发现入口。技能中的本地正文路径只在源主机存在；树莓派历史记录不自动适用于当前 Jetson。
+- 两项项目技能只放在 `.agents/skills/vehicle-cloud-thesis/` 和 `.agents/skills/thesis-handoff/`，正文为各自 `SKILL.md`；不另建根 `skills/` 副本、发现软链接或第二份项目AGENTS。技能负责可复用方法，当前架构和阶段事实由PROJECT_INDEX及其链接维护。
+- `agents/openai.yaml` 是技能目录内的显示/调用元数据，不是另一份协作规则。全局Codex插件属于工具环境，不并入本仓库规则。
+- 日常启动统一用 `./vehicle --help` 查命令。根目录三个 `run_*.sh` 仅为既有部署路径兼容，不新增平行启动入口。
 
 ## 工作与持久化
 
+- 未经用户后续明确要求，不自行commit、push或merge；保留未提交差异供review。
 - 每次修改前检查 `git status` 和相关差异；保留已有未提交代码与未跟踪文件。同一文件同时由一个聊天修改，并行实现使用独立工作树或分支。
 - 初次任务读 `coordination/2026-10-08-car-baseline.md`，先做只读盘点并报告结果；没有直接人类指令，不把盘点自动升级为修复、安装或硬件试运行。
 - 重要的新事实附日期和命令依据更新到本仓库索引；任务状态与产物记录到 `coordination/`。重复流程才考虑技能，不保存聊天逐字稿。

@@ -1,0 +1,21 @@
+Documentation: 23 maintained pages; 19 archive hashes
+Layout: one public launcher, three deployed-path adapters, one AGENTS.md, two physical skills
+Static checks: 163 Python files, 5 shell scripts
+Explicitly excluded optional groups: test_cloud_scene_ws
+.................................................................................................................................................................................................................................................................................................................................................................................................................................Saved: /tmp/tmpkmdrtxbt/runs/20261012T081028_939209Z_0c2a40c2
+.Saved: /tmp/tmp7o7w3fu4/runs/20261012T081029_574264Z_7c696c57
+Saved: /tmp/tmp03sy_zuz/runs/20261012T081030_256962Z_8269d2cb
+..Saved: /tmp/tmpw_wqhadq/runs/20261012T081030_955053Z_daaf74a7
+........Saved: /tmp/tmp4h05nqgk/runs/20261012T081032_331336Z_202e755b
+....Saved: /tmp/tmpxnpyl362/runs/20261012T081032_966555Z_fc96fb04
+..Saved: /tmp/tmplsphil5l/runs/20261012T081033_550292Z_1086c9db
+....Saved: /tmp/tmp41o_0po2/runs/20261012T081034_602879Z_1aaa0587
+.Saved: /tmp/tmph_ynobv9/runs/20261012T081035_187323Z_e2118164
+.Saved: /tmp/tmpzgojvd7x/runs/20261012T081035_770316Z_44043177
+.....Saved: /tmp/tmpekxhuren/runs/20261012T081037_550866Z_54652c6c
+...Saved: /tmp/tmpxlj816f4/runs/20261012T081038_091077Z_bb89623c
+...............................................................................................................................................
+----------------------------------------------------------------------
+Ran 591 tests in 50.672s
+
+OK

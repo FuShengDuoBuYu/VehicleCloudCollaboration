@@ -1,6 +1,6 @@
 # longtail
 
-`car/longtail/` 是车端长尾场景检测模块。闭环入口 `../run_closed_loop.py` 会从环境变量生成检测器配置。
+`car/longtail/` 保留历史单帧长尾分类研究和数据。它不是当前车端闭环入口，现行架构见 [当前架构](../../docs/architecture/current.md)。
 
 ## 主要文件
 
@@ -12,7 +12,7 @@
 - `evaluate.py`：数据集评估脚本
 - `dataset/`：样例数据集
 
-依赖统一维护在仓库根目录的 `requirements.txt`。
+离线研究依赖见 `requirements/research.txt`，与车端环境分开。
 
 ## 分类器接口
 
@@ -69,17 +69,9 @@ python evaluate.py --dataset dataset --output evaluation_results
 - 正样本关键词：`long-tail`、`corner-case`、`accident`、`construction`、`positive`
 - 负样本关键词：`non-long-tail`、`normal`、`negative`、`clear`
 
-## 闭环调用
+## 历史闭环说明
 
-`../run_closed_loop.py` 会将 `car/longtail` 加入 Python 路径，并按以下方式使用：
-
-1. 从环境变量构造检测器配置
-2. 初始化 `LongTailClassifier`
-3. 周期性保存摄像头帧
-4. 调用 `classifier.predict(frame_path)`
-5. 根据 `is_long_tail` 决定是否请求云端 LLM 决策
-
-树莓派运行时可以用 `--interval 3` 控制每 3 秒检测一次。`run_closed_loop.py` 默认会先执行一次 synthetic warmup，让三个模型的首次推理开销发生在闭环开始前；如需关闭可传 `--no-warmup-detector`。
+旧 `run_closed_loop.py` 已不存在，不能使用本目录推断当前运行链。当前感知直接使用 `autodrive.perception.yolopv2_torch`，旧 detector 路径只保留导入兼容。分类器和数据集作为历史研究保留，不参与活动云恢复触发。
 
 ## TODO
 

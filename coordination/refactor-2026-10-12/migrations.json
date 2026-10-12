@@ -1,0 +1,116 @@
+[
+  {
+    "old_path": "docs/superpowers/specs/2026-10-08-jetson-vehicle-bringup-design.md",
+    "new_path": "docs/history/designs/2026-10-08-jetson-vehicle-bringup-design.md",
+    "sha256": "4a1a40d85d45288a81635d52764a34477042941227a9b3224b161a6d45bce1f8",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/specs/2026-10-08-vehicle-dashboard-design.md",
+    "new_path": "docs/history/designs/2026-10-08-vehicle-dashboard-design.md",
+    "sha256": "6314262606d8d7ab69dca89f252296c25baee9572ec671a8eb9cca3fec0cc97a",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/specs/2026-10-10-cloud-assisted-recovery-design.md",
+    "new_path": "docs/history/designs/2026-10-10-cloud-assisted-recovery-design.md",
+    "sha256": "fb6027711126aaa19677b46d2507e63dc900103b191e2243c7815fef75f3f76e",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/specs/2026-10-10-decision-fusion-interface.md",
+    "new_path": "docs/history/designs/2026-10-10-decision-fusion-interface.md",
+    "sha256": "8a1cdae4e3891b37ffec9095ddd8b5962d9efd7a2c19d076bc0d07a5495c5413",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/plans/2026-10-08-car-hardware-acceptance.md",
+    "new_path": "docs/history/plans/2026-10-08-car-hardware-acceptance.md",
+    "sha256": "02f865c1abd3a0195e6e50d976a9589438d36c4f2bfebd4752640128633aa89f",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/plans/2026-10-08-jetson-yolopv2-field.md",
+    "new_path": "docs/history/plans/2026-10-08-jetson-yolopv2-field.md",
+    "sha256": "e4400be99bccb98cb813c7912edb6ddf48d35cec5e1d95fca3bdcb1950660771",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/plans/2026-10-08-outer-loop-cloud.md",
+    "new_path": "docs/history/plans/2026-10-08-outer-loop-cloud.md",
+    "sha256": "e49d96a52bf39d0c3a873aa50b3ae4a18ac593bc541572ae6c17a125245f3733",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/plans/2026-10-08-vehicle-dashboard.md",
+    "new_path": "docs/history/plans/2026-10-08-vehicle-dashboard.md",
+    "sha256": "3e432c704e06203e9d868516ebf838c3cfe722b2dd3f47d4a42eb3172e7b9f62",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/plans/2026-10-10-cloud-assisted-recovery.md",
+    "new_path": "docs/history/plans/2026-10-10-cloud-assisted-recovery.md",
+    "sha256": "27c72df071bb519452b918620f7320d3381fd447f36ea5e70f1515ad3fce6ed0",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/superpowers/plans/2026-10-10-session-replay.md",
+    "new_path": "docs/history/plans/2026-10-10-session-replay.md",
+    "sha256": "4ece59c5bc149a872cbc744de15200254bdc28c4fedbc7b8167973b016e251a4",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "car/autodrive/YOLOPV2_ONNX_EXPERIMENT.md",
+    "new_path": "docs/history/2026-08-04-pi-onnx-experiment.md",
+    "sha256": "342c585d0ea0e4b77934101d65c15f59c8739de90c1c6691a53575b4e3761136",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "car/test/closed_loop_test.py",
+    "new_path": "research/legacy/closed_loop_test.py",
+    "sha256": "0a885e1f2313f26933c98db497f7c5e381605e41d99abc3a7e85091a3a262bcb",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "car/test/closed_loop_report.json",
+    "new_path": "research/legacy/closed_loop_report.json",
+    "sha256": "475692721f3e52a485b182bdc7475f8ab9955ca8d7004286d9fb251350390991",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "PROJECT_INDEX.md",
+    "new_path": "docs/history/project-index-through-2026-10-12.md",
+    "sha256": "639158fa3e334dab5fdf19b4d55cc768edbc9cfda7de3cfb0a331135e4427f00",
+    "kind": "index_snapshot"
+  },
+  {
+    "old_path": "docs/jetson-yolopv2.md",
+    "new_path": "docs/history/2026-10-08-jetson-yolopv2.md",
+    "sha256": "2a2b4f6ca7ac79e50f1b421e66242d149a92f37f32bef5d2288038e6f39805c6",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/visual-feedback-replay.md",
+    "new_path": "docs/history/2026-10-12-visual-feedback-evolution.md",
+    "sha256": "5be46458681fbbc63ad9ef3655fe4b6d81e8a2a56d103ef92bf06c7421d20082",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "car/autodrive/ON_CAR_CHECKLIST.md",
+    "new_path": "docs/history/pi-on-car-checklist.md",
+    "sha256": "aa63b4063673220e2da99ba7eebf572e45af53e18924cbef72e877ec1103e998",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "docs/outer-loop-record-replay.md",
+    "new_path": "docs/history/2026-10-09-outer-loop-record-replay.md",
+    "sha256": "d400604bd50acecaaf249a4ef2d13c9372eeba8b9b170d2857027c38aabfc300",
+    "kind": "historical_archive"
+  },
+  {
+    "old_path": "requirements.txt",
+    "new_path": "docs/history/requirements-pre-refactor.txt",
+    "sha256": "4a8dae49fa3e21073a6138c3c59a401458c55a3208c45e6ce7690216a1daacc7",
+    "kind": "historical_dependencies"
+  }
+]

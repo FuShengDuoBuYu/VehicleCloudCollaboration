@@ -1,0 +1,13 @@
+.......................................................................................................................................................F.
+======================================================================
+FAIL: test_sloped_front_is_rejected_before_entry_and_resets_with_new_frame (car.test.test_stationary_corner_perception.StationaryCornerPerceptionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_stationary_corner_perception.py", line 61, in test_sloped_front_is_rejected_before_entry_and_resets_with_new_frame
+    self.assertIsNone(selector.observed_front_ratio)
+AssertionError: 0.7229166666666667 is not None
+
+----------------------------------------------------------------------
+Ran 153 tests in 6.640s
+
+FAILED (failures=1)

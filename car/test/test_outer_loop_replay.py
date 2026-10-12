@@ -36,7 +36,7 @@ class OuterLoopReplayTests(unittest.TestCase):
                 replay(run,root/'without-final-status',mode='recorded')
             (run/'status.json').write_text(json.dumps({'termination':{'stopped':True,'completed_at':100.},
                 'last_result':{'sample':7},'diagnostics':{'archive':{'written_frames':8,'dropped_frames':0,'error':None}}}))
-            with patch('longtail.detectors.yolopv2_detector.YOLOPv2Detector') as gpu, \
+            with patch('autodrive.perception.yolopv2_torch.YOLOPv2Detector') as gpu, \
                  patch('autodrive.runtime.onboard.create_chassis') as chassis:
                 result = replay(run,root/'derived',mode='recorded')
                 gpu.assert_not_called(); chassis.assert_not_called()
@@ -44,6 +44,15 @@ class OuterLoopReplayTests(unittest.TestCase):
             commands = json.loads((root/'derived/commands.json').read_text())
             self.assertIn('stale',commands[-1]['reason'])
             self.assertEqual(result['unique_semantic_inputs'],1)
+            # A slow analyst machine must not inject fresh processing vetoes.
+            from itertools import count
+            from types import SimpleNamespace
+            ticks = count(step=2.)
+            with patch('autodrive.runtime.perception_pipeline.time',
+                       SimpleNamespace(monotonic=lambda: next(ticks))):
+                slow = replay(run,root/'slow-host',mode='recorded')
+            self.assertEqual(commands,json.loads((root/'slow-host/commands.json').read_text()))
+            self.assertEqual(slow['processing_budget_unknown_rows'],8)
             # Old CSV rounded 0.30004 to .3; its explicit stale veto must win.
             csv_path = run/'onboard_log.csv'
             with csv_path.open() as stream: rows = list(csv.DictReader(stream))
@@ -58,6 +67,43 @@ class OuterLoopReplayTests(unittest.TestCase):
             rows[4]['sample'] = '99'; save()
             with self.assertRaisesRegex(ValueError,'incomplete'):
                 replay(run,root/'gap',mode='recorded')
+
+    def test_recorded_budget_preserves_motion_on_slow_host_and_stops_over_budget(self):
+        from itertools import count
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);run=root/'run';inputs=run/'semantic_inputs'
+            inputs.mkdir(parents=True);model=MaskModel();rows=[]
+            for i in range(8):
+                np.savez(inputs/('%08d.npz'%i),sequence=i,captured_at=2.+i*.05,
+                    road=model.road,lane=model.lane,
+                    frame=np.zeros((480,640,3),np.uint8),detections_json='[]')
+                rows.append(dict(timestamp_s=i*.05,sample=i,action='forward',
+                    semantic_sequence=i,semantic_result_age_s=.01,
+                    semantic_fusion_source='yolopv2',inference_ms=10,boundary_ms=10))
+            def save():
+                with (run/'onboard_log.csv').open('w') as stream:
+                    out=csv.DictWriter(stream,fieldnames=list(rows[0]))
+                    out.writeheader();out.writerows(rows)
+            save()
+            (run/'status.json').write_text(json.dumps({
+                'termination':{'stopped':True,'completed_at':100.},'last_result':{'sample':7},
+                'diagnostics':{'archive':{'written_frames':8,'dropped_frames':0,'error':None}}}))
+            normal=replay(run,root/'normal',mode='recorded')
+            ticks=count(step=2.)
+            with patch('autodrive.runtime.perception_pipeline.time',
+                       SimpleNamespace(monotonic=lambda:next(ticks))):
+                slow=replay(run,root/'slow',mode='recorded')
+            self.assertGreater(normal['maximum_pwm'],0)
+            self.assertGreater(slow['maximum_pwm'],0)
+            self.assertEqual(normal['processing_budget_unknown_rows'],0)
+            self.assertEqual(json.loads((root/'normal/commands.json').read_text()),
+                             json.loads((root/'slow/commands.json').read_text()))
+            for row in rows:row['inference_ms']=1000
+            save()
+            veto=replay(run,root/'over-budget',mode='recorded')
+            self.assertEqual(veto['maximum_pwm'],0)
+            self.assertEqual(veto['actions'],{'stop':8})
 
     def test_replay_preserves_originals_emits_virtual_commands_and_checks_annotations(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -105,18 +105,19 @@ class RecoveryRuntimeTests(unittest.TestCase):
                  patch('cloud_client.client.CloudClient') as replay_cloud, \
                  patch.object(onboard,'create_chassis') as replay_hardware:
                 summary=replay_outer_loop.replay_recorded(run,root/'replay',profile='recorded')
-            replay_cloud.assert_not_called();replay_hardware.assert_not_called()
-            self.assertTrue(summary['cloud_recovery_replayed'])
-            self.assertGreater(summary['cloud_replay']['matched_events'],0)
-            self.assertEqual(summary['cloud_replay']['unmatched_events'],0)
-            self.assertEqual(summary['matched_action_rows'],summary['frames'])
-            self.assertEqual(summary['matched_pwm_rows'],summary['frames'])
+            # Preserve requested diagnostic evidence before assertions can fail.
             evidence_dir=os.environ.get('CAR_TEST_REPLAY_EVIDENCE_DIR')
             if evidence_dir:
                 destination=Path(evidence_dir)
                 destination.mkdir(parents=True,exist_ok=True)
                 shutil.copytree(run,destination/'synthetic-run')
                 shutil.copytree(root/'replay',destination/'synthetic-replay')
+            replay_cloud.assert_not_called();replay_hardware.assert_not_called()
+            self.assertTrue(summary['cloud_recovery_replayed'])
+            self.assertGreater(summary['cloud_replay']['matched_events'],0)
+            self.assertEqual(summary['cloud_replay']['unmatched_events'],0)
+            self.assertEqual(summary['matched_action_rows'],summary['frames'])
+            self.assertEqual(summary['matched_pwm_rows'],summary['frames'])
 
     def test_real_worker_current_geometry_final_pwm_and_stop(self):
         self.exercise_runtime(False)

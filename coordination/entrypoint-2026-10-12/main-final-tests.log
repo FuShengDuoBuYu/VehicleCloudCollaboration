@@ -1,0 +1,29 @@
+Documentation: 23 maintained pages; 19 archive hashes
+Layout: one public launcher, three deployed-path adapters, one AGENTS.md, two physical skills
+Static checks: 163 Python files, 5 shell scripts
+Explicitly excluded optional groups: test_cloud_scene_ws
+..........................................F......................................................................................................................................................................................................................................................................................................................................................................................Saved: /tmp/tmp90e0w_8x/runs/20261012T081650_465952Z_548c9655
+.Saved: /tmp/tmpnftdolpu/runs/20261012T081651_100324Z_3ba46c62
+Saved: /tmp/tmp98_gcsf4/runs/20261012T081651_785652Z_a16563ce
+..Saved: /tmp/tmphq1zal2i/runs/20261012T081652_483227Z_c3599c62
+........Saved: /tmp/tmpfx9z_1_2/runs/20261012T081653_858554Z_d0c89232
+....Saved: /tmp/tmpf79eddip/runs/20261012T081654_492968Z_5ac14529
+..Saved: /tmp/tmp56kuqddc/runs/20261012T081655_078763Z_06d87208
+....Saved: /tmp/tmp7xcb8rlb/runs/20261012T081656_137633Z_64478687
+.Saved: /tmp/tmpxi_fhswv/runs/20261012T081656_724198Z_c4279b08
+.Saved: /tmp/tmp25a75au2/runs/20261012T081657_258498Z_7ed28bd0
+.....Saved: /tmp/tmpmy5draz4/runs/20261012T081659_010379Z_b46f0898
+...Saved: /tmp/tmp3arxlnr6/runs/20261012T081659_543525Z_5ee08bbd
+.................................................................................................................................................
+======================================================================
+FAIL: test_onboard_main_archives_recovery_and_never_creates_hardware (car.test.test_cloud_recovery_runtime.RecoveryRuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/jetson/VehicleCloudCollaboration/car/test/test_cloud_recovery_runtime.py", line 111, in test_onboard_main_archives_recovery_and_never_creates_hardware
+    self.assertEqual(summary['cloud_replay']['unmatched_events'],0)
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 593 tests in 54.548s
+
+FAILED (failures=1)

@@ -1,0 +1,21 @@
+FF
+======================================================================
+FAIL: test_wheel_prompt_visible_before_input_and_preserved_in_console_log (tests.test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 204, in test_wheel_prompt_visible_before_input_and_preserved_in_console_log
+    self.assertIn(b'Ready pulse? ',seen,'interactive prompt hidden before input')
+AssertionError: b'Ready pulse? ' not found in b'Console log: /tmp/tmpzmem7qw3/outputs/manual_wheel_check/20261012T081353Z-o_aa1kmf/console.log\n' : interactive prompt hidden before input
+
+======================================================================
+FAIL: test_cancelled_trial_never_replays_even_if_child_exits_with_error (tests.test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 236, in test_cancelled_trial_never_replays_even_if_child_exits_with_error
+    self.assertEqual(len([r for r in self.records() if 'child'in r]),1)
+AssertionError: 2 != 1
+
+----------------------------------------------------------------------
+Ran 2 tests in 3.893s
+
+FAILED (failures=2)

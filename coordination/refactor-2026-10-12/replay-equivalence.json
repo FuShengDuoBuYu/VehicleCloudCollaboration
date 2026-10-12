@@ -1,0 +1,14 @@
+{
+  "frames": 867,
+  "different_frames": [],
+  "inputs_equal": true,
+  "csv_sha256": "0ca7ca5a7b3bb72a807dd80b3fadea773a21d091f717fbb101afad17cae888a0",
+  "semantic_input_count": 820,
+  "processing_budget_unknown_rows": 0,
+  "before_commands_sha256": "abf76ee2c9aae719c9e38f152ad1a597679b18c18192664a860e620f46884158",
+  "after_commands_sha256": "b4a8b86adef0f42fbbecbbfb7fb3683e458ccfa9ade814ff5c5ca20ac9528680",
+  "canonical_sha256": "b3524f916c97864a8a235cb77e006603f293a8b7e9197792687050945d234d78",
+  "comparison": "all frame results except random event UUIDs and new processing-budget metadata",
+  "timing": "baseline uses archived gate via replay_baseline.py; refactor uses recorded budget natively",
+  "limitation": "No model inference, physical movement, network or actuator timing validation"
+}

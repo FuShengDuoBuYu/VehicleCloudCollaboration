@@ -12,13 +12,13 @@ class LauncherTest(unittest.TestCase):
     def run_case(self, args):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);bin_dir=root/'bin';bin_dir.mkdir()
-            source=Path(__file__).resolve().parents[2]/'run_vehicle_experiment.sh'
-            script=root/source.name;shutil.copy2(source,script)
-            runner=root/'run_jetson_yolopv2.sh';runner.write_text('#!/usr/bin/env bash\nexit 7\n');runner.chmod(0o755)
+            from tests.launcher_fixture import copy_launcher
+            script=copy_launcher(root)
+            runner=root/'fake-runtime';runner.write_text('#!/usr/bin/env bash\nexit 7\n');runner.chmod(0o755)
             systemctl=bin_dir/'systemctl';systemctl.write_text('#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$LAUNCH_TEST_LOG"\nexit 0\n');systemctl.chmod(0o755)
             sudo=bin_dir/'sudo';sudo.write_text('#!/usr/bin/env bash\nshift\nexec "$@"\n');sudo.chmod(0o755)
-            env=dict(os.environ,PATH=str(bin_dir)+':'+os.environ['PATH'],LAUNCH_TEST_LOG=str(root/'log'))
-            result=subprocess.run(['bash',str(script)]+args,env=env,timeout=4)
+            env=dict(os.environ,PATH=str(bin_dir)+':'+os.environ['PATH'],LAUNCH_TEST_LOG=str(root/'log'),CAR_PYTHON=str(runner))
+            result=subprocess.run(['bash',str(script),'drive']+args,env=env,timeout=4)
             return result.returncode,(root/'log').read_text()
 
     def test_dry_run_keeps_serial_and_restores_camera_on_failure(self):
@@ -29,7 +29,7 @@ class LauncherTest(unittest.TestCase):
         self.assertIn('start vehicle-perception-monitor.service',log)
 
     def test_motor_run_restores_both_previously_active_monitors(self):
-        code,log=self.run_case(['--enable-motors'])
+        code,log=self.run_case(['--enable-motors','--confirm-motor-motion','I_UNDERSTAND_MOTORS_WILL_MOVE'])
         self.assertEqual(code,7)
         self.assertIn('stop vehicle-serial-monitor.service',log)
         self.assertIn('start vehicle-serial-monitor.service',log)
@@ -37,9 +37,9 @@ class LauncherTest(unittest.TestCase):
     def test_terminal_signal_is_forwarded_once_to_isolated_child_before_restore(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);bin_dir=root/'bin';bin_dir.mkdir()
-            source=Path(__file__).resolve().parents[2]/'run_vehicle_experiment.sh'
-            script=root/source.name;shutil.copy2(source,script)
-            runner=root/'run_jetson_yolopv2.sh'
+            from tests.launcher_fixture import copy_launcher
+            script=copy_launcher(root)
+            runner=root/'fake-runtime'
             runner.write_text('''#!/usr/bin/env python3
 import json, os, pathlib, signal, time
 root = pathlib.Path(os.environ['LAUNCH_TEST_ROOT'])
@@ -62,8 +62,8 @@ with (root/'log').open('a') as log:
     log.write(' '.join(sys.argv[1:])+' cleanup='+str((root/'cleanup.json').exists())+'\\n')
 ''');systemctl.chmod(0o755)
             sudo=bin_dir/'sudo';sudo.write_text('#!/usr/bin/env bash\nshift\nexec "$@"\n');sudo.chmod(0o755)
-            env=dict(os.environ,PATH=str(bin_dir)+':'+os.environ['PATH'],LAUNCH_TEST_ROOT=str(root))
-            process=subprocess.Popen(['bash',str(script),'--enable-motors'],env=env,start_new_session=True)
+            env=dict(os.environ,PATH=str(bin_dir)+':'+os.environ['PATH'],LAUNCH_TEST_ROOT=str(root),CAR_PYTHON=str(runner))
+            process=subprocess.Popen(['bash',str(script),'drive','--enable-motors','--confirm-motor-motion','I_UNDERSTAND_MOTORS_WILL_MOVE'],env=env,start_new_session=True)
             child=None
             try:
                 deadline=time.monotonic()+3

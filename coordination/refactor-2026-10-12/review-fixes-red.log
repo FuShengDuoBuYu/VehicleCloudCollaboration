@@ -1,0 +1,36 @@
+E.F.....E
+======================================================================
+ERROR: test_adaptive_models_are_both_hashed_and_tilde_is_expanded (test_evidence_catalog.EvidenceTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_evidence_catalog.py", line 95, in test_adaptive_models_are_both_hashed_and_tilde_is_expanded
+    result=write_run_provenance(run,root,'primary.onnx',
+TypeError: write_run_provenance() got an unexpected keyword argument 'model_paths'
+
+======================================================================
+ERROR: test_recorded_processing_budget (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_recorded_processing_budget
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/tests/test_recorded_processing_budget.py", line 4, in <module>
+    from autodrive.tools.replay_outer_loop import recorded_processing_budget
+ImportError: cannot import name 'recorded_processing_budget' from 'autodrive.tools.replay_outer_loop' (/tmp/vcc-repository-refactor/car/autodrive/tools/replay_outer_loop.py)
+
+
+======================================================================
+FAIL: test_catalog_output_cannot_enter_symlinked_evidence_storage (test_evidence_catalog.EvidenceTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_evidence_catalog.py", line 109, in test_catalog_output_cannot_enter_symlinked_evidence_storage
+    main(['--root',str(root),'--output',str(destination)])
+AssertionError: SystemExit not raised
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.170s
+
+FAILED (failures=1, errors=2)
+{"sessions": 0, "runs": 0, "sensor_matches": 0, "dataset_files": 0, "issues": 1}

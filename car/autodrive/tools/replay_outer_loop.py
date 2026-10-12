@@ -46,6 +46,28 @@ def recorded_replay_config(run, profile):
     return config, evidence
 
 
+def recorded_processing_budget(row, maximum_seconds):
+    """Recorded allowance; None means missing evidence, never current CPU time."""
+    exact = row.get('stationary_perception_budget_valid')
+    if exact not in (None, ''):
+        if exact not in ('True', 'False'):
+            raise ValueError('invalid recorded processing budget flag')
+        return exact == 'True'
+    if row.get('reason') == 'inference exceeded safety limit':
+        return False
+    values = (row.get('inference_ms'), row.get('boundary_ms'))
+    if any(value in (None, '') for value in values):
+        return None
+    times = [float(value) / 1000 for value in values]
+    if not all(math.isfinite(value) and value >= 0 for value in times):
+        raise ValueError('invalid recorded processing time')
+    # Three-decimal millisecond CSVs cannot resolve a sub-microsecond threshold tie.
+    total = sum(times)
+    if abs(total - maximum_seconds) <= 1e-6:
+        return None
+    return total < maximum_seconds
+
+
 def recorded_stationary_inputs(row):
     """Decode archived control/IMU evidence; never replace it with live time."""
     required = ('control_monotonic', 'imu_yaw_rad', 'imu_received_monotonic',
@@ -201,7 +223,7 @@ def replay_recorded(run, output_dir=None, profile='rosmaster_jetson_yolopv2_oute
     """
     from autodrive.perception.yolopv2_semantic import YOLOPv2SemanticDetector
     from autodrive.perception.yolopv2_fusion import YOLOPv2FusionConfig, _MaskResult
-    from autodrive.control.lane_centering import RoadCenterlineEstimator, LaneCenteringController, LCCConfig
+    from autodrive.control.lane_centering import RoadCenterlineEstimator, LaneCenteringController, LCCConfig, DifferentialDriveCommand
     from autodrive.control.drive_runtime import SafeWheelDriver, WheelMappingConfig
 
     class RecordedDetector(YOLOPv2SemanticDetector):
@@ -330,7 +352,15 @@ def replay_recorded(run, output_dir=None, profile='rosmaster_jetson_yolopv2_oute
             previous = timestamp
             estimate, proposed, overlay, _, _, boundary = analyze(detector,estimator,controller,
                 None,frame,str(config.get('runtime',{}).get('route_hint','center')),dt,
-                float(safety.get('maximum_inference_time',.25)),captured_at=captured)
+                math.inf,captured_at=captured)
+            # Host processing time is not experiment evidence. Reapply the recorded
+            # gate, and conservatively stop if a legacy row lacks this evidence.
+            processing_budget = recorded_processing_budget(recorded,
+                float(safety.get('maximum_inference_time', .25)))
+            if processing_budget is False or (processing_budget is None and proposed.action != 'stop'):
+                proposed = DifferentialDriveCommand('stop', 0., 0., 0., estimate.confidence,
+                    'inference exceeded safety limit' if processing_budget is False
+                    else 'recorded processing budget unavailable')
             applied = (stationary_runtime.filter(proposed, estimate, boundary,
                                                 **stationary_inputs[index])
                        if stationary_runtime is not None else gate.filter(proposed,estimate,boundary))
@@ -382,6 +412,7 @@ def replay_recorded(run, output_dir=None, profile='rosmaster_jetson_yolopv2_oute
                     'ego_yellow_ratio':boundary.ego_yellow_ratio},
                 'stationary_corner': (None if stationary_runtime is None
                                       else stationary_runtime.get_state()),
+                'recorded_processing_budget_valid':processing_budget,
                 'recorded_application':application,
                 'fusion':None if recovery is None else asdict(recovery.fusion.last_decision),
                 'cloud_recovery':None if recovery is None else recovery.get_state(),
@@ -407,6 +438,8 @@ def replay_recorded(run, output_dir=None, profile='rosmaster_jetson_yolopv2_oute
             'actions':dict(Counter(r['action'] for r in results)),
             'stop_reasons':dict(Counter(r['reason'] for r in results if r['action']=='stop')),
             'maximum_pwm':max(abs(v) for r in results for v in r['pwm']),
+            'processing_timing_source':'recorded gate or recorded milliseconds; missing/ambiguous evidence stops',
+            'processing_budget_unknown_rows':sum(r['recorded_processing_budget_valid'] is None for r in results),
             'stationary_corner_replayed': stationary_enabled,
             'recorded_final_application_rows':sum(item is not None for item in application_inputs),
             'final_application_veto_rows':sum(item is not None and not item['allowed']

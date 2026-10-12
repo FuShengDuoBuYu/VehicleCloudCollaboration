@@ -1,0 +1,696 @@
+{
+  "base_commit": "664793438d9d2cf51dae603e8d6fcc45902f6fb1",
+  "scope": "Uncommitted entrypoint and project skill consolidation",
+  "files": [
+    {
+      "path": ".agents/skills/thesis-handoff",
+      "before": {
+        "type": "symlink",
+        "target": "../../skills/thesis-handoff"
+      },
+      "after": {
+        "type": "directory"
+      }
+    },
+    {
+      "path": ".agents/skills/thesis-handoff/SKILL.md",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "3db86272eef114d4090cc21c46b35699f2ff43abbdfda20e4532a2eb09a77ea7",
+        "mode": 436
+      }
+    },
+    {
+      "path": ".agents/skills/thesis-handoff/agents/openai.yaml",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "834acb32c263819309d211812b7a4ce9831e692434211be21e5c8e6a348e64c8",
+        "mode": 436
+      }
+    },
+    {
+      "path": ".agents/skills/vehicle-cloud-thesis",
+      "before": {
+        "type": "symlink",
+        "target": "../../skills/vehicle-cloud-thesis"
+      },
+      "after": {
+        "type": "directory"
+      }
+    },
+    {
+      "path": ".agents/skills/vehicle-cloud-thesis/SKILL.md",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "7253115b8a349eee00442899719997f13fedb34909104d6ee78ad19074dfc1bb",
+        "mode": 436
+      }
+    },
+    {
+      "path": ".agents/skills/vehicle-cloud-thesis/agents/openai.yaml",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "87ec62dd6e27e63f95f23222f94d05d0f7da7cf7f9427dbb5ba0cea05bfce9af",
+        "mode": 436
+      }
+    },
+    {
+      "path": "AGENTS.md",
+      "before": {
+        "type": "file",
+        "sha256": "00b072dbf6b1201c5e78a88143ec4b6e35961aa2095df991e98d3a271f3663fc",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "e0003a83fc7c49e9bbb81710390525ce21051f262ac991cf4782b0bc898cfab4",
+        "mode": 436
+      }
+    },
+    {
+      "path": "PROJECT_INDEX.md",
+      "before": {
+        "type": "file",
+        "sha256": "dd58d4da026902f557b5b5e06b89066381cc7174487e4c593ec34b4e02e104df",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "0fc2dc2e969bb27c76325617a450fb6c9a13aeec669681df1213545fe4b95de1",
+        "mode": 436
+      }
+    },
+    {
+      "path": "README.md",
+      "before": {
+        "type": "file",
+        "sha256": "1ede1a4ff3a25123d13ec32ab867badbaf5321b154a7adbe6dcd6b43a720cc81",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "99d093b6441ba0b37373589df10a2afbe89ac1671557482fc74959d0ebae8552",
+        "mode": 436
+      }
+    },
+    {
+      "path": "car/autodrive/runtime/provenance.py",
+      "before": {
+        "type": "file",
+        "sha256": "0ca87538e803ad2877487ba458c69f00540f70821fe072e8a72b3ded4a80c1fb",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "db2f0dbaf2c849281cad4a5021f94a81ab2751450f1048aa8ccbe90b606f0a5a",
+        "mode": 436
+      }
+    },
+    {
+      "path": "car/autodrive/web/drive_sessions.py",
+      "before": {
+        "type": "file",
+        "sha256": "4638c6232b1556f9244cb4d102360c50e15f0d142e9a82cfca81bc1a2540b267",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "0741e91b5d691604c7b90f21a89bc9015190e47b1733d0f8b0bdc45558d8de45",
+        "mode": 436
+      }
+    },
+    {
+      "path": "car/cloud_client/README.md",
+      "before": {
+        "type": "file",
+        "sha256": "902e1ecd68c47e9ecd54c753a2f1cbba5adc1e6987cddbb356e6aacb4fa486ae",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "6a77c1aaf27fefccfe512f3deebca34070a115bc90c566a192c104340cd26bdc",
+        "mode": 436
+      }
+    },
+    {
+      "path": "car/control/README.md",
+      "before": {
+        "type": "file",
+        "sha256": "81131e7ab8da0dfd81f8dd2a30ac32eec18dd93364b3a095c3db7aad84586ff4",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "733bf1d7afd760b05634e22ca10e54fbc1533350e997630b14c658eee4fdeec7",
+        "mode": 436
+      }
+    },
+    {
+      "path": "car/test/README.md",
+      "before": {
+        "type": "file",
+        "sha256": "41da5bce8ae9bb721442c9335e615047ba8ec007aed35384a37fe5d7cb45bf01",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "b2a9d5046feb80a7c9dbfbcd7230856ef7596b4fb7d6398ea34fa8cbbc956c4b",
+        "mode": 436
+      }
+    },
+    {
+      "path": "car/test/test_dashboard_launcher.py",
+      "before": {
+        "type": "file",
+        "sha256": "fd33fc7970e81c00b2f4f342b01d796595fcfffb5f141ff64083e89076dbe8f6",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "a8d070960b5ef7c30281bfdb1573836e5a5e64516210c76e5574e1946ce4ee37",
+        "mode": 436
+      }
+    },
+    {
+      "path": "car/test/test_perception_monitor_profile.py",
+      "before": {
+        "type": "file",
+        "sha256": "957cb3031c125bb68b8508d8f076820a4bc5f8b87e685de285ef8e4f91c6095b",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "c3a49725395e52f066b6d194595d473aea0185302ee106d4349d8ef46c8fa586",
+        "mode": 436
+      }
+    },
+    {
+      "path": "car/test/test_wheel_check_launcher.py",
+      "before": {
+        "type": "file",
+        "sha256": "8956c298e16268af7cb5e57dc8f4c86a446c450d23fc8da5ae64f5e41c1a8296",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "8e423205ceabc81664b6b128e8199e80c60f404c98cb8ead6f2dd7683642ebaa",
+        "mode": 436
+      }
+    },
+    {
+      "path": "check.sh",
+      "before": {
+        "type": "file",
+        "sha256": "7219dfc0ceabd84139ee9538f8c5147ba34e9d32a1b09196ec181f57ba3dac08",
+        "mode": 509
+      },
+      "after": null
+    },
+    {
+      "path": "coordination/2026-10-12-entrypoint-consolidation.md",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "746e6238b479bae3c42fc2c394f14ef1baf29c2c59ca96a20fa2b84d59072cd4",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/full-tests.log",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "117a24ff15e6355c84fff22d1220da7ba32c0e4e1eaddb4dfe14da431228b039",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/launcher-additional.log",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "6dcb6f5963d0733c6b6a12a0dd8ef9b7448f76c32cb9bc6dcf0659eb26a04a09",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/launcher-green.log",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "746cee046dfae2662e937a768f5f466990f8123f2d8eff8f78e5703a7d71b038",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/launcher-red.log",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "710d8f794b2fac573ad5a2fcd9a4d4ce3daad3139101b42502c05a9b2cf00141",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/launcher-regression.log",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "dfa72bf3434083bce07e80023d90778575c738e02d879cfe52521b70d0f1d0ba",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/preimages.zip",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "f89732acb93457fcc5beb957a322daa46eb86f2879ca7cea6325776c249d76ce",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/retired-entrypoints.json",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "8d0b9d5c8e04a48c3eb5a03600ebac8c1c0f818da402963e82423667d3d54ec8",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/review-regressions-green.log",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "de7bd526842d823726a8f3ce89883ea21db80722cb8e9f34aa4f5e783d83a978",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/review-regressions-red.log",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "64b5c0b6e071d7c5e0bd3fdf49844cc0dce7a888dc2f87e84095ae8c7767e5d0",
+        "mode": 436
+      }
+    },
+    {
+      "path": "coordination/entrypoint-2026-10-12/rule-migrations.json",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "459b56f43aa9220df26ee513d36d93e7274fab8caf6d432d140d7b7385213d3f",
+        "mode": 436
+      }
+    },
+    {
+      "path": "deploy/vehicle-autodrive-panel.service",
+      "before": {
+        "type": "file",
+        "sha256": "b54f6df2c0340c1d3b7296aab23be27d6e6f320c2ef3c3d0b9a41192aef3b2ee",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "00d6998c17466848ae708f9e53e1bddfb26352bc37c5b0e956f867de14d52fe2",
+        "mode": 436
+      }
+    },
+    {
+      "path": "deploy/vehicle-dashboard.service",
+      "before": {
+        "type": "file",
+        "sha256": "bbc78f9526c4131e13c80a03d01b88b1daac15da367f010c0dcb1019c0516959",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "0fa9da304142ead799c4e34f0e1281d367b2d2a46e96c15547aceff473ac40f8",
+        "mode": 436
+      }
+    },
+    {
+      "path": "deploy/vehicle-perception-monitor.service",
+      "before": {
+        "type": "file",
+        "sha256": "12d8a2ba21cdbf09a75e462fccd5307a48f0e7fbaee0caec936220934cd3d201",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "0c745394bba0fd7956b18b1f89afefa83e65849ebcc0a1b051ad1c951140c446",
+        "mode": 436
+      }
+    },
+    {
+      "path": "deploy/vehicle-sensors.service",
+      "before": {
+        "type": "file",
+        "sha256": "c361e3edc933c1ee7c37c255135a34254d219f6650eb57fb7677132081b88129",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "cff99da4eec17ecd8f4dc0dac6fb129233c05015b297035c88b116b078d191a9",
+        "mode": 436
+      }
+    },
+    {
+      "path": "deploy/vehicle-serial-monitor.service",
+      "before": {
+        "type": "file",
+        "sha256": "47ad627009c512b6d1ebeb65a855a81030e1510a4bebaf7fea893fe1c41f2e35",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "6a8c5d5736fe1b74f5a8b25b021bb80eb80e76a5a5cfee99e6f303e4ce38e5b2",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/architecture/current.md",
+      "before": {
+        "type": "file",
+        "sha256": "9935ae1001460ee43820557e9f0e32237c1ba2fcc574df3b943fe5cb1740b5a2",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "5432c79d6f0c0b4a8d81e81ccc5eb9e2ba25b56fa5116271d2942dac38344b37",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/history/collaboration-before-entrypoint-consolidation/AGENTS.md.txt",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "00b072dbf6b1201c5e78a88143ec4b6e35961aa2095df991e98d3a271f3663fc",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/history/collaboration-before-entrypoint-consolidation/skills--thesis-handoff--SKILL.md.txt",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "e75fec64f50dcf5f66fb7e233ffeb0e5f73c23f1d6c1681923ab0bc646c6fc53",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/history/collaboration-before-entrypoint-consolidation/skills--vehicle-cloud-thesis--SKILL.md.txt",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "b5241be6af8a7091f5a4b25343d7f33d989763a7928396da0c488f5dc13a568e",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/manual-wheel-check.md",
+      "before": {
+        "type": "file",
+        "sha256": "580f1f614a613a76e86c1b02c6a5a8e54f5d795292b112ad7c05aa50b6f38e4b",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "4d15e737264f33bf332c96203aa23699e46548d03e09f1d37e22a8b32fef118a",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/operations/development.md",
+      "before": {
+        "type": "file",
+        "sha256": "6fa62a5962b7347d0589c858d2d8dd0518e01ee38d23ca61a51d51fbaf71b163",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "4b0a66438c6011b859e61c31f11cc248c255532c222750bf0637aae854508373",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/operations/runtime.md",
+      "before": {
+        "type": "file",
+        "sha256": "17f7f249b9eb99bb430736df3f6423fef26576dc065dc4b4767c8357f7b45c10",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "e0190914324b9a3aeba4d98ab00b77f808fb072cb49022c265f1b5c91d783a71",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/outer-loop-record-replay.md",
+      "before": {
+        "type": "file",
+        "sha256": "97eae498868c97c022bb8a8910e33c884fd2a594642e1a1955b2b6ebeda66686",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "9c2386d3a19b0693eb6ad1f649786b8afccb10d32e519caeba6e27e824172b3c",
+        "mode": 436
+      }
+    },
+    {
+      "path": "docs/vehicle-dashboard.md",
+      "before": {
+        "type": "file",
+        "sha256": "ba3513356b713e771cf26806e9397138cb9ce4136ed86e42b8ea9477bf619af0",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "d630eaeefc6a620be3a05090362a23108b61cd107cf55143398c4daf8c573d2b",
+        "mode": 436
+      }
+    },
+    {
+      "path": "experiments/README.md",
+      "before": {
+        "type": "file",
+        "sha256": "4820b6eb173d2135baa0f1cc074cf740df2d3b594b3aa641a446781e767222ef",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "22078b937804f5286a58c053eaac7507b1805705faea5de8950a164633374253",
+        "mode": 436
+      }
+    },
+    {
+      "path": "run.sh",
+      "before": {
+        "type": "file",
+        "sha256": "bc1c321a45451c31eb2dc972794d53c00f493f0f803e136f0a12a91c06a3aa1d",
+        "mode": 509
+      },
+      "after": null
+    },
+    {
+      "path": "run_autodrive_panel.sh",
+      "before": {
+        "type": "file",
+        "sha256": "20ca000005c20b0ba27194262748bbe0eee994f633bcf9894a59f227971581b0",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "9fa2801b1db2269233f380af6c30b2266f5dbc3e9eefa3b9f212e644ec2e8894",
+        "mode": 436
+      }
+    },
+    {
+      "path": "run_jetson_yolopv2.sh",
+      "before": {
+        "type": "file",
+        "sha256": "343234408cb5c0e1248a3dadac0625b2cf1de3a0c7fd067f684f1e31380f9532",
+        "mode": 493
+      },
+      "after": null
+    },
+    {
+      "path": "run_outer_loop.sh",
+      "before": {
+        "type": "file",
+        "sha256": "7832696949bc9cd371cbac845e32c67eff5f290c0a787b65598ab5dd325cf870",
+        "mode": 436
+      },
+      "after": null
+    },
+    {
+      "path": "run_vehicle_dashboard.sh",
+      "before": {
+        "type": "file",
+        "sha256": "0587979b2201b120658f8ac200e4568c89cf139eaa2d19ef131c6e2f60f0790b",
+        "mode": 509
+      },
+      "after": {
+        "type": "file",
+        "sha256": "6bae5c5d829c96ea783cd98d5c1d1e216d560f3189750798382641f036e490f1",
+        "mode": 509
+      }
+    },
+    {
+      "path": "run_vehicle_experiment.sh",
+      "before": {
+        "type": "file",
+        "sha256": "36134b867d0adeb03bb328a5f3c210bcfbe341bc1c836aa39004134e3644b193",
+        "mode": 509
+      },
+      "after": {
+        "type": "file",
+        "sha256": "ceffb04cd6c283ac6b671ce44d58334029a2c7e603914eb90bc65c27926e47d2",
+        "mode": 509
+      }
+    },
+    {
+      "path": "run_wheel_check.sh",
+      "before": {
+        "type": "file",
+        "sha256": "8d9bc889320740f994190ffbf3021fb2f8407bcf016136c6de748879e39a1b11",
+        "mode": 436
+      },
+      "after": null
+    },
+    {
+      "path": "skills/thesis-handoff/SKILL.md",
+      "before": {
+        "type": "file",
+        "sha256": "e75fec64f50dcf5f66fb7e233ffeb0e5f73c23f1d6c1681923ab0bc646c6fc53",
+        "mode": 436
+      },
+      "after": null
+    },
+    {
+      "path": "skills/thesis-handoff/agents/openai.yaml",
+      "before": {
+        "type": "file",
+        "sha256": "834acb32c263819309d211812b7a4ce9831e692434211be21e5c8e6a348e64c8",
+        "mode": 436
+      },
+      "after": null
+    },
+    {
+      "path": "skills/vehicle-cloud-thesis/SKILL.md",
+      "before": {
+        "type": "file",
+        "sha256": "b5241be6af8a7091f5a4b25343d7f33d989763a7928396da0c488f5dc13a568e",
+        "mode": 436
+      },
+      "after": null
+    },
+    {
+      "path": "skills/vehicle-cloud-thesis/agents/openai.yaml",
+      "before": {
+        "type": "file",
+        "sha256": "87ec62dd6e27e63f95f23222f94d05d0f7da7cf7f9427dbb5ba0cea05bfce9af",
+        "mode": 436
+      },
+      "after": null
+    },
+    {
+      "path": "tests/__init__.py",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "c65fdd202927e9e4c9fd9eb85b422e3d0f6bc609e5e53b827cfef979ce4976ef",
+        "mode": 436
+      }
+    },
+    {
+      "path": "tests/launcher_fixture.py",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "c34369bc4f64cf3f136fe2d3eccce1b3b30ff0339d0a65f6950d1e3c460ba69b",
+        "mode": 436
+      }
+    },
+    {
+      "path": "tests/test_evidence_catalog.py",
+      "before": {
+        "type": "file",
+        "sha256": "819531996257336dbbd975858ea6ac08f9cad5eff961e6f628b6e9f174a146d1",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "290cf1beeec139a16ef0142c41e0050da071fb1fa4286e3e77e362be1672d09a",
+        "mode": 436
+      }
+    },
+    {
+      "path": "tests/test_vehicle_cli.py",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "ed0f48d6ae91724fe0834b6dd8e8d93e9d3789811e3fcaa536887be6a92a07b9",
+        "mode": 436
+      }
+    },
+    {
+      "path": "tools/check.py",
+      "before": {
+        "type": "file",
+        "sha256": "15a02b71cae67ff95952e01d049afc0af4c9869937c40201002f8d95f53c7e92",
+        "mode": 436
+      },
+      "after": {
+        "type": "file",
+        "sha256": "d5dca6e34f4ea14b7964892cf70107b9acf996d69b7f23a6e6544bf9d6049b31",
+        "mode": 436
+      }
+    },
+    {
+      "path": "tools/process_lifecycle.py",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "8bca6a65d30766080e08695185fabda037ac5e3f064118b2efe0fe3839aa0d66",
+        "mode": 436
+      }
+    },
+    {
+      "path": "tools/repository_layout.py",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "40784995b0544583384e7c0f2c82e6e7688306fb916a339a2df8021b3371cbc3",
+        "mode": 436
+      }
+    },
+    {
+      "path": "tools/vehicle_cli.py",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "3b2019ffbfe5acb51709957fff521a63cfd08f26095da33040133c72ea0c3ebc",
+        "mode": 436
+      }
+    },
+    {
+      "path": "vehicle",
+      "before": null,
+      "after": {
+        "type": "file",
+        "sha256": "2324a1cc081993595946e79736820d90a9df9bde210ea75d9970c83253d8a54c",
+        "mode": 509
+      }
+    }
+  ]
+}

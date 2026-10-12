@@ -1,8 +1,10 @@
 # 云端观测客户端
 
-默认 `qwen3.8-omni-flash-realtime`，每事件新建独立WebSocket会话，上传一张最新JPEG，仅接收文本。默认合同为用户选择的 **road-observation-fast-v1**。模型、合同、传输分别配置，保留HTTP千问和其他OpenAI-compatible厂商入口。
+该目录是车端访问外部模型服务的客户端，不是云服务端。默认 provider/model 为 `qwen-realtime` / `qwen3.8-omni-flash-realtime`；每事件新建独立 WebSocket 会话，仅接收文本。模型、合同、传输分别配置，保留 HTTP 和其他 OpenAI-compatible 入口。
 
-本模块不导入摄像头、底盘或电机，不接管 `car/autodrive/runtime/onboard.py`。云端建议只能供本地观察/仲裁；没有自动PWM、停车、恢复或选路映射。`observe`不能解释为恢复驾驶。代码本轮未部署到车端，未建设HTTP网关。
+**当前驾驶集成**：`rosmaster_jetson_yolopv2_visual_feedback` 启用 `cloud_recovery`，运行时显式采用 **road-recovery-v1**。持续停车后提交 1–3 张有序稀疏帧及本地受限候选；`RecoveryCoordinator` 接收云候选建议，车端融合策略和最新几何证据重新核验，最终门禁决定单步或保持停车。具体模块与边界见[当前架构](../../docs/architecture/current.md)。这条链路已有源码和历史记录，结构重构没有重新进行真实云或实车验收。
+
+**独立观察工具**：下文 CLI 示例默认 **road-observation-fast-v1**，一次一张图。其 `observe` 不能解释为恢复驾驶；该合同不提供可执行路径。本模块自身不导入摄像头、底盘或电机，也不设置 PWM。旧 `road-scene-v1` / `cloud_arbitration` 属于兼容能力，当前驾驶 profile 关闭该分支。
 
 **2秒仅为速度参考，超过2秒的合法结果照常返回。** `CAR_CLOUD_TIMEOUT`是独立可调的网络请求超时，默认30秒；Realtime使用该预算，包含图片准备、建连、会话配置、上传及完整响应/校验。不自动重试或串行切换HTTP/Max。
 
@@ -25,9 +27,9 @@ CAR_CLOUD_IMAGE_LIMIT_MB=6
 
 环境变量优先于 `.env`，显式构造参数优先于两者。`--env-file`/`CAR_CLOUD_ENV_FILE`可指定另一份配置。若历史进程环境仍设置Max或HTTP provider，应同步更新/清除覆盖项。
 
-允许JPEG/PNG/WebP，Realtime只接受一张静态图；本地纠正EXIF方向、缩小最长边至640、JPEG quality=95，不裁剪、不增加letterbox。保留原图与派生hash/尺寸/变换；Base64不超过256KiB，超出则要求提供更小图。该Pillow编码配置与此前OpenCV先导有差异，不继承先导时延/质量结果。
+允许JPEG/PNG/WebP；Realtime 观察合同接受一张静态图，恢复合同接受 1–3 张有序稀疏静态帧；本地纠正EXIF方向、缩小最长边至640、JPEG quality=95，不裁剪、不增加letterbox。保留原图与派生hash/尺寸/变换；Base64不超过256KiB，超出则要求提供更小图。该Pillow编码配置与此前OpenCV先导有差异，不继承先导时延/质量结果。
 
-每轮提交200ms的16kHz单声道合成静音PCM，随后图像、commit及response.create；静音是图像缓冲载体，不是实际车载音频，usage中音频Token应计费。HTTP的max_tokens/reasoning_effort/response_format不应用于Realtime；文本在本地校验，不冒称已向Realtime发送这些HTTP参数。
+单帧请求提交 200ms 的 16kHz 单声道合成静音 PCM，随后图像、commit 及 response.create；恢复请求在后续帧间追加 1 秒静音和发送间隔，提交全部帧后再 commit；静音是图像缓冲载体，不是实际车载音频，usage中音频Token应计费。HTTP的max_tokens/reasoning_effort/response_format不应用于Realtime；文本在本地校验，不冒称已向Realtime发送这些HTTP参数。
 
 ## 手工预览与调用
 
@@ -51,7 +53,7 @@ python -m car.cloud_client --image car/test/test_image.jpg --output outputs/clou
 
 身份/时间由本地绑定，不要求模型复述。不同主机单调时钟不可直接相减，当前不会依据采集时间产生2秒截止。预览只显示公开配置和图片来源/hash，不输出Key、Bearer头或Base64。
 
-## 结果合同与记录
+## 独立观察合同与记录
 
 ```json
 {"features":["straight_arrow","right_arrow"],"uncertain":false,"advice":"observe","reason":"直行或右转"}
@@ -103,13 +105,12 @@ CAR_CLOUD_REASONING_EFFORT=none
 
 ## 开发验证
 
-运行时新增websocket-client，Pillow已有基础依赖，不需要OpenAI/DashScope SDK。回环服务器是开发依赖：
+运行依赖与现有 Jetson 环境见 [requirements](../../requirements/README.md)，不需要 OpenAI/DashScope SDK。回环服务器是可选开发依赖；使用已经具备依赖的环境：
 
 ```bash
-python -m pip install -r car/test/requirements-cloud.txt
-python -m unittest discover -s car/test -p "test_cloud_scene*.py"
+./vehicle check --torch --loopback --websocket-loopback
 ```
 
-测试只用虚构Key、本机HTTP/WebSocket和协议反例，没有调用真实阿里或硬件。历史16份Realtime事件仅离线重解析，没有重写。新代码真实账号/车端相机/网络效果需现场单独验证。
+测试只用虚构Key、本机HTTP/WebSocket和协议反例，没有调用真实阿里或硬件。历史16份Realtime事件仅离线重解析，没有重写。本轮重构未发起真实云请求，当前账号/相机/网络效果仍须按现场实验安排独立验证。
 
 官方协议（2026-10-08核对）：[Realtime指南](https://help.aliyun.com/zh/model-studio/realtime)、[选定模型](https://help.aliyun.com/zh/model-studio/qwen3-8-omni-flash-realtime)。

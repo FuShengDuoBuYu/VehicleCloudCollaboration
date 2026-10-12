@@ -1,0 +1,2 @@
+# Optional local RFC6455 integration-test server; not needed by vehicle runtime.
+websockets>=12,<14

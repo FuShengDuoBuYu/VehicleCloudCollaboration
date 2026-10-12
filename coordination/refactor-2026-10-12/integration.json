@@ -1,0 +1,722 @@
+{
+  "base_commit": "664793438d9d2cf51dae603e8d6fcc45902f6fb1",
+  "source_worktree": "/tmp/vcc-repository-refactor",
+  "destination": "/home/jetson/VehicleCloudCollaboration",
+  "mode": "uncommitted hash-guarded copy; no merge or commit",
+  "files": [
+    {
+      "path": "PROJECT_INDEX.md",
+      "before_sha256": "639158fa3e334dab5fdf19b4d55cc768edbc9cfda7de3cfb0a331135e4427f00",
+      "after_sha256": "d730cf8a106571e159f95113dd2bb3ab2ed32195ad8e8a643d48f7790fad7bc3",
+      "action": "write"
+    },
+    {
+      "path": "README.md",
+      "before_sha256": "3478f775e25f1c494b785de982c47d2506128903c138856e527066791a3fad5b",
+      "after_sha256": "1ede1a4ff3a25123d13ec32ab867badbaf5321b154a7adbe6dcd6b43a720cc81",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/ON_CAR_CHECKLIST.md",
+      "before_sha256": "aa63b4063673220e2da99ba7eebf572e45af53e18924cbef72e877ec1103e998",
+      "after_sha256": "791332258f0284b3a8b83d5d87e93b70d4c9060dafe0e3448c2dfc8d5082fc2c",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/README.md",
+      "before_sha256": "4b5b9ed76b8177d89835230b8bb8466c529dc52a7940ee2dc5caa1ec3e92adff",
+      "after_sha256": "acebeceb75ed8ee4a60b00eb9286e769fae165b7bd41952900ba53b7bd56c9fa",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/YOLOPV2_ONNX_EXPERIMENT.md",
+      "before_sha256": "342c585d0ea0e4b77934101d65c15f59c8739de90c1c6691a53575b4e3761136",
+      "after_sha256": "d08266345df5d73b780c5451797a05ba6471877156926522298d23d662983e61",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/control/corner_continuation.py",
+      "before_sha256": null,
+      "after_sha256": "53c5ede89756b8f85b571c5afbcc317bda602c13275afbc77e0dd6891b8dae60",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/control/drive_runtime.py",
+      "before_sha256": "24fb3cb9799324647cc22cf8591dbc38323970eb4599f404e198d52bd39699f7",
+      "after_sha256": "89363b4fa24f2a395e476f6c032d86f9003cf17ffbac08da90b908bf26239728",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/control/motion_gate.py",
+      "before_sha256": null,
+      "after_sha256": "b3e63ebd34c3b38415c623c85d3c2b74345c38a2be8524500892f7ac8ed4e59b",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/control/watchdog.py",
+      "before_sha256": null,
+      "after_sha256": "1ab437f4ec6eba2667d61a70cac0893e05e9df4f03d28d3f4307f5d7012f7dfe",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/control/wheel_driver.py",
+      "before_sha256": null,
+      "after_sha256": "228e1a83759c434773b983494d20008f0e8a4273eb4070ddeee12584106f4a25",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/perception/model_base.py",
+      "before_sha256": null,
+      "after_sha256": "b6a908d28ae69ab31b45b8da44450afe7b7bed69831405290e55ca6d1e233217",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/perception/yolopv2_fusion.py",
+      "before_sha256": "9f349066ff0209aec5855512cbf569075ef9838c22616361d7542a53ebaa95cb",
+      "after_sha256": "e764aea84cb901e36217d40583599ae4d6133b72959abd348c10a711b91b5dcc",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/perception/yolopv2_torch.py",
+      "before_sha256": null,
+      "after_sha256": "082c8f8570705aab1927fad5b1217b9d65067601966601d7a8700e1d8cf9ba03",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/archive.py",
+      "before_sha256": null,
+      "after_sha256": "2a5d83364eaf564c40cfad07eca9f37c88d708042c4e443914f350e106258970",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/components.py",
+      "before_sha256": null,
+      "after_sha256": "6fe907d2c9c9533ead0c39fdc86cdbdb23e341c4b306ad9eae043e80b0fbe4bb",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/configuration.py",
+      "before_sha256": null,
+      "after_sha256": "9a21d36bf0a369c1f64b0c2dcd7ec09e3ec5b0f2c6891404125b6cf7209217a8",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/corner_runtime.py",
+      "before_sha256": null,
+      "after_sha256": "472bc93d356588168308491f111f33bb6ae9eed34297aa46524a31ba1cc38960",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/io_utils.py",
+      "before_sha256": null,
+      "after_sha256": "64b8bbcbf7418e6a1d16e5b7f3d31e20b1994193346e5b0649ac3d6c3cda28b8",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/onboard.py",
+      "before_sha256": "c70ad6330ab6168f5dbdfd4e6a88b0961950712c00d58c8f1d47809fd1662f51",
+      "after_sha256": "facf014dc73b4aaf2d8e2d7285cc30799d33c1174e47ac12a421790d01ed658d",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/paths.py",
+      "before_sha256": null,
+      "after_sha256": "efdd43802b08b46fbd743a9ea9bd6b8fdd19719432fd48f3b0b36e34c58b8d92",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/perception_pipeline.py",
+      "before_sha256": null,
+      "after_sha256": "b6e1ea5bc86aea05fa05cf5dd826bcff96e930a3a9c8d5b0d84bfe15ab6b1526",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/provenance.py",
+      "before_sha256": null,
+      "after_sha256": "0ca87538e803ad2877487ba458c69f00540f70821fe072e8a72b3ded4a80c1fb",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/publication.py",
+      "before_sha256": null,
+      "after_sha256": "e3cbfcb6c10dbb4eb03f737b1c961778c70c756beeab905cc4be0685d5b18591",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/reporting.py",
+      "before_sha256": null,
+      "after_sha256": "3d712528e173626c84cb4fe7ed978dc9949fa5df8ca58dc08b297e1b95bd5609",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/runtime/sources.py",
+      "before_sha256": null,
+      "after_sha256": "e4fafcb262cb04be2c33bcf5ea0da0d9d48f8d24aabc91369aef30131e825a3d",
+      "action": "write"
+    },
+    {
+      "path": "car/autodrive/tools/replay_outer_loop.py",
+      "before_sha256": "258be380144e8db3181ac884d86b0d056dd4dc2a78ce204f5b1f75326667bc78",
+      "after_sha256": "470f33d1a436ccd4af0a21aa86eb9d700da7fc0ef6555b61b38a1f19a5f3436a",
+      "action": "write"
+    },
+    {
+      "path": "car/cloud_client/README.md",
+      "before_sha256": "0cae20dd1a4ac5453ea6ea07c59a63ac157bd92485b8cf0ecf917e7226333f79",
+      "after_sha256": "902e1ecd68c47e9ecd54c753a2f1cbba5adc1e6987cddbb356e6aacb4fa486ae",
+      "action": "write"
+    },
+    {
+      "path": "car/control/README.md",
+      "before_sha256": "a9be85dfe074b43fba7e560c252961a4cd67a7182b6c72e496d5c53afaf47078",
+      "after_sha256": "81131e7ab8da0dfd81f8dd2a30ac32eec18dd93364b3a095c3db7aad84586ff4",
+      "action": "write"
+    },
+    {
+      "path": "car/longtail/README.md",
+      "before_sha256": "868d88310aa1edb49192b387eff05ce7460653c266e5ca53c58e0e391ad7f6d1",
+      "after_sha256": "9bca8f01148fe2249c1cb537744c01dce729f7c6da912ca530ccdb545cb3d499",
+      "action": "write"
+    },
+    {
+      "path": "car/longtail/detectors/base_detector.py",
+      "before_sha256": "b6a908d28ae69ab31b45b8da44450afe7b7bed69831405290e55ca6d1e233217",
+      "after_sha256": "b755d442075f7c130677664d6f4aa10692f0da99a3ec926d294fa7b331eb0e0c",
+      "action": "write"
+    },
+    {
+      "path": "car/longtail/detectors/yolopv2_detector.py",
+      "before_sha256": "7a375461ee5e59710fbabab9c336db5fd99ea5779f1a7f0f16cdef405cee9b51",
+      "after_sha256": "2c0ae630f380694c02bae095b203c8a0d75efdea9176d20ab52140a6d7921b16",
+      "action": "write"
+    },
+    {
+      "path": "car/test/README.md",
+      "before_sha256": "03146010ade70db7835832e4dfa1ce0814b888ef555e57741d0780b24c133770",
+      "after_sha256": "41da5bce8ae9bb721442c9335e615047ba8ec007aed35384a37fe5d7cb45bf01",
+      "action": "write"
+    },
+    {
+      "path": "car/test/closed_loop_report.json",
+      "before_sha256": "475692721f3e52a485b182bdc7475f8ab9955ca8d7004286d9fb251350390991",
+      "after_sha256": null,
+      "action": "delete_original_after_verified_archive"
+    },
+    {
+      "path": "car/test/closed_loop_test.py",
+      "before_sha256": "0a885e1f2313f26933c98db497f7c5e381605e41d99abc3a7e85091a3a262bcb",
+      "after_sha256": null,
+      "action": "delete_original_after_verified_archive"
+    },
+    {
+      "path": "car/test/requirements-cloud.txt",
+      "before_sha256": "1110cd1444f4b4ef1f9b8534c93f75f65ed90baacb08188203dfc6f63ad711b7",
+      "after_sha256": "b1dfe6dbafb07f35b7a3450ce6f8821ea116bf5d280f1558ca21f5eb86397978",
+      "action": "write"
+    },
+    {
+      "path": "car/test/test_cloud_scene_http.py",
+      "before_sha256": "0a43da0d5593084030c7ab9b24acb7d0aec28be2954b12edd283fcbaac1523fd",
+      "after_sha256": "80baf5b249506db31ce7bb59e678dc9937d39cd69ddeadf86e84ca7d9be32c30",
+      "action": "write"
+    },
+    {
+      "path": "car/test/test_cloud_scene_ws.py",
+      "before_sha256": "a0fd5c69f4c18389384e9268ea8d90ec7c884158797512d6db7de694facf5315",
+      "after_sha256": "5fdbd2143d49554eea73dc043a4b0f9d229506a0114f026a88a37a28f5b5db7e",
+      "action": "write"
+    },
+    {
+      "path": "car/test/test_outer_loop_replay.py",
+      "before_sha256": "7b9d59e7616c4bac1d5fe9265e97ebff922565f9a7c1974dbb0d74ef45f71e43",
+      "after_sha256": "cebd9e673e232d97a3d95175d223166e240445757fbb9e4000c08eea8a7ff2ab",
+      "action": "write"
+    },
+    {
+      "path": "car/test/test_session_replay.py",
+      "before_sha256": "1c54297320a18a2c04bb72c46413ad610e87945c36ec076591d8665ecece4d10",
+      "after_sha256": "e7d2e60c8ec437b9a4f7a9ac7f0cd852a5feb37a3f8e986c1e711477963c075b",
+      "action": "write"
+    },
+    {
+      "path": "car/test/test_stationary_corner_perception.py",
+      "before_sha256": "0969f64983d605f5da9ca0501cd47f048fe124fdf7e4a654e3050ac7654c9336",
+      "after_sha256": "25cddbf157016665365dd6f43e64c9b799444403692795e642fbce54b20aaf50",
+      "action": "write"
+    },
+    {
+      "path": "car/test/test_track_colors.py",
+      "before_sha256": "84a432a0f088b7490185345b61a7f30624e8bc5eb2e966c5f7f499e518cc2a87",
+      "after_sha256": "2174578a05a8fd5ea71b87407d268959cb4f92f4c72066250aa67b67687b8500",
+      "action": "write"
+    },
+    {
+      "path": "car/test/test_yolopv2_torch_input.py",
+      "before_sha256": "dcc5b73480d2e59594e48dcc48329e00e9fe41fe2ff1881b06497de1938f39d5",
+      "after_sha256": "49a1bd80fc16d3c58e669b0911b6316842504d5f14ee9f0a391d8f0fc30f8e86",
+      "action": "write"
+    },
+    {
+      "path": "check.sh",
+      "before_sha256": null,
+      "after_sha256": "7219dfc0ceabd84139ee9538f8c5147ba34e9d32a1b09196ec181f57ba3dac08",
+      "action": "write"
+    },
+    {
+      "path": "coordination/2026-10-12-current-architecture-drawing-brief.md",
+      "before_sha256": "c87f9c973268e25faf7e24bd5bf5f31e7a18c87521fb1c88aeeab204d937f2c8",
+      "after_sha256": "165ac56ad3836abce2233dda609aa2f7693433899035f54bff4baea616d72e67",
+      "action": "write"
+    },
+    {
+      "path": "coordination/2026-10-12-repository-refactor.md",
+      "before_sha256": null,
+      "after_sha256": "5fc4398eb045308f06f612307d75c93f49e7fc7eba6f3a65eb217257b6997c11",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/baseline-supported-tests.log",
+      "before_sha256": null,
+      "after_sha256": "920ee744d81e7093b3a1ee66c32ca34029ae58c502c13eafae3c359670a8fbea",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/baseline-tests.log",
+      "before_sha256": null,
+      "after_sha256": "18cd8ab1f54d5349d7bf882a9e60b9b52bc252e23bf836d459a43edd0086e5eb",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/catalog-escape-red.log",
+      "before_sha256": null,
+      "after_sha256": "37784dd1f3c375b43e325ba5efdb562fd703067a9319b264ffcfc6e12e7f347b",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/catalog-green.log",
+      "before_sha256": null,
+      "after_sha256": "87245808eeb32a5b7e94a9e9b58b38336813d4f62263b057dfc74ca6992a3a79",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/catalog-red.log",
+      "before_sha256": null,
+      "after_sha256": "6c7c90347852cf74dcff7315b2621da5007546d65064493bf9c4f21f5fbe1a4b",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/compare_replay.py",
+      "before_sha256": null,
+      "after_sha256": "01b09be5d2c88ac65a78dc15c5e7f5da8f2bef3b514669d65ec9b3e5d6a86529",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/core-tests.log",
+      "before_sha256": null,
+      "after_sha256": "fc1b79899a72fe08f3bb1130f0ebe24849ce8984801ef51ff231159cadd52ee3",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/extraction-tests.log",
+      "before_sha256": null,
+      "after_sha256": "157fad5307912da55731692b496e08805b5c9f4e2670148d1003f3f28fa87efb",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/full-tests.log",
+      "before_sha256": null,
+      "after_sha256": "02684227368540e682004f7713441dda1288dd72c2a699abce25b23af641a71a",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/migrations.json",
+      "before_sha256": null,
+      "after_sha256": "e3307d7290d971d6727d7a861ee9690dd14958a3d333f08999c34252fcd5db87",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/preexisting-documents.json",
+      "before_sha256": null,
+      "after_sha256": "70d944ff66e400bbf3719f101072fea0f4531732946aeb8b56b13fece7d511a6",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/recovery-isolated.log",
+      "before_sha256": null,
+      "after_sha256": "a4d5080e7fe83486aba0f44016e1fcebd3f0b361cdd151e2a2b85d9d07fa5899",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/replay-equivalence.json",
+      "before_sha256": null,
+      "after_sha256": "8070974ecde194ce39aabde3cdf1113d5491bce2f5b71c8e7144b024271f13e4",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/replay-regression.log",
+      "before_sha256": null,
+      "after_sha256": "19374714a0ff1e13bfc427fcc0e04a38c7f52141e4282e7a90f78cb5a2432929",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/replay_baseline.py",
+      "before_sha256": null,
+      "after_sha256": "a00c7e7e082ed8c779e8671d44435dc79b58c26247a11a3098f774b50568f4dc",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/reporting-tests.log",
+      "before_sha256": null,
+      "after_sha256": "d588fc6d490be763b79d31b648a96519bb90b38eea2545e97c61bd70d5920b77",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/review-fixes-green.log",
+      "before_sha256": null,
+      "after_sha256": "ffaa92b67e320c73341f4d223acc9d20508e93547e3ebe3bde9fcb9e1f0e1f85",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/review-fixes-red.log",
+      "before_sha256": null,
+      "after_sha256": "59397ae8ffc5e13ea77afc68f25e758127e88ce6513153cfca8e3b24fbf4c3ea",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/review.md",
+      "before_sha256": null,
+      "after_sha256": "ccac2de20107474da17e7c13e6ffa72e0efd92b2063174c0574c687e028e74d5",
+      "action": "write"
+    },
+    {
+      "path": "coordination/refactor-2026-10-12/validation-artifacts.json",
+      "before_sha256": null,
+      "after_sha256": "a6d89c7edf8f410f5b5947eb65562b9db3fc8d1776dc5166fc1dfe60c7d78c95",
+      "action": "write"
+    },
+    {
+      "path": "docs/architecture/current.md",
+      "before_sha256": null,
+      "after_sha256": "9935ae1001460ee43820557e9f0e32237c1ba2fcc574df3b943fe5cb1740b5a2",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/2026-08-04-pi-onnx-experiment.md",
+      "before_sha256": null,
+      "after_sha256": "342c585d0ea0e4b77934101d65c15f59c8739de90c1c6691a53575b4e3761136",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/2026-10-08-jetson-yolopv2.md",
+      "before_sha256": null,
+      "after_sha256": "2a2b4f6ca7ac79e50f1b421e66242d149a92f37f32bef5d2288038e6f39805c6",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/2026-10-09-outer-loop-record-replay.md",
+      "before_sha256": null,
+      "after_sha256": "d400604bd50acecaaf249a4ef2d13c9372eeba8b9b170d2857027c38aabfc300",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/2026-10-12-visual-feedback-evolution.md",
+      "before_sha256": null,
+      "after_sha256": "5be46458681fbbc63ad9ef3655fe4b6d81e8a2a56d103ef92bf06c7421d20082",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/README.md",
+      "before_sha256": null,
+      "after_sha256": "17cd30d9d26262c0fe466fa70fd1ee2b646c9f223280b60d1a33b5adf88c50b5",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/designs/2026-10-08-jetson-vehicle-bringup-design.md",
+      "before_sha256": null,
+      "after_sha256": "4a1a40d85d45288a81635d52764a34477042941227a9b3224b161a6d45bce1f8",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/designs/2026-10-08-vehicle-dashboard-design.md",
+      "before_sha256": null,
+      "after_sha256": "6314262606d8d7ab69dca89f252296c25baee9572ec671a8eb9cca3fec0cc97a",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/designs/2026-10-10-cloud-assisted-recovery-design.md",
+      "before_sha256": null,
+      "after_sha256": "fb6027711126aaa19677b46d2507e63dc900103b191e2243c7815fef75f3f76e",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/designs/2026-10-10-decision-fusion-interface.md",
+      "before_sha256": null,
+      "after_sha256": "8a1cdae4e3891b37ffec9095ddd8b5962d9efd7a2c19d076bc0d07a5495c5413",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/pi-on-car-checklist.md",
+      "before_sha256": null,
+      "after_sha256": "aa63b4063673220e2da99ba7eebf572e45af53e18924cbef72e877ec1103e998",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/plans/2026-10-08-car-hardware-acceptance.md",
+      "before_sha256": null,
+      "after_sha256": "02f865c1abd3a0195e6e50d976a9589438d36c4f2bfebd4752640128633aa89f",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/plans/2026-10-08-jetson-yolopv2-field.md",
+      "before_sha256": null,
+      "after_sha256": "e4400be99bccb98cb813c7912edb6ddf48d35cec5e1d95fca3bdcb1950660771",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/plans/2026-10-08-outer-loop-cloud.md",
+      "before_sha256": null,
+      "after_sha256": "e49d96a52bf39d0c3a873aa50b3ae4a18ac593bc541572ae6c17a125245f3733",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/plans/2026-10-08-vehicle-dashboard.md",
+      "before_sha256": null,
+      "after_sha256": "3e432c704e06203e9d868516ebf838c3cfe722b2dd3f47d4a42eb3172e7b9f62",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/plans/2026-10-10-cloud-assisted-recovery.md",
+      "before_sha256": null,
+      "after_sha256": "27c72df071bb519452b918620f7320d3381fd447f36ea5e70f1515ad3fce6ed0",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/plans/2026-10-10-session-replay.md",
+      "before_sha256": null,
+      "after_sha256": "4ece59c5bc149a872cbc744de15200254bdc28c4fedbc7b8167973b016e251a4",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/project-index-through-2026-10-12.md",
+      "before_sha256": null,
+      "after_sha256": "639158fa3e334dab5fdf19b4d55cc768edbc9cfda7de3cfb0a331135e4427f00",
+      "action": "write"
+    },
+    {
+      "path": "docs/history/requirements-pre-refactor.txt",
+      "before_sha256": null,
+      "after_sha256": "4a8dae49fa3e21073a6138c3c59a401458c55a3208c45e6ce7690216a1daacc7",
+      "action": "write"
+    },
+    {
+      "path": "docs/jetson-yolopv2.md",
+      "before_sha256": "2a2b4f6ca7ac79e50f1b421e66242d149a92f37f32bef5d2288038e6f39805c6",
+      "after_sha256": "8c0755db85e5fb0d3cacd6453651880da36c2bd23411c631a46ac66771737490",
+      "action": "write"
+    },
+    {
+      "path": "docs/operations/development.md",
+      "before_sha256": null,
+      "after_sha256": "6fa62a5962b7347d0589c858d2d8dd0518e01ee38d23ca61a51d51fbaf71b163",
+      "action": "write"
+    },
+    {
+      "path": "docs/operations/runtime.md",
+      "before_sha256": null,
+      "after_sha256": "17f7f249b9eb99bb430736df3f6423fef26576dc065dc4b4767c8357f7b45c10",
+      "action": "write"
+    },
+    {
+      "path": "docs/outer-loop-record-replay.md",
+      "before_sha256": "d400604bd50acecaaf249a4ef2d13c9372eeba8b9b170d2857027c38aabfc300",
+      "after_sha256": "97eae498868c97c022bb8a8910e33c884fd2a594642e1a1955b2b6ebeda66686",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-08-car-hardware-acceptance.md",
+      "before_sha256": "02f865c1abd3a0195e6e50d976a9589438d36c4f2bfebd4752640128633aa89f",
+      "after_sha256": "4579568d35c18023d77a4264b714e4f7b0f2b26463ddae6171082c0df6c736f1",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-08-jetson-yolopv2-field.md",
+      "before_sha256": "e4400be99bccb98cb813c7912edb6ddf48d35cec5e1d95fca3bdcb1950660771",
+      "after_sha256": "c55436974f20b1cb5dc1e50871a59de312c101068fd915c8e05226ce796e14cc",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-08-outer-loop-cloud.md",
+      "before_sha256": "e49d96a52bf39d0c3a873aa50b3ae4a18ac593bc541572ae6c17a125245f3733",
+      "after_sha256": "6cf3e5f33f0570f4f7915cde638b62699779e32c986694b3f796d7d4d3fcf632",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-08-vehicle-dashboard.md",
+      "before_sha256": "3e432c704e06203e9d868516ebf838c3cfe722b2dd3f47d4a42eb3172e7b9f62",
+      "after_sha256": "88f6fcc3183eccce685e59d3ea59f135e3f132c718ae9f3cf1adaad079db5b24",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-10-cloud-assisted-recovery.md",
+      "before_sha256": "27c72df071bb519452b918620f7320d3381fd447f36ea5e70f1515ad3fce6ed0",
+      "after_sha256": "b660538fee94739143bd7bbdf381957e311c627c6b31b5ec4bbd624d0da42d40",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-10-session-replay.md",
+      "before_sha256": "4ece59c5bc149a872cbc744de15200254bdc28c4fedbc7b8167973b016e251a4",
+      "after_sha256": "fbeef216132a4510f8db94ed1f359ec709baa1cc9f764760786756fc5361158e",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-12-repository-refactor.md",
+      "before_sha256": null,
+      "after_sha256": "4a6906224dbfcdef81a2956ea5b52e56bd6b8d2e0064cc5b053f21c407c2368f",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-08-jetson-vehicle-bringup-design.md",
+      "before_sha256": "4a1a40d85d45288a81635d52764a34477042941227a9b3224b161a6d45bce1f8",
+      "after_sha256": "71b5f837da05862d72ff44efa12ac6cf40f9c3dcc10f603fe8063cd8f8e3c3ff",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-08-vehicle-dashboard-design.md",
+      "before_sha256": "6314262606d8d7ab69dca89f252296c25baee9572ec671a8eb9cca3fec0cc97a",
+      "after_sha256": "6568e6969646dfbabea1ff97571c1153027a33fd1d0488b48439e86e3b985801",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-10-cloud-assisted-recovery-design.md",
+      "before_sha256": "fb6027711126aaa19677b46d2507e63dc900103b191e2243c7815fef75f3f76e",
+      "after_sha256": "08a4afb042486c3f2809047df9bd11b438af3835ed0374af97acede8d34b858a",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-10-decision-fusion-interface.md",
+      "before_sha256": "8a1cdae4e3891b37ffec9095ddd8b5962d9efd7a2c19d076bc0d07a5495c5413",
+      "after_sha256": "50fe8a65a33187b72d289066e8dc1bcd06b1acde831f45447dcd292f75a1779e",
+      "action": "write"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-12-repository-refactor.md",
+      "before_sha256": null,
+      "after_sha256": "7ac3c04bc5d1eb311add8872f308f4e1d3f08f40cc72450af175b0ffadd97d39",
+      "action": "write"
+    },
+    {
+      "path": "docs/vehicle-dashboard.md",
+      "before_sha256": "d2a82ac21f072543323abfbceb7284f5d268e2f1d8b1427be52253e90c242b91",
+      "after_sha256": "ba3513356b713e771cf26806e9397138cb9ce4136ed86e42b8ea9477bf619af0",
+      "action": "write"
+    },
+    {
+      "path": "docs/visual-feedback-replay.md",
+      "before_sha256": "5be46458681fbbc63ad9ef3655fe4b6d81e8a2a56d103ef92bf06c7421d20082",
+      "after_sha256": "ca7065b86422de13a5f91fece48984f2668dd34b0ef871ee4487b2348f81d8f3",
+      "action": "write"
+    },
+    {
+      "path": "experiments/README.md",
+      "before_sha256": null,
+      "after_sha256": "4820b6eb173d2135baa0f1cc074cf740df2d3b594b3aa641a446781e767222ef",
+      "action": "write"
+    },
+    {
+      "path": "experiments/__init__.py",
+      "before_sha256": null,
+      "after_sha256": "56eb65bfdbd4359aa694e11b78d2f64ab8eca040fff5aad666511dd4f1c2d9f2",
+      "action": "write"
+    },
+    {
+      "path": "experiments/catalog.py",
+      "before_sha256": null,
+      "after_sha256": "b48e2e4eb9ae59a5edea347916c7db8174ea972c2e62e93166d88021ac2ee352",
+      "action": "write"
+    },
+    {
+      "path": "experiments/catalog/2026-10-12/datasets.json",
+      "before_sha256": null,
+      "after_sha256": "b90747e66404f80dc4180035ce92a583bef70925048f0efba0720d4623fd18c2",
+      "action": "write"
+    },
+    {
+      "path": "experiments/catalog/2026-10-12/runs.json",
+      "before_sha256": null,
+      "after_sha256": "92c964e9c103f22672720f22704f567a084c4c32bd766d1baf194865e1f1c15e",
+      "action": "write"
+    },
+    {
+      "path": "requirements.txt",
+      "before_sha256": "4a8dae49fa3e21073a6138c3c59a401458c55a3208c45e6ce7690216a1daacc7",
+      "after_sha256": "702c47567d83458ddb43adf23fb256f436ca73199db2f4c8f13d9982f66a71cb",
+      "action": "write"
+    },
+    {
+      "path": "requirements/README.md",
+      "before_sha256": null,
+      "after_sha256": "8d8ed393e21ce840f3eede80de7125655a4a5e7ac730652fec95691bf3d9347f",
+      "action": "write"
+    },
+    {
+      "path": "requirements/jetson-observed.json",
+      "before_sha256": null,
+      "after_sha256": "fb4dafbb04ac9f1e1d3dbee2b5b598d79623b1ecb9e3529b2def5153cfff68cc",
+      "action": "write"
+    },
+    {
+      "path": "requirements/research.txt",
+      "before_sha256": null,
+      "after_sha256": "b03b53d5ab8bf32f89072dabf26f2512692b80400b30b14fc996f6853384c19e",
+      "action": "write"
+    },
+    {
+      "path": "requirements/runtime.txt",
+      "before_sha256": null,
+      "after_sha256": "108f38ef220a0a8f772baa5c4521fc837f43523d9af943d102408bb7c3be08a6",
+      "action": "write"
+    },
+    {
+      "path": "requirements/test-websocket.txt",
+      "before_sha256": null,
+      "after_sha256": "de2be8748f1377859161491fe07f1531add1d50b0a4673e2989485debd96bca7",
+      "action": "write"
+    },
+    {
+      "path": "research/legacy/README.md",
+      "before_sha256": null,
+      "after_sha256": "bed0e635417d14fc56624ffb115bd40d3c67bcacee210dc60ac293fca7398cf4",
+      "action": "write"
+    },
+    {
+      "path": "research/legacy/closed_loop_report.json",
+      "before_sha256": null,
+      "after_sha256": "475692721f3e52a485b182bdc7475f8ab9955ca8d7004286d9fb251350390991",
+      "action": "write"
+    },
+    {
+      "path": "research/legacy/closed_loop_test.py",
+      "before_sha256": null,
+      "after_sha256": "0a885e1f2313f26933c98db497f7c5e381605e41d99abc3a7e85091a3a262bcb",
+      "action": "write"
+    },
+    {
+      "path": "tests/test_evidence_catalog.py",
+      "before_sha256": null,
+      "after_sha256": "819531996257336dbbd975858ea6ac08f9cad5eff961e6f628b6e9f174a146d1",
+      "action": "write"
+    },
+    {
+      "path": "tests/test_recorded_processing_budget.py",
+      "before_sha256": null,
+      "after_sha256": "480dc5cea367e889779e9ab36abefc2dd12c8272c6c5146647178dd4961bd7f8",
+      "action": "write"
+    },
+    {
+      "path": "tools/check.py",
+      "before_sha256": null,
+      "after_sha256": "15a02b71cae67ff95952e01d049afc0af4c9869937c40201002f8d95f53c7e92",
+      "action": "write"
+    }
+  ]
+}

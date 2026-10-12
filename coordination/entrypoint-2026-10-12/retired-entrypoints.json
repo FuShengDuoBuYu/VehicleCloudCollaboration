@@ -1,0 +1,22 @@
+[
+  {
+    "path": "run.sh",
+    "sha256": "bc1c321a45451c31eb2dc972794d53c00f493f0f803e136f0a12a91c06a3aa1d"
+  },
+  {
+    "path": "run_jetson_yolopv2.sh",
+    "sha256": "343234408cb5c0e1248a3dadac0625b2cf1de3a0c7fd067f684f1e31380f9532"
+  },
+  {
+    "path": "run_outer_loop.sh",
+    "sha256": "7832696949bc9cd371cbac845e32c67eff5f290c0a787b65598ab5dd325cf870"
+  },
+  {
+    "path": "run_wheel_check.sh",
+    "sha256": "8d9bc889320740f994190ffbf3021fb2f8407bcf016136c6de748879e39a1b11"
+  },
+  {
+    "path": "check.sh",
+    "sha256": "7219dfc0ceabd84139ee9538f8c5147ba34e9d32a1b09196ec181f57ba3dac08"
+  }
+]

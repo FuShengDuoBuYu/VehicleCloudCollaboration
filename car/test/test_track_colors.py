@@ -109,6 +109,8 @@ class TrackColorsTests(unittest.TestCase):
         road,lane,frame=self.scene()
         _,config=onboard.load_config(onboard.DEFAULT_CONFIG,'rosmaster_jetson_yolopv2_visual_feedback')
         config['stationary_corner']['enabled']=False
+        # This fixture is local perception only and intentionally has no cloud journals.
+        config['cloud_recovery']['enabled']=False
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);run=root/'run';(run/'semantic_inputs').mkdir(parents=True)
             np.savez_compressed(run/'semantic_inputs/00000007.npz',sequence=7,captured_at=2.,

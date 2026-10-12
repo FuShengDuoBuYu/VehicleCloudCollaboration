@@ -8,7 +8,7 @@ Type=simple
 User=jetson
 WorkingDirectory=/home/jetson/VehicleCloudCollaboration
 # Opens only the local socket. Hardware starts on a later operator Start click.
-ExecStart=/bin/bash /home/jetson/VehicleCloudCollaboration/run_autodrive_panel.sh --authorize-motion I_UNDERSTAND_MOTORS_WILL_MOVE
+ExecStart=/bin/bash /home/jetson/VehicleCloudCollaboration/vehicle panel --authorize-motion I_UNDERSTAND_MOTORS_WILL_MOVE
 Restart=on-failure
 RestartSec=5
 # Let the supervisor request runtime cleanup before killing remaining children.

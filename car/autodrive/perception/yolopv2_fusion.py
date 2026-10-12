@@ -150,7 +150,7 @@ class YOLOPv2FusionDetector:
                         )
                     except RuntimeError:
                         pass
-                from longtail.detectors.yolopv2_detector import YOLOPv2Detector
+                from .yolopv2_torch import YOLOPv2Detector
 
                 model = YOLOPv2Detector(
                     {

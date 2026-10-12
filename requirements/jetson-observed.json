@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-12",
+  "python": "3.8.10",
+  "machine": "aarch64",
+  "metadata_versions": {
+    "numpy": "1.24.3",
+    "opencv-python": "4.7.0.72",
+    "PyYAML": "5.3.1",
+    "torch": "2.0.0+nv23.5",
+    "torchvision": null,
+    "Pillow": "10.4.0",
+    "requests": "2.22.0",
+    "websocket-client": "1.8.0",
+    "websockets": null,
+    "pyserial": "3.5",
+    "smbus2": "0.4.2",
+    "scipy": "1.3.3",
+    "scikit-learn": null,
+    "onnxruntime": null
+  },
+  "scope": "metadata only; no module/model imports, no environment values; null means no distribution metadata"
+}

@@ -1,0 +1,93 @@
+FFFFFFFFFFF
+======================================================================
+FAIL: test_confirmed_drive_releases_both_monitors_and_restores_after_child (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_drive_uses_current_profile_and_defaults_to_no_motor (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_failed_release_prevents_child_and_attempts_restore (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_inactive_services_remain_inactive (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_monitor_forwards_profile_as_one_argument (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_no_arguments_and_help_have_no_side_effects (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_replay_is_explicitly_recorded_and_never_leases_devices (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_restore_failure_is_not_reported_as_success (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_terminal_signal_forwarded_once_and_cleanup_before_restore (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_unconfirmed_motor_or_trial_request_never_touches_services (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+======================================================================
+FAIL: test_unknown_service_state_prevents_child (test_vehicle_cli.VehicleCLITests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_vehicle_cli.py", line 27, in setUp
+    self.assertTrue((ROOT/'vehicle').is_file(),'single vehicle launcher is missing')
+AssertionError: False is not true : single vehicle launcher is missing
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.007s
+
+FAILED (failures=11)

@@ -1,0 +1,19 @@
+.........E.................................
+======================================================================
+ERROR: test_partial_builder_cleanup_stop_failure_preserves_original_error_and_closes_fake_serial (car.test.test_stationary_corner_onboard.StationaryCalibrationTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_stationary_corner_onboard.py", line 577, in test_partial_builder_cleanup_stop_failure_preserves_original_error_and_closes_fake_serial
+    onboard.build_components(config, True, None)
+  File "/tmp/vcc-repository-refactor/car/autodrive/runtime/onboard.py", line 107, in build_components
+    return _build_components(config, motors_enabled, calibration_path, field_trial,
+  File "/tmp/vcc-repository-refactor/car/autodrive/runtime/components.py", line 99, in build_components
+    validate_motion_configuration(config.get("vehicle", {}), config.get("wheels", {}))
+  File "/tmp/vcc-repository-refactor/car/control/vehicle_control/factory.py", line 29, in validate_motion_configuration
+    raise HardwareNotCalibratedError(
+vehicle_control.factory.HardwareNotCalibratedError: vehicle profile 'rosmaster_jetson_yolopv2_outer_trial' is not marked motion_calibrated; run the lifted-wheel checks and update its profile
+
+----------------------------------------------------------------------
+Ran 43 tests in 11.254s
+
+FAILED (errors=1)

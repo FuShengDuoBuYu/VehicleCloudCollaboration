@@ -15,8 +15,8 @@ class WheelCheckLauncherTest(unittest.TestCase):
                  start_fail=False, interrupt=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            script = root / "run_wheel_check.sh"
-            shutil.copy2(Path(__file__).resolve().parents[2] / script.name, script)
+            from tests.launcher_fixture import copy_launcher
+            script = copy_launcher(root)
             python = root / "outputs/field_yolopv2/venv/bin/python"
             python.parent.mkdir(parents=True)
             python.symlink_to(sys.executable)
@@ -55,13 +55,13 @@ esac
             log = root / "log"
             env = dict(os.environ, PATH=str(bin_dir) + ":" + os.environ["PATH"],
                        LAUNCH_LOG=str(log), LAUNCH_MODE=mode,
-                       LAUNCH_INACTIVE=str(int(not active)),
+                       LAUNCH_INACTIVE=str(0 if active else 3),
                        LAUNCH_STOP_FAIL=str(int(stop_fail)),
                        LAUNCH_START_FAIL=str(int(start_fail)))
             args = ["--help"] if mode == "help" else [
                 "--confirm-wheels-lifted", "WHEELS_ARE_LIFTED", "--all-wheels",
                 "--pwm", "20", "--duration", "0.3"]
-            process = subprocess.Popen(["bash", str(script)] + args, env=env,
+            process = subprocess.Popen(["bash", str(script), "wheel-check"] + args, env=env,
                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if interrupt:
                 deadline = time.monotonic() + 3
@@ -113,7 +113,7 @@ esac
     def test_help_does_not_touch_services(self):
         code, log, _ = self.run_case("help")
         self.assertEqual(code, 0)
-        self.assertEqual(log, "help\n")
+        self.assertEqual(log, "")
 
 
 if __name__ == "__main__":

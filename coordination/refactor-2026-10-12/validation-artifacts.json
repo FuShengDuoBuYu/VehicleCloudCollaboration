@@ -1,0 +1,23 @@
+{
+  "outputs/refactor_validation/20261012/replay-equivalence.json": "8070974ecde194ce39aabde3cdf1113d5491bce2f5b71c8e7144b024271f13e4",
+  "outputs/refactor_validation/20261012/baseline-recorded.log": "2bea8cad33890db327c0100870c5dee2a7b75fbef75adf2efc770cdb0439864e",
+  "outputs/refactor_validation/20261012/refactor-recorded.log": "38187b3b1c40ab23e8b63b476cb10662b41cda5966f5340849bdcdc1257bc46a",
+  "outputs/refactor_validation/20261012/host-timing-before.log": "cbd9a5ee31685e59136b45e3a2bbbe438fae8058eb30da076398bf1e9a4ab504",
+  "outputs/refactor_validation/20261012/host-timing-after.log": "ca47228940a038a15591b26da0a941f55e67e8e33abb2fb1d507e57b346193e8",
+  "outputs/refactor_validation/20261012/baseline-recorded/replay.mp4": "2a6462a42808cf12e8b51c75f2007dacf90075e00fdf77ec97775a11b82d5520",
+  "outputs/refactor_validation/20261012/baseline-recorded/commands.json": "abf76ee2c9aae719c9e38f152ad1a597679b18c18192664a860e620f46884158",
+  "outputs/refactor_validation/20261012/baseline-recorded/summary.json": "2bea8cad33890db327c0100870c5dee2a7b75fbef75adf2efc770cdb0439864e",
+  "outputs/refactor_validation/20261012/baseline-recorded/replay_config.yaml": "0b1d85d5e0f735a2f15d9b2dbc187360fe5538f29709a01932d2b2a2241c4994",
+  "outputs/refactor_validation/20261012/host-timing-before/replay.mp4": "18f16a493763f357d7a3304e612f8366df447ca8eb50df4396c2245c102a98df",
+  "outputs/refactor_validation/20261012/host-timing-before/commands.json": "703ce7ed215341fd6087b2e3d85f49b8c2aa9e9c49de1bee62f89bf83856a421",
+  "outputs/refactor_validation/20261012/host-timing-before/summary.json": "cbd9a5ee31685e59136b45e3a2bbbe438fae8058eb30da076398bf1e9a4ab504",
+  "outputs/refactor_validation/20261012/host-timing-before/replay_config.yaml": "0b1d85d5e0f735a2f15d9b2dbc187360fe5538f29709a01932d2b2a2241c4994",
+  "outputs/refactor_validation/20261012/refactor-recorded/replay.mp4": "2a6462a42808cf12e8b51c75f2007dacf90075e00fdf77ec97775a11b82d5520",
+  "outputs/refactor_validation/20261012/refactor-recorded/commands.json": "b4a8b86adef0f42fbbecbbfb7fb3683e458ccfa9ade814ff5c5ca20ac9528680",
+  "outputs/refactor_validation/20261012/refactor-recorded/summary.json": "38187b3b1c40ab23e8b63b476cb10662b41cda5966f5340849bdcdc1257bc46a",
+  "outputs/refactor_validation/20261012/refactor-recorded/replay_config.yaml": "0b1d85d5e0f735a2f15d9b2dbc187360fe5538f29709a01932d2b2a2241c4994",
+  "outputs/refactor_validation/20261012/host-timing-after/replay.mp4": "62ee7733bafb7ab836b4690e26d589ef8e581bbb4c7b1cb15d6fe4f2a3d66025",
+  "outputs/refactor_validation/20261012/host-timing-after/commands.json": "14006d4d278ad47efc51c039631854d6d6515123026286e72394590f7c667e49",
+  "outputs/refactor_validation/20261012/host-timing-after/summary.json": "ca47228940a038a15591b26da0a941f55e67e8e33abb2fb1d507e57b346193e8",
+  "outputs/refactor_validation/20261012/host-timing-after/replay_config.yaml": "0b1d85d5e0f735a2f15d9b2dbc187360fe5538f29709a01932d2b2a2241c4994"
+}

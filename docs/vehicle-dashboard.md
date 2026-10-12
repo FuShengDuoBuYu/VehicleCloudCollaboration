@@ -2,7 +2,7 @@
 
 复用现有 LCC 状态与图像发布。综合页 `/`，状态接口 `GET /api/state`，健康接口 `GET /api/health`。同一局域网访问 `http://小车IP:8080/`，浏览器自动刷新，不依赖公网资源。DHCP地址改变后用 `hostname -I` 查询。
 
-2026-10-08 按用户要求移除 LCC 详细诊断页及旧 Web 启停代码；旧 `/diagnostics` 地址返回404。2026-10-10 按新要求添加会话式“开始/结束自动驾驶”，通过独立本机启停程序接入，详细行为与离线回放见 [visual-feedback-replay.md](visual-feedback-replay.md)。2026-10-10已按用户当次安排重载网页/传感器并启动启停程序，当前待用户点击。`./run.sh` 现在等同于 `./run_vehicle_dashboard.sh web`，HTTP启动本身不启动采集或驾驶。已有开机服务运行时直接访问页面，无需重复启动。手动运行可用 `--host`、`--port`、`--runtime-dir`、`--sensor-dir` 参数；`CAR_PYTHON` 可指定Python，`DASHBOARD_HOST`/`DASHBOARD_PORT` 可指定默认监听地址。
+2026-10-08 按用户要求移除 LCC 详细诊断页及旧 Web 启停代码；旧 `/diagnostics` 地址返回404。2026-10-10 按新要求添加会话式“开始/结束自动驾驶”，通过独立本机启停程序接入，当前行为见[运行说明](operations/runtime.md)，离线分析见[记录与回放](outer-loop-record-replay.md)。2026-10-10已按用户当次安排重载网页/传感器并启动启停程序，该句记录的是当日部署状态，本轮未重启或验收服务。当前统一入口为 `./vehicle dashboard`，HTTP启动本身不启动采集或驾驶。已有开机服务运行时直接访问页面，无需重复启动。手动运行可用 `--host`、`--port`、`--runtime-dir`、`--sensor-dir` 参数；`CAR_PYTHON` 可指定Python，`DASHBOARD_HOST`/`DASHBOARD_PORT` 可指定默认监听地址。
 
 ## 开机服务
 
@@ -31,7 +31,7 @@ journalctl -u vehicle-dashboard -u vehicle-perception-monitor -u vehicle-serial-
 相机与串口不能被监控和控制进程重复占用。新增入口：
 
 ```bash
-./run_vehicle_experiment.sh --max-runtime-seconds 30
+./vehicle drive --max-runtime-seconds 30
 ```
 
 默认电机禁用。入口暂停相机监控；仅参数含 `--enable-motors` 时才暂停独立串口监控。原现场确认、标定与电机门禁仍生效；真实运动按当次现场安排执行。退出后恢复本次暂停且之前active的服务，保留实验程序退出码。

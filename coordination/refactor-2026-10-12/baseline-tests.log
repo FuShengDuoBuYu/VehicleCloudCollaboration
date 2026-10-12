@@ -1,0 +1,421 @@
+E....................EEE.................EEEEEEEEEEEE.....E......E........E.....E.....................................................................................................E....................................................................................E..............................................................................F.......................Saved: /tmp/tmpbkg3l2z7/runs/20261012T072733_070948Z_c92d2a92
+.Saved: /tmp/tmpwn7haqck/runs/20261012T072733_704503Z_12704021
+Saved: /tmp/tmp6isqojy9/runs/20261012T072734_386781Z_552f8d83
+..Saved: /tmp/tmpl3tx6yui/runs/20261012T072735_082459Z_0905e368
+........Saved: /tmp/tmp1i7kx4ty/runs/20261012T072736_458637Z_897490c4
+....Saved: /tmp/tmp0lvr_151/runs/20261012T072737_095799Z_bd409a8d
+..Saved: /tmp/tmpiwa_on9i/runs/20261012T072737_682841Z_8345f595
+....Saved: /tmp/tmpw5ro_9e4/runs/20261012T072738_739520Z_f3eb29fa
+.Saved: /tmp/tmpscdq3c8l/runs/20261012T072739_325371Z_c5ee1894
+.Saved: /tmp/tmpo8cncq5g/runs/20261012T072739_912968Z_69d24d35
+.....Saved: /tmp/tmpabbezi_t/runs/20261012T072741_710148Z_a01b5da7
+...Saved: /tmp/tmpziorpmn4/runs/20261012T072742_243556Z_e94675cf
+....E...................................E..E....................................................................E
+======================================================================
+ERROR: test_camera_gimbal (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_camera_gimbal
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_camera_gimbal.py", line 21, in <module>
+    from vehicle_control.factory import create_gimbal
+ModuleNotFoundError: No module named 'vehicle_control'
+
+
+======================================================================
+ERROR: test_cloud_recovery (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cloud_recovery
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery.py", line 12, in <module>
+    from car.test.test_cloud_recovery_contract import recovery
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery_contract.py", line 7, in <module>
+    from car.test import test_cloud_scene_realtime as realtime_tests
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_realtime.py", line 13, in <module>
+    import websocket
+ModuleNotFoundError: No module named 'websocket'
+
+
+======================================================================
+ERROR: test_cloud_recovery_contract (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cloud_recovery_contract
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery_contract.py", line 7, in <module>
+    from car.test import test_cloud_scene_realtime as realtime_tests
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_realtime.py", line 13, in <module>
+    import websocket
+ModuleNotFoundError: No module named 'websocket'
+
+
+======================================================================
+ERROR: test_cloud_recovery_runtime (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cloud_recovery_runtime
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery_runtime.py", line 18, in <module>
+    from car.test.test_cloud_recovery import evidence, STOP
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery.py", line 12, in <module>
+    from car.test.test_cloud_recovery_contract import recovery
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery_contract.py", line 7, in <module>
+    from car.test import test_cloud_scene_realtime as realtime_tests
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_realtime.py", line 13, in <module>
+    import websocket
+ModuleNotFoundError: No module named 'websocket'
+
+
+======================================================================
+ERROR: test_auth_post_scene_envelope_usage_and_image_provenance (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_cli_dry_run_never_calls_network_or_shows_key (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_cli_failed_http_preserves_failure_without_key (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_cli_live_creates_complete_record_and_refuses_overwrite (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_cli_malformed_http_body_preserves_failure_record (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_cli_requires_output_before_network (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_echoed_key_is_redacted_from_preserved_response (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_http_error_never_exposes_key_or_provider_body (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_incomplete_scene_becomes_safe_error (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_rejects_redirect_without_following_or_retrying (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_socket_timeout_fails_without_retry (test_cloud_scene_http.SceneHTTPTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_http.py", line 64, in setUp
+    self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_cloud_scene_realtime (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cloud_scene_realtime
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_realtime.py", line 13, in <module>
+    import websocket
+ModuleNotFoundError: No module named 'websocket'
+
+
+======================================================================
+ERROR: test_cloud_scene_ws (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cloud_scene_ws
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_ws.py", line 13, in <module>
+    from websockets.sync.server import serve
+ModuleNotFoundError: No module named 'websockets'
+
+
+======================================================================
+ERROR: test_corner_cloud_feedback_fix (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_corner_cloud_feedback_fix
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_corner_cloud_feedback_fix.py", line 9, in <module>
+    from car.test.test_cloud_recovery import evidence, STOP, FORWARD
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery.py", line 12, in <module>
+    from car.test.test_cloud_recovery_contract import recovery
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery_contract.py", line 7, in <module>
+    from car.test import test_cloud_scene_realtime as realtime_tests
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_realtime.py", line 13, in <module>
+    import websocket
+ModuleNotFoundError: No module named 'websocket'
+
+
+======================================================================
+ERROR: test_decision_fusion (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_decision_fusion
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_decision_fusion.py", line 4, in <module>
+    from car.test.test_cloud_recovery import evidence, STOP, FORWARD
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery.py", line 12, in <module>
+    from car.test.test_cloud_recovery_contract import recovery
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery_contract.py", line 7, in <module>
+    from car.test import test_cloud_scene_realtime as realtime_tests
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_realtime.py", line 13, in <module>
+    import websocket
+ModuleNotFoundError: No module named 'websocket'
+
+
+======================================================================
+ERROR: test_exit_recenter_cloud (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_exit_recenter_cloud
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_exit_recenter_cloud.py", line 7, in <module>
+    from car.test.test_cloud_recovery import evidence, STOP
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery.py", line 12, in <module>
+    from car.test.test_cloud_recovery_contract import recovery
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_recovery_contract.py", line 7, in <module>
+    from car.test import test_cloud_scene_realtime as realtime_tests
+  File "/tmp/vcc-repository-refactor/car/test/test_cloud_scene_realtime.py", line 13, in <module>
+    import websocket
+ModuleNotFoundError: No module named 'websocket'
+
+
+======================================================================
+ERROR: test_lossless_replay_preserves_cached_sequence_and_stale_stop_without_gpu (test_outer_loop_replay.OuterLoopReplayTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/mock.py", line 1215, in _dot_lookup
+    return getattr(thing, comp)
+  File "/tmp/vcc-repository-refactor/car/longtail/detectors/__init__.py", line 14, in __getattr__
+    raise AttributeError(name)
+AttributeError: yolopv2_detector
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_outer_loop_replay.py", line 39, in test_lossless_replay_preserves_cached_sequence_and_stale_stop_without_gpu
+    with patch('longtail.detectors.yolopv2_detector.YOLOPv2Detector') as gpu, \
+  File "/usr/lib/python3.8/unittest/mock.py", line 1377, in __enter__
+    self.target = self.getter()
+  File "/usr/lib/python3.8/unittest/mock.py", line 1552, in <lambda>
+    getter = lambda: _importer(target)
+  File "/usr/lib/python3.8/unittest/mock.py", line 1228, in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+  File "/usr/lib/python3.8/unittest/mock.py", line 1217, in _dot_lookup
+    __import__(import_path)
+  File "/tmp/vcc-repository-refactor/car/longtail/detectors/yolopv2_detector.py", line 7, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
+
+======================================================================
+ERROR: test_full_bundle_replays_with_no_hardware_and_preserves_originals (test_session_replay.SessionReplayTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/mock.py", line 1215, in _dot_lookup
+    return getattr(thing, comp)
+  File "/tmp/vcc-repository-refactor/car/longtail/detectors/__init__.py", line 14, in __getattr__
+    raise AttributeError(name)
+AttributeError: yolopv2_detector
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_session_replay.py", line 57, in test_full_bundle_replays_with_no_hardware_and_preserves_originals
+    with patch('longtail.detectors.yolopv2_detector.YOLOPv2Detector') as gpu, \
+  File "/usr/lib/python3.8/unittest/mock.py", line 1377, in __enter__
+    self.target = self.getter()
+  File "/usr/lib/python3.8/unittest/mock.py", line 1552, in <lambda>
+    getter = lambda: _importer(target)
+  File "/usr/lib/python3.8/unittest/mock.py", line 1228, in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+  File "/usr/lib/python3.8/unittest/mock.py", line 1217, in _dot_lookup
+    __import__(import_path)
+  File "/tmp/vcc-repository-refactor/car/longtail/detectors/yolopv2_detector.py", line 7, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
+
+======================================================================
+ERROR: test_lossless_replay_uses_recorded_color_config_without_model_or_chassis (test_track_colors.TrackColorsTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_track_colors.py", line 125, in test_lossless_replay_uses_recorded_color_config_without_model_or_chassis
+    replay(run,root/'derived',profile='recorded',mode='recorded')
+  File "/tmp/vcc-repository-refactor/car/autodrive/tools/replay_outer_loop.py", line 107, in replay
+    return replay_recorded(run, output_dir, profile, expectations)
+  File "/tmp/vcc-repository-refactor/car/autodrive/tools/replay_outer_loop.py", line 260, in replay_recorded
+    raise ValueError('cloud-enabled recording is missing its cloud journals')
+ValueError: cloud-enabled recording is missing its cloud journals
+
+======================================================================
+ERROR: test_http_read_only_health_and_no_path_traversal (test_vehicle_dashboard.DashboardTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_vehicle_dashboard.py", line 157, in test_http_read_only_health_and_no_path_traversal
+    server=service.make_http_server()
+  File "/tmp/vcc-repository-refactor/car/autodrive/web/dashboard.py", line 453, in make_http_server
+    server=ThreadingHTTPServer((self.host,self.port),Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_panel_start_requires_explicit_click_header_and_rejects_cross_origin (test_vehicle_dashboard.DashboardTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_vehicle_dashboard.py", line 28, in test_panel_start_requires_explicit_click_header_and_rejects_cross_origin
+    server=DashboardServer(self.state,host='127.0.0.1',port=0,control_client=Client()).make_http_server()
+  File "/tmp/vcc-repository-refactor/car/autodrive/web/dashboard.py", line 453, in make_http_server
+    server=ThreadingHTTPServer((self.host,self.port),Handler)
+  File "/usr/lib/python3.8/socketserver.py", line 448, in __init__
+    self.socket = socket.socket(self.address_family,
+  File "/usr/lib/python3.8/socket.py", line 231, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+======================================================================
+ERROR: test_yolopv2_torch_input (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_yolopv2_torch_input
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.8/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/tmp/vcc-repository-refactor/car/test/test_yolopv2_torch_input.py", line 7, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
+
+
+======================================================================
+FAIL: test_sloped_front_is_diagnostic_only_and_resets_with_new_frame (test_stationary_corner_perception.StationaryCornerPerceptionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/car/test/test_stationary_corner_perception.py", line 59, in test_sloped_front_is_diagnostic_only_and_resets_with_new_frame
+    self.assertTrue(selector.front_observed)
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 514 tests in 26.257s
+
+FAILED (failures=1, errors=26)

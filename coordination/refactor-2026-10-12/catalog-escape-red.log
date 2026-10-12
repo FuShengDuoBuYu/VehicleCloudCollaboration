@@ -1,0 +1,31 @@
+..F...
+======================================================================
+FAIL: test_intermediate_symlink_cannot_escape_evidence_root (test_evidence_catalog.EvidenceTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/vcc-repository-refactor/tests/test_evidence_catalog.py", line 47, in test_intermediate_symlink_cannot_escape_evidence_root
+    self.assertEqual(result['runs'],[])
+AssertionError: Lists differ: [{'run_id': 'stolen', 'path': 'outputs/aut[324 chars]ng'}] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+{'run_id': 'stolen', 'path': 'outputs/autodrive_sessions/s1/runtime/runs/stolen', 'session_id': 's1', 'source_commit': None, 'source_tree_sha256': None, 'stopped_recorded': None, 'sensor_recording': None, 'sensor_closed_recorded': None, 'config_present': False, 'cloud_events': [], 'integrity': 'not_verified', 'provenance_status': 'historical_source_requires_mapping'}
+
++ []
+- [{'cloud_events': [],
+-   'config_present': False,
+-   'integrity': 'not_verified',
+-   'path': 'outputs/autodrive_sessions/s1/runtime/runs/stolen',
+-   'provenance_status': 'historical_source_requires_mapping',
+-   'run_id': 'stolen',
+-   'sensor_closed_recorded': None,
+-   'sensor_recording': None,
+-   'session_id': 's1',
+-   'source_commit': None,
+-   'source_tree_sha256': None,
+-   'stopped_recorded': None}]
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.179s
+
+FAILED (failures=1)

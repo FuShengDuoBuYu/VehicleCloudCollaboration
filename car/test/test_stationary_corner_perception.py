@@ -51,12 +51,13 @@ class StationaryCornerPerceptionTests(unittest.TestCase):
             road,preserve_exclusions=True,semantic_preview_point=selector.preview_point)
         self.assertTrue(estimate.valid,estimate.reason)
 
-    def test_sloped_front_is_diagnostic_only_and_resets_with_new_frame(self):
+    def test_sloped_front_is_rejected_before_entry_and_resets_with_new_frame(self):
         selector=SemanticOuterRoute([[0,.4],[1,1.]],stationary_corners=True)
         road=np.zeros((240,320),np.uint8)
         for x in range(320):road[128+x//4:,x]=1
         selector.select(road)
-        self.assertTrue(selector.front_observed)
+        # 05a3 retains diagnostics but rejects this as a turn-entry observation.
+        self.assertFalse(selector.front_observed)
         self.assertIsNotNone(selector.observed_front_ratio)
         self.assertIsNone(selector.front_boundary_ratio)
         self.assertFalse(selector.right_exit_observed)

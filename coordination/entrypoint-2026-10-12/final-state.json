@@ -1,0 +1,278 @@
+{
+  "base_commit": "664793438d9d2cf51dae603e8d6fcc45902f6fb1",
+  "git_index_empty": true,
+  "final_tests": {
+    "passed": 593,
+    "seconds": 54.457,
+    "excluded": [
+      "test_cloud_scene_ws"
+    ]
+  },
+  "known_unresolved": "Intermittent unmatched_events assertion in synthetic cloud recovery replay; first full run failed, three diagnostics and final full run passed.",
+  "hardware_cloud_service_changes": false,
+  "files": {
+    ".agents/skills/thesis-handoff": {
+      "directory": true
+    },
+    ".agents/skills/thesis-handoff/SKILL.md": {
+      "sha256": "3db86272eef114d4090cc21c46b35699f2ff43abbdfda20e4532a2eb09a77ea7",
+      "size": 2678
+    },
+    ".agents/skills/thesis-handoff/agents/openai.yaml": {
+      "sha256": "834acb32c263819309d211812b7a4ce9831e692434211be21e5c8e6a348e64c8",
+      "size": 329
+    },
+    ".agents/skills/vehicle-cloud-thesis": {
+      "directory": true
+    },
+    ".agents/skills/vehicle-cloud-thesis/SKILL.md": {
+      "sha256": "7253115b8a349eee00442899719997f13fedb34909104d6ee78ad19074dfc1bb",
+      "size": 3560
+    },
+    ".agents/skills/vehicle-cloud-thesis/agents/openai.yaml": {
+      "sha256": "87ec62dd6e27e63f95f23222f94d05d0f7da7cf7f9427dbb5ba0cea05bfce9af",
+      "size": 289
+    },
+    "AGENTS.md": {
+      "sha256": "e0003a83fc7c49e9bbb81710390525ce21051f262ac991cf4782b0bc898cfab4",
+      "size": 3715
+    },
+    "PROJECT_INDEX.md": {
+      "sha256": "476c3af46930514b745caafa2b02a9a95337fc1b31959aae46a4ffaba8f694aa",
+      "size": 3747
+    },
+    "README.md": {
+      "sha256": "99d093b6441ba0b37373589df10a2afbe89ac1671557482fc74959d0ebae8552",
+      "size": 4302
+    },
+    "car/autodrive/runtime/provenance.py": {
+      "sha256": "db2f0dbaf2c849281cad4a5021f94a81ab2751450f1048aa8ccbe90b606f0a5a",
+      "size": 4657
+    },
+    "car/autodrive/web/drive_sessions.py": {
+      "sha256": "0741e91b5d691604c7b90f21a89bc9015190e47b1733d0f8b0bdc45558d8de45",
+      "size": 10529
+    },
+    "car/cloud_client/README.md": {
+      "sha256": "6a77c1aaf27fefccfe512f3deebca34070a115bc90c566a192c104340cd26bdc",
+      "size": 8986
+    },
+    "car/control/README.md": {
+      "sha256": "733bf1d7afd760b05634e22ca10e54fbc1533350e997630b14c658eee4fdeec7",
+      "size": 3770
+    },
+    "car/test/README.md": {
+      "sha256": "b2a9d5046feb80a7c9dbfbcd7230856ef7596b4fb7d6398ea34fa8cbbc956c4b",
+      "size": 672
+    },
+    "car/test/test_cloud_recovery_runtime.py": {
+      "sha256": "d4f7593b9cd6e9fe0f6bb62e702ad2c0c304e7493b98d4a275ab5b580b50eaa8",
+      "size": 12093
+    },
+    "car/test/test_dashboard_launcher.py": {
+      "sha256": "a8d070960b5ef7c30281bfdb1573836e5a5e64516210c76e5574e1946ce4ee37",
+      "size": 4684
+    },
+    "car/test/test_perception_monitor_profile.py": {
+      "sha256": "c3a49725395e52f066b6d194595d473aea0185302ee106d4349d8ef46c8fa586",
+      "size": 7193
+    },
+    "car/test/test_wheel_check_launcher.py": {
+      "sha256": "8e423205ceabc81664b6b128e8199e80c60f404c98cb8ead6f2dd7683642ebaa",
+      "size": 4844
+    },
+    "check.sh": null,
+    "coordination/2026-10-12-entrypoint-consolidation.md": {
+      "sha256": "78cd4fa3e6592d829b4846f1a2c6b4e6a7091b906bcdc15627db9966e0e241be",
+      "size": 4364
+    },
+    "coordination/entrypoint-2026-10-12/diagnostic-test-preimage.zip": {
+      "sha256": "7a026109e27a88e46e51808bee0ca13482f37a3845bf85fa2a9ea84741ab5191",
+      "size": 3958
+    },
+    "coordination/entrypoint-2026-10-12/full-tests.log": {
+      "sha256": "117a24ff15e6355c84fff22d1220da7ba32c0e4e1eaddb4dfe14da431228b039",
+      "size": 1690
+    },
+    "coordination/entrypoint-2026-10-12/launcher-additional.log": {
+      "sha256": "6dcb6f5963d0733c6b6a12a0dd8ef9b7448f76c32cb9bc6dcf0659eb26a04a09",
+      "size": 113
+    },
+    "coordination/entrypoint-2026-10-12/launcher-green.log": {
+      "sha256": "746cee046dfae2662e937a768f5f466990f8123f2d8eff8f78e5703a7d71b038",
+      "size": 110
+    },
+    "coordination/entrypoint-2026-10-12/launcher-red.log": {
+      "sha256": "710d8f794b2fac573ad5a2fcd9a4d4ce3daad3139101b42502c05a9b2cf00141",
+      "size": 5757
+    },
+    "coordination/entrypoint-2026-10-12/launcher-regression.log": {
+      "sha256": "dfa72bf3434083bce07e80023d90778575c738e02d879cfe52521b70d0f1d0ba",
+      "size": 135
+    },
+    "coordination/entrypoint-2026-10-12/main-final-rerun.log": {
+      "sha256": "18708398926c6f6722c71a4ec00903a45b09e01c9ae6cb4f8a719645651d991e",
+      "size": 1692
+    },
+    "coordination/entrypoint-2026-10-12/main-final-tests.log": {
+      "sha256": "3af2570cd9b6a7d79f7aa959e1fe2ab54e1ef0255fe0656b5fa7c4dffd5fe3df",
+      "size": 2272
+    },
+    "coordination/entrypoint-2026-10-12/preimages.zip": {
+      "sha256": "f89732acb93457fcc5beb957a322daa46eb86f2879ca7cea6325776c249d76ce",
+      "size": 69169
+    },
+    "coordination/entrypoint-2026-10-12/recovery-diagnostic.log": {
+      "sha256": "914ae59dd6e69c91df44c2df77a89df000d2a4a47d05639c38de9c6592c4bbd5",
+      "size": 420
+    },
+    "coordination/entrypoint-2026-10-12/retired-entrypoints.json": {
+      "sha256": "8d0b9d5c8e04a48c3eb5a03600ebac8c1c0f818da402963e82423667d3d54ec8",
+      "size": 603
+    },
+    "coordination/entrypoint-2026-10-12/review-regressions-green.log": {
+      "sha256": "de7bd526842d823726a8f3ce89883ea21db80722cb8e9f34aa4f5e783d83a978",
+      "size": 125
+    },
+    "coordination/entrypoint-2026-10-12/review-regressions-red.log": {
+      "sha256": "64b5c0b6e071d7c5e0bd3fdf49844cc0dce7a888dc2f87e84095ae8c7767e5d0",
+      "size": 1355
+    },
+    "coordination/entrypoint-2026-10-12/review.md": {
+      "sha256": "bc88de7f6e26f577a87b1518695407603b15d5642824ce53d5e483c0ba63298d",
+      "size": 1454
+    },
+    "coordination/entrypoint-2026-10-12/rule-migrations.json": {
+      "sha256": "459b56f43aa9220df26ee513d36d93e7274fab8caf6d432d140d7b7385213d3f",
+      "size": 748
+    },
+    "coordination/entrypoint-2026-10-12/source-manifest.json": {
+      "sha256": "5461a15220ba385da8da51166c80e241b2a295cc48fcd67b43e078afa5a98531",
+      "size": 14306
+    },
+    "coordination/entrypoint-2026-10-12/sync-manifest.json": {
+      "sha256": "5ac51cc724bec46d2cc68d5155a4b769b21197613d4408c897b7ab0f7f223ad9",
+      "size": 19459
+    },
+    "coordination/entrypoint-2026-10-12/synthetic-recovery-validation.zip": {
+      "sha256": "2030de0764424ec3f1bded79d2e734cd8f63f2ec3e5bf54d5cf9093de77114b7",
+      "size": 690818
+    },
+    "deploy/vehicle-autodrive-panel.service": {
+      "sha256": "00d6998c17466848ae708f9e53e1bddfb26352bc37c5b0e956f867de14d52fe2",
+      "size": 637
+    },
+    "deploy/vehicle-dashboard.service": {
+      "sha256": "0fa9da304142ead799c4e34f0e1281d367b2d2a46e96c15547aceff473ac40f8",
+      "size": 380
+    },
+    "deploy/vehicle-perception-monitor.service": {
+      "sha256": "0c745394bba0fd7956b18b1f89afefa83e65849ebcc0a1b051ad1c951140c446",
+      "size": 438
+    },
+    "deploy/vehicle-sensors.service": {
+      "sha256": "cff99da4eec17ecd8f4dc0dac6fb129233c05015b297035c88b116b078d191a9",
+      "size": 473
+    },
+    "deploy/vehicle-serial-monitor.service": {
+      "sha256": "6a8c5d5736fe1b74f5a8b25b021bb80eb80e76a5a5cfee99e6f303e4ce38e5b2",
+      "size": 425
+    },
+    "docs/architecture/current.md": {
+      "sha256": "5432c79d6f0c0b4a8d81e81ccc5eb9e2ba25b56fa5116271d2942dac38344b37",
+      "size": 5028
+    },
+    "docs/history/collaboration-before-entrypoint-consolidation/AGENTS.md.txt": {
+      "sha256": "00b072dbf6b1201c5e78a88143ec4b6e35961aa2095df991e98d3a271f3663fc",
+      "size": 3331
+    },
+    "docs/history/collaboration-before-entrypoint-consolidation/skills--thesis-handoff--SKILL.md.txt": {
+      "sha256": "e75fec64f50dcf5f66fb7e233ffeb0e5f73c23f1d6c1681923ab0bc646c6fc53",
+      "size": 5857
+    },
+    "docs/history/collaboration-before-entrypoint-consolidation/skills--vehicle-cloud-thesis--SKILL.md.txt": {
+      "sha256": "b5241be6af8a7091f5a4b25343d7f33d989763a7928396da0c488f5dc13a568e",
+      "size": 15005
+    },
+    "docs/manual-wheel-check.md": {
+      "sha256": "4d15e737264f33bf332c96203aa23699e46548d03e09f1d37e22a8b32fef118a",
+      "size": 2961
+    },
+    "docs/operations/development.md": {
+      "sha256": "4b0a66438c6011b859e61c31f11cc248c255532c222750bf0637aae854508373",
+      "size": 2293
+    },
+    "docs/operations/runtime.md": {
+      "sha256": "e0190914324b9a3aeba4d98ab00b77f808fb072cb49022c265f1b5c91d783a71",
+      "size": 4174
+    },
+    "docs/outer-loop-record-replay.md": {
+      "sha256": "9c2386d3a19b0693eb6ad1f649786b8afccb10d32e519caeba6e27e824172b3c",
+      "size": 2699
+    },
+    "docs/vehicle-dashboard.md": {
+      "sha256": "d630eaeefc6a620be3a05090362a23108b61cd107cf55143398c4daf8c573d2b",
+      "size": 8370
+    },
+    "experiments/README.md": {
+      "sha256": "22078b937804f5286a58c053eaac7507b1805705faea5de8950a164633374253",
+      "size": 2078
+    },
+    "run.sh": null,
+    "run_autodrive_panel.sh": {
+      "sha256": "9fa2801b1db2269233f380af6c30b2266f5dbc3e9eefa3b9f212e644ec2e8894",
+      "size": 189
+    },
+    "run_jetson_yolopv2.sh": null,
+    "run_outer_loop.sh": null,
+    "run_vehicle_dashboard.sh": {
+      "sha256": "6bae5c5d829c96ea783cd98d5c1d1e216d560f3189750798382641f036e490f1",
+      "size": 437
+    },
+    "run_vehicle_experiment.sh": {
+      "sha256": "ceffb04cd6c283ac6b671ce44d58334029a2c7e603914eb90bc65c27926e47d2",
+      "size": 200
+    },
+    "run_wheel_check.sh": null,
+    "skills/thesis-handoff/SKILL.md": null,
+    "skills/thesis-handoff/agents/openai.yaml": null,
+    "skills/vehicle-cloud-thesis/SKILL.md": null,
+    "skills/vehicle-cloud-thesis/agents/openai.yaml": null,
+    "tests/__init__.py": {
+      "sha256": "c65fdd202927e9e4c9fd9eb85b422e3d0f6bc609e5e53b827cfef979ce4976ef",
+      "size": 74
+    },
+    "tests/launcher_fixture.py": {
+      "sha256": "c34369bc4f64cf3f136fe2d3eccce1b3b30ff0339d0a65f6950d1e3c460ba69b",
+      "size": 458
+    },
+    "tests/test_evidence_catalog.py": {
+      "sha256": "290cf1beeec139a16ef0142c41e0050da071fb1fa4286e3e77e362be1672d09a",
+      "size": 7212
+    },
+    "tests/test_vehicle_cli.py": {
+      "sha256": "ed0f48d6ae91724fe0834b6dd8e8d93e9d3789811e3fcaa536887be6a92a07b9",
+      "size": 13452
+    },
+    "tools/check.py": {
+      "sha256": "d5dca6e34f4ea14b7964892cf70107b9acf996d69b7f23a6e6544bf9d6049b31",
+      "size": 5153
+    },
+    "tools/process_lifecycle.py": {
+      "sha256": "8bca6a65d30766080e08695185fabda037ac5e3f064118b2efe0fe3839aa0d66",
+      "size": 3832
+    },
+    "tools/repository_layout.py": {
+      "sha256": "40784995b0544583384e7c0f2c82e6e7688306fb916a339a2df8021b3371cbc3",
+      "size": 2230
+    },
+    "tools/vehicle_cli.py": {
+      "sha256": "3b2019ffbfe5acb51709957fff521a63cfd08f26095da33040133c72ea0c3ebc",
+      "size": 10501
+    },
+    "vehicle": {
+      "sha256": "2324a1cc081993595946e79736820d90a9df9bde210ea75d9970c83253d8a54c",
+      "size": 240
+    }
+  }
+}

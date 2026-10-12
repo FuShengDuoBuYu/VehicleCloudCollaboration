@@ -16,7 +16,7 @@ from websockets.exceptions import ConnectionClosed
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from cloud_client import CloudClient
 from cloud_client.cli import main
-from test_cloud_scene_realtime import events
+from car.test.test_cloud_scene_realtime import events
 
 
 class WebSocketLoopbackTests(unittest.TestCase):

@@ -119,14 +119,14 @@ class MonitorProfileTests(unittest.TestCase):
         self.assertEqual(error.exception.code, 2)
 
     def test_launcher_passes_selector_without_starting_runtime(self):
-        script = self.root / 'run_vehicle_dashboard.sh'
-        shutil.copy2(CAR.parent / script.name, script)
+        from tests.launcher_fixture import copy_launcher
+        script = copy_launcher(self.root)
         capture = self.root / 'arguments.json'
         runner = self.root / 'capture-python'
         runner.write_text('#!' + sys.executable + '\nimport json, os, sys\n'
                           'open(os.environ["MONITOR_TEST_ARGUMENTS"], "w").write(json.dumps(sys.argv[1:]))\n')
         runner.chmod(0o755)
-        result = subprocess.run(['bash', str(script), 'perception', '--vehicle-profile',
+        result = subprocess.run(['bash', str(script), 'monitor', 'perception', '--vehicle-profile',
                                  'selected experiment.yaml'],
                                 env=dict(os.environ, CAR_PYTHON=str(runner),
                                          MONITOR_TEST_ARGUMENTS=str(capture)),

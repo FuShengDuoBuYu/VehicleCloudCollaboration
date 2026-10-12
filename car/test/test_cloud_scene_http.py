@@ -16,7 +16,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from cloud_client import CloudAPIError, CloudClient
 from cloud_client.cli import main
-from test_cloud_scene_client import completion, scene
+from car.test.test_cloud_scene_client import completion, scene
 
 
 class SceneHTTPTest(unittest.TestCase):
